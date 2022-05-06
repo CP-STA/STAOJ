@@ -7,6 +7,8 @@ import { dirname, join as join_path } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const sock_path = join_path(__dirname, 'staoj.exe.sock')
+console.log("Socket created at: " + sock_path)
+console.log("Listening")
 
 try {
   fs.unlinkSync(sock_path)
@@ -16,7 +18,6 @@ try {
   }
 }
 
-var known_clients = new Set()
 
 var server = http.createServer()
 var wss = new WebSocketServer({ server });
@@ -33,7 +34,7 @@ wss.on('connection', function connection(ws) {
 });
 
 process.on('SIGINT', async function() {
-  console.log("Cleaning up.. Please wait");
+  console.log("Cleaning up... Please wait");
   fs.unlinkSync(sock_path);
   process.exit();
 });
