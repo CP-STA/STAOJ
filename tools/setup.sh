@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Sets up the webserver with wireguard proxy. 
 
 SOURCE=${BASH_SOURCE[0]}
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
