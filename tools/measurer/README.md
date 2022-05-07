@@ -6,12 +6,14 @@ Only works on linux.
 
 Run 
 ```bash
-sudo python3 measure.py ...
+make
+sudo ./demoter.out ...
 ```
 
 to measure and limit whatever `...` command.
 
 For example
 ```bash
-sudo python3 measure.py python3 -c "print('hello world')"
+make
+sudo ./demoter.out python3 -c "print('hello world')"
 ```
