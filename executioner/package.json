@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "ws": "file:ws-8.6.0.tgz"
+  }
+}
