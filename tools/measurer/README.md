@@ -1,6 +1,8 @@
 # Resource Limiter and Measurer
 
-This contains example codes to send the process to userspace, limit the cpu time of a process, memory usage and prevents it from using fork, as well as measuring the cpu and memory useage.
+This contains example codes to send the process to userspace, limit the cpu time of a process, memory usage and prevents it from using fork, as well as measuring the cpu and memory useage. Real time is also limited to 3 times the cpu time limit. 
+
+The limits for cpu time and memory are set using the environmental variables MAX_TIME and MAX_MEM.
 
 Only works on linux.
 
