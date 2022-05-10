@@ -12,15 +12,16 @@ RUN npm cache clean -f && npm install -g n && n stable && hash -r && npm update 
 WORKDIR /app
 
 # Copy the npm files and install the packages using the tarballs
-COPY package.json package-lock.json *.tgz *.tgz .
+COPY package.json package-lock.json *.tgz *.tgz demoter.out .
 RUN npm install *.tgz && rm -f *.tgz
-
 
 ENV EXER_SOCKET=$EXER_SOCKET
 
+RUN apt-get install -y cpulimit bc
+
 # Copy the user created files like js and executioner script
-COPY socket_interface.mjs  .
+COPY socket_interface.mjs executioner.sh .
 
 # Execute interface
-CMD node socket_interface.mjs 
+CMD node socket_interface.mjs  
 

@@ -4,7 +4,7 @@
 
 quit_gracefully() {
     echo "Exitting gracefully"
-    rm -f uuid-*.tgz ws-*.tgz
+    rm -f uuid-*.tgz ws-*.tgz demoter.* Makefile
 }
 
 # Check that arguments exist
@@ -31,13 +31,17 @@ echo "Beginning image building"
 # Pack the neccessary node packages into tarballs (.tgz)
 npm pack uuid ws 
 
+# Retrieve the demoter program and build
+cp ../tools/measurer/demoter.c ../tools/measurer/Makefile .
+make
+
 # Build the image with arguments and execute in container
 podman build --build-arg EXER_SOCKET=/app/socket/${1##*/} . -t executioner
 
 echo "Running container"
 
 if [ $# -ge 2 ]; then
-    podman run -itv "${1%/*}":/app/socket -v "$2":/app/problem executioner 
+    podman run -itv "${1%/*}":/app/socket -v "$2":/app/problems executioner 
 else
     podman run -itv "${1%/*}":/app/socket executioner
 fi
