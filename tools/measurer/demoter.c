@@ -1,5 +1,5 @@
-// Demotes the user and limit resources and run the arguemnts. 
-// Written in c because the time and memory useage of this will be measured as the contentants usage.
+// Demotes the user and limit resources and run the argumnts. 
+// Written in c becauseperl -e 'while ($i<100000000) {$a->{$i} = $i++;} the time and memory usage of this will be measured as the contestants usage.
 // e.g. gcc demoter.c && ./a.out python3
 
 #include <sys/resource.h>
@@ -8,12 +8,17 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <math.h>
 
 // Executed child process id
 int exe_pid = 0;
 
 // Resource limits set with environmental variables
+
+// (in milliseconds)
 char* max_time_env = "MAX_TIME";
+
+// (in kilobytes)
 char* max_mem_env = "MAX_MEM";
 
 // Handler of alarm signal after real time limit passes
@@ -47,12 +52,12 @@ int main(int argc, char *argv[]) {
   int max_mem = atoi(getenv(max_mem_env));
 
   if (max_time <= 0) {
-      fprintf(stderr, "%s must be a positive integer representing the number of seconds of CPU time allowed\n", max_time_env);
+      fprintf(stderr, "%s must be a positive integer representing the number of milliseconds of CPU time allowed\n", max_time_env);
       return 1;
   }
 
   if (max_mem <= 0) {
-      fprintf(stderr, "%s must be a positive integer representing the number of MB of memory allowed\n", max_mem_env);
+      fprintf(stderr, "%s must be a positive integer representing the number of KB of memory allowed\n", max_mem_env);
       return 1;
   }
 
@@ -61,15 +66,17 @@ int main(int argc, char *argv[]) {
   nproc_limit.rlim_cur = 1;
   nproc_limit.rlim_max = 1;
 
-  // Set memory constrains measured in bytes to some number of megabytes
+  // Set memory constrains measured in bytes to some number of kilobytes
   struct rlimit as_limit;
-  as_limit.rlim_cur = (1 << 20) * max_mem;
-  as_limit.rlim_max = (1 << 20) * max_mem;
+  int max_mem_in_bytes = (1 << 10) * max_mem;
+  as_limit.rlim_cur = max_mem_in_bytes;
+  as_limit.rlim_max = max_mem_in_bytes;
 
-  // Set CPU runttime limit in second (real time limit is 3x this number)
+  // Set CPU runtime limit in seconds (converting max_time from milliseconds) (real time limit is 3x this number)
   struct rlimit cpu_limit;
-  cpu_limit.rlim_cur = max_time;
-  cpu_limit.rlim_max = max_time; 
+  int max_time_in_seconds = ceil(max_time / 1000.0);
+  cpu_limit.rlim_cur = max_time_in_seconds;
+  cpu_limit.rlim_max = max_time_in_seconds;
 
   // Pass in arguments from command line.
   char *new_argv[argc];
@@ -81,7 +88,7 @@ int main(int argc, char *argv[]) {
   exe_pid = fork();
   if (exe_pid) {
     // Set real time limit to 3x that of cpu time limit
-    alarm(max_time * 3);
+    alarm(max_time_in_seconds * 3);
     signal(SIGALRM, alarm_handler);
 
     int status;
@@ -93,7 +100,7 @@ int main(int argc, char *argv[]) {
     
     // Check for timeout
     if (status) {
-        if (usage.ru_utime.tv_sec >= max_time || (usage.ru_utime.tv_sec == max_time - 1 && usage.ru_utime.tv_usec > 980000l)) {
+        if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec == max_time_in_seconds - 1 && usage.ru_utime.tv_usec > 980000l)) {
             fprintf(stderr, "Out of time!\n");
         }
     }
