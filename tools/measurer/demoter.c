@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("CPU time (milliseconds) %03ld\n", usage.ru_utime.tv_sec * 1000 + usage.ru_utime.tv_usec);
+    printf("CPU time (milliseconds) %ld\n", usage.ru_utime.tv_sec * 1000 + usage.ru_utime.tv_usec / 1000);
     printf("Memory (kilobytes) %ld\n", usage.ru_maxrss);
 
     // Indicate something wrong with executed program

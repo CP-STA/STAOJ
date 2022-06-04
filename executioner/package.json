@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "read-last-lines": "^1.8.0",
+    "synchronized-promise": "^0.3.1",
     "ws": "file:ws-8.6.0.tgz"
+  },
+  "devDependencies": {
+    "filecompare": "^1.0.4"
   }
 }

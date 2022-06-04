@@ -1,27 +1,17 @@
-FROM ubuntu:20.04
-ARG EXER_SOCKET
-
+FROM ubuntu:22.04
 # Add dependencies via package manager
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y gcc python3 curl
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y gcc python3 curl make
 
-# Update nodejs and npm
-RUN npm cache clean -f && npm install -g n && n stable && hash -r && npm update npm -g
+# Recompile demoter.out and delete everything else
 
 WORKDIR /app
 
 # Copy the npm files and install the packages using the tarballs
-COPY package.json package-lock.json *.tgz *.tgz demoter.out .
-RUN npm install *.tgz && rm -f *.tgz
+COPY measurer /app/
+RUN rm -f demoter.out && make && rm -f Makefile README.md demoter.c
 
-ENV EXER_SOCKET=$EXER_SOCKET
-
-RUN apt-get install -y cpulimit bc
-
-# Copy the user created files like js and executioner script
-COPY socket_interface.mjs executioner.sh .
-
-# Execute interface
-CMD node socket_interface.mjs  
-
+ARG MAX_MEM
+ENV MAX_MEM=${MAX_MEM}
+ARG MAX_TIME
+ENV MAX_TIME=${MAX_TIME}
