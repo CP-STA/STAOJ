@@ -1,3 +1,4 @@
 [submodule "problems"]
 	path = problems
-	url = git@github.com:STAOJ/problems-private.git
+	url = https://github.com/CP-STA/problems-private.git
+	
