@@ -4,12 +4,30 @@ This directory contains the scripts used to run untrusted code in a sandboxed en
 
 ## Running the Script
 
-This repository contains a startup script called start.sh which runs the program with its dependencies
+The script can be run by calling
 
 ```bash
-./start.sh <path/to/socket> [<path/to/repo>]
+node executioner.sh
 ```
 
-To execute the script, you will need to have installed Podman, npm, and nodejs.
+It requires the following environmental variables to be set:
 
-NOTE: In its current build, the executioner does not yet use secure containers for execution
+1. REPO_PATH - absolute path to the STAOJ repo
+2. EXER_SOCK - absolute path to the socket
+
+Additionally you can run the following npm script to demonstrate and example
+It runs an example socket server and sends a sample submission to the executioner
+
+```bash
+npm run example
+```
+
+This script was developed within the devcontainer included in the repo and should successfully run within it
+
+## New changes
+
+- The executioner should now be os agnostic.
+- Makes better use of javascript's async tools
+- Better queuing support
+- Tests are run completly isolated from each other now, preventing programs from altering the env between tests
+- However this is at the expense of slower execution times due to overhead of rerunning containers
