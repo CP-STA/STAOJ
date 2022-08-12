@@ -23,6 +23,7 @@ export async function execute(repoPath, sendMessage, request) {
     console.log(`${request.id}: ${message}`);
   }
 
+  console.time(`${request.id}: Execution completed in`)
   log('Preparing execution environment');
 
   // Bind id arg to message as that remains the same for the duration of this funcion
@@ -95,7 +96,7 @@ export async function execute(repoPath, sendMessage, request) {
     // Now to begin the executor process
 
     // Build container
-    log('Building execution container');
+    log('Building execution container, this may take a while...');
     await exec(
       `podman build --build-arg MAX_MEM=${maxMem} --build-arg MAX_TIME=${maxTime} . -t executioner`
     );
@@ -218,11 +219,9 @@ export async function execute(repoPath, sendMessage, request) {
       ]);
     }
 
-    log('Execution completed');
+    console.timeEnd(`${request.id}: Execution completed in`)
   })();
 
   // Clean resources if created
-  await fs.rmdir(tmpPath, { recursive: true }).catch(() => {
-    console.log('i');
-  });
+  await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
 }

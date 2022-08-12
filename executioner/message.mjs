@@ -15,8 +15,16 @@ export const state = Object.freeze({
 export function Message(uuid, state, props) {
   // Setting the core props
   this.to = to;
-  this.id = uuid;
-  this.state = state;
+
+  // Setting main props if defined
+
+  if (uuid !== undefined) {
+    this.id = uuid;
+  }
+
+  if (state !== undefined) {
+    this.state = state;
+  }
 
   // Adding additonal props to the message if any passed
   if (props !== undefined) {

@@ -9,9 +9,18 @@
     "ws": "^8.6.0"
   },
   "devDependencies": {
+    "ava": "^4.3.1",
+    "lodash": "^4.17.21",
     "prettier": "^2.7.1"
   },
   "scripts": {
-    "example": "./example.sh"
+    "example": "./example.sh",
+    "test": "ava"
+  },
+  "ava": {
+    "files": [
+      "test/*.test.mjs"
+    ]
+
   }
 }
