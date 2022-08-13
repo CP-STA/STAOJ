@@ -38,18 +38,23 @@ export async function createEnvironment(request, tmpPath, repoPath) {
 
 // Macro to be run before tests to prepare for running container
 export const prepareEnvironmentMacro = test.macro(
-  (t, requiredTypes, languages, sampleSourceCodePath) => {
+  async (t, requiredTypes, languages, sampleSourceCodePath) => {
     // Parse requests
-    t.context.requests = parseRequests(
+    const parsingRequests = parseRequests(
       sampleSourceCodePath,
       problem,
       requiredTypes
-    );
+    ).catch((e) => {
+      t.fail(e.message);
+    });
 
     // Build container
-    exec(
+    const buildingContainer = exec(
       `podman build --build-arg MAX_MEM=${maxMem} --build-arg MAX_TIME=${maxTime} . -t executioner`
     );
+
+    t.context.requests = await parsingRequests;
+    await buildingContainer;
 
     // Generate the tmp environment names for the request
     t.context.tmpPaths = languages.reduce((langAcc, lang) => {

@@ -34,13 +34,8 @@ const errorName = 'error.out';
 
 // --- Testing macro ---
 const testRunningMacro = test.macro(async (t, language, requestName) => {
-  // Ensure requests not failing
-  t.context.requests.catch((e) => {
-    t.fail(e.message);
-  });
-
   // Await requests parsing to get request
-  const request = (await t.context.requests)[language][requestName];
+  const request = t.context.requests[language][requestName];
   const tmpPath = t.context.tmpPaths[language][requestName];
   const mountPath = await createEnvironment(request, tmpPath, repoPath);
 
