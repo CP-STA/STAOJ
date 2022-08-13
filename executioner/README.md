@@ -7,7 +7,7 @@ This directory contains the scripts used to run untrusted code in a sandboxed en
 The script can be run by calling
 
 ```bash
-node executioner.sh
+node executioner.mjs
 ```
 
 It requires the following environmental variables to be set:
