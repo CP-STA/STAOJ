@@ -5,6 +5,6 @@ typedef long long ll;
 ll n;
 int main () {
   cin >> n;
-  cout << n * 2 << endl;
+  cout << n << endl;
   return 0;
 }
