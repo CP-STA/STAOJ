@@ -99,9 +99,13 @@ int main(int argc, char *argv[]) {
     getrusage(RUSAGE_CHILDREN, &usage);
     
     // Check for timeout
+    // Check for mem exceed in case program exits before
     if (status) {
         if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec == max_time_in_seconds - 1 && usage.ru_utime.tv_usec > 980000l)) {
             fprintf(stderr, "Out of time!\n");
+        }
+        if (max_mem - usage.ru_maxrss < 4000) {
+            fprintf(stderr, "Out of memory!\n");
         }
     }
 
