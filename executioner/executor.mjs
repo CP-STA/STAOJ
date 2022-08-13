@@ -23,7 +23,7 @@ export async function execute(repoPath, sendMessage, request) {
     console.log(`${request.id}: ${message}`);
   }
 
-  console.time(`${request.id}: Execution completed in`)
+  console.time(`${request.id}: Execution completed in`);
   log('Preparing execution environment');
 
   // Bind id arg to message as that remains the same for the duration of this funcion
@@ -219,7 +219,7 @@ export async function execute(repoPath, sendMessage, request) {
       ]);
     }
 
-    console.timeEnd(`${request.id}: Execution completed in`)
+    console.timeEnd(`${request.id}: Execution completed in`);
   })();
 
   // Clean resources if created

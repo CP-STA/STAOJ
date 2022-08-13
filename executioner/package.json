@@ -21,6 +21,5 @@
     "files": [
       "test/*.test.mjs"
     ]
-
   }
 }

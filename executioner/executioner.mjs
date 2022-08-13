@@ -99,9 +99,9 @@ function runExecutioner() {
   });
 }
 
-runExecutioner()
+runExecutioner();
 
 // Exposing the program entry point to testing
 if (process.env.NODE_ENV === 'test') {
-  exports.runExecutioner = runExecutioner
+  exports.runExecutioner = runExecutioner;
 }
