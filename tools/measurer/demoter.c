@@ -56,24 +56,28 @@ int main(int argc, char *argv[]) {
       return 1;
   }
 
-  if (max_mem <= 0) {
-      fprintf(stderr, "%s must be a positive integer representing the number of KB of memory allowed\n", max_mem_env);
+  if (max_mem <= 0 && max_mem != -1) {
+      fprintf(stderr, "%s must be a positive integer representing the number of KB of memory allowed or -1 to represent no memory restrictions\n", max_mem_env);
       return 1;
   }
 
-  // Ban fork (Part 1)
   struct rlimit nproc_limit;
-  nproc_limit.rlim_cur = 1;
-  nproc_limit.rlim_max = 1;
-
-  // Set memory constrains measured in bytes to some number of kilobytes
+  struct rlimit cpu_limit;
   struct rlimit as_limit;
-  int max_mem_in_bytes = (1 << 10) * max_mem;
-  as_limit.rlim_cur = max_mem_in_bytes;
-  as_limit.rlim_max = max_mem_in_bytes;
+
+  // If max_mem restriction
+  if (max_mem != -1) {
+    // Ban fork (Part 1)
+    nproc_limit.rlim_cur = 1;
+    nproc_limit.rlim_max = 1;
+
+    // Set memory constrains measured in bytes to some number of kilobytes
+    int max_mem_in_bytes = (1 << 10) * max_mem;
+    as_limit.rlim_cur = max_mem_in_bytes;
+    as_limit.rlim_max = max_mem_in_bytes;
+  }
 
   // Set CPU runtime limit in seconds (converting max_time from milliseconds) (real time limit is 3x this number)
-  struct rlimit cpu_limit;
   int max_time_in_seconds = ceil(max_time / 1000.0);
   cpu_limit.rlim_cur = max_time_in_seconds;
   cpu_limit.rlim_max = max_time_in_seconds;
@@ -101,10 +105,10 @@ int main(int argc, char *argv[]) {
     // Check for timeout
     // Check for mem exceed in case program exits before
     if (status) {
-        if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec == max_time_in_seconds - 1 && usage.ru_utime.tv_usec > 980000l)) {
+        if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec == max_time_in_seconds - 1 && usage.ru_utime.tv_usec > 950000l)) {
             fprintf(stderr, "Out of time!\n");
         }
-        if (max_mem - usage.ru_maxrss < 4000) {
+        if (max_mem != -1 && max_mem - usage.ru_maxrss < 4000) {
             fprintf(stderr, "Out of memory!\n");
         }
     }
@@ -119,8 +123,10 @@ int main(int argc, char *argv[]) {
 
     // Indicate that program not executed correctly
   } else {
-    setrlimit(RLIMIT_NPROC, &nproc_limit);
-    setrlimit(RLIMIT_AS, &as_limit);
+    if (max_mem != -1) {
+      setrlimit(RLIMIT_NPROC, &nproc_limit);
+      setrlimit(RLIMIT_AS, &as_limit);
+    }
     setrlimit(RLIMIT_CPU, &cpu_limit);
     execvp(new_argv[0], new_argv);
 
