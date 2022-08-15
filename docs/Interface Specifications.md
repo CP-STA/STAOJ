@@ -11,7 +11,7 @@ Unless stated otherwise `time` should be an integer in millisecond, `memory` sho
 These are the changes from V1:
 
 ### Inconsistency
-- `constrains` and `constraints` were both used in version 1 in previous version. Rename all `constraints` to `constraints`.
+- `constrains` and `constraints` were both used in version 1 in previous version. Rename all `constrains` to `constraints`.
 
 ### Naming Convention
 - Use camelCase instead of snake_case for dictionary keys.
