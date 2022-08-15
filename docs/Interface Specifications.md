@@ -272,7 +272,12 @@ An example output
 
 ### statement.json
 
-This file should complied from `statement.md`. In other word, `statement.md` should be the single source of truth and this files should not be edited directly. Change `statement.md` and recompile if the statement needs to change. 
+This file should complied from `statement.md` with the command
+
+```bash
+python3 compile_statement.py `folder name`
+```
+ In other word, `statement.md` should be the single source of truth and this files should not be edited directly. Change `statement.md` and recompile if the statement needs to change. 
 
 This is a json file with the following fields:
 
