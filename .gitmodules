@@ -2,3 +2,6 @@
 	path = problems
 	url = https://github.com/CP-STA/problems-private.git
 	
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/CP-STA/STAOJ-frontend
