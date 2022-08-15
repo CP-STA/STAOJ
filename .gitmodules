@@ -1,5 +1,5 @@
-[submodule "problems"]
-	path = problems
+[submodule "problems-private"]
+	path = problems-private
 	url = https://github.com/CP-STA/problems-private.git
 	
 [submodule "frontend"]
