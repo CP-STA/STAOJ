@@ -1,14 +1,9 @@
 import test from 'ava';
 import { parseRequests, filesFromRequests } from './request_parser.mjs';
-import cp from 'child_process';
-import util from 'util';
-const exec = util.promisify(cp.exec);
 import { promises as fs } from 'fs';
 import path from 'path';
 
 // Consts
-const maxMem = 256000;
-const maxTime = 1;
 const problem = undefined;
 
 // For creating the bare minimum to emulate the executor environment
@@ -38,30 +33,23 @@ export async function createEnvironment(request, tmpPath, repoPath) {
 
 // Macro to be run before tests to prepare for running container
 export const prepareEnvironmentMacro = test.macro(
-  async (t, requiredTypes, languages, sampleSourceCodePath) => {
+  async (t, requiredTypes, requiredLanguages, sampleSourceCodePath, action) => {
     // Parse requests
-    const parsingRequests = parseRequests(
+    t.context.requests = await parseRequests(
       sampleSourceCodePath,
       problem,
-      requiredTypes
+      requiredTypes,
+      requiredLanguages
     ).catch((e) => {
       t.fail(e.message);
     });
 
-    // Build container
-    const buildingContainer = exec(
-      `podman build --build-arg MAX_MEM=${maxMem} --build-arg MAX_TIME=${maxTime} . -t executioner`
-    );
-
-    t.context.requests = await parsingRequests;
-    await buildingContainer;
-
     // Generate the tmp environment names for the request
-    t.context.tmpPaths = languages.reduce((langAcc, lang) => {
+    t.context.tmpPaths = requiredLanguages.reduce((langAcc, lang) => {
       langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
         typeAcc[
           type
-        ] = `/tmp/request_testing_container_compiling_with_${filesFromRequests[type]}_for_${lang}`;
+        ] = `/tmp/request_testing_container_${action}_with_${filesFromRequests[type]}_for_${lang}`;
         return typeAcc;
       }, {});
       return langAcc;

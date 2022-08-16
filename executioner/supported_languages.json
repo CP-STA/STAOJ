@@ -1,0 +1,32 @@
+[
+  {
+    "name": "gcc@11.3",
+    "compiled": true,
+    "extensions": ["cpp", "c++", "hpp"]
+  },
+  {
+    "name": "java@11.0",
+    "compiled": true,
+    "extensions": ["java"]
+  },
+  {
+    "name": "python@3.10",
+    "compiled": false,
+    "extensions": ["py"]
+  },
+  {
+    "name": "ruby@3.0",
+    "compiled": false,
+    "extensions": ["rb"]
+  },
+  {
+    "name": "nodejs@12.22",
+    "compiled": false,
+    "extensions": ["js", "mjs"]
+  },
+  {
+    "name": "rust@1.59",
+    "compiled": true,
+    "extensions": ["rs"]
+  }
+]

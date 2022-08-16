@@ -10,6 +10,8 @@
 # 2. source code language
 # 3. name of compiled code file
 
+# If no arguments passed, then just compile demoter
+
 
 # Holds the compile methods for the different languages
 # Arguments are the same as the script
@@ -18,8 +20,15 @@ compile() {
     "gcc@11.3")
       g++ "$1" -o "$3"
       ;;
+    "java@11.0")
+      javac "$1"
+      ;;
+    "rust@1.59")
+      rustc "$1" -o "$3"
+      ;;
     *)
       throw_error "$2 is not supported"
+      ;;
   esac
 }
 
@@ -36,13 +45,17 @@ throw_error() {
 # Which should contain a sub directory called mount
 cd mount || throw_error "Failed to switch directory to mount"
 
-# Ensure source code file exists
-test -f "$1" || throw_error "$1 not found" 
+# If arguments passed
+if [ "$#" -gt 0 ]; then
 
-# Compile source code
-printf "Compiling\n"
-compile "$@" || throw_error "Failed to compile"
-printf "Compiling over\n"
+  # Ensure source code file exists
+  test -f "$1" || throw_error "$1 not found" 
+
+  # Compile source code
+  printf "Compiling\n"
+  compile "$@" || throw_error "Failed to compile"
+  printf "Compiling over\n"
+fi
 
 # Build demoter
 printf "Building demoter"

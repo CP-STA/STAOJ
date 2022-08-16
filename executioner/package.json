@@ -15,7 +15,8 @@
   },
   "scripts": {
     "example": "./example.sh",
-    "test": "ava"
+    "test": "ava",
+    "postinstall": "podman build . -t executioner"
   },
   "ava": {
     "files": [

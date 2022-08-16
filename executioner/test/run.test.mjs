@@ -1,33 +1,40 @@
 import test from 'ava';
-import { promises as fs } from 'fs';
+import { promises as fs, readFileSync } from 'fs';
 import cp from 'child_process';
 import util from 'util';
 import path from 'path';
-import { requestTypes, languageDirs } from './request_parser.mjs';
+import { requestTypes, filesFromRequests } from './request_parser.mjs';
 import {
   cleanEnvironmentMacro,
   createEnvironment,
   prepareEnvironmentMacro,
 } from './hook_macros.mjs';
-
 const exec = util.promisify(cp.exec);
 
 // --- Testing consts ---
 const repoPath = path.resolve('../');
+const thisPath = path.resolve('.');
 const sampleSourceCodePath = path.join(
-  path.resolve('.'),
+  thisPath,
   'test',
   'sample_source_code'
 );
+
+// Required types and languages
 const requiredTypes = [
   requestTypes.testAccepted,
   requestTypes.testError,
   requestTypes.testMle,
   requestTypes.testTle,
+  requestTypes.testHang,
 ];
+const requiredLanguages = JSON.parse(readFileSync(path.join(thisPath, 'supported_languages.json')));
+
+// Constrains
+const maxMem = 128000;
+const maxTime = 3000;
 
 // File names
-const compiledName = 'compiled';
 const inName = 'sample.in';
 const outName = 'sample.out';
 const errorName = 'error.out';
@@ -35,9 +42,15 @@ const errorName = 'error.out';
 // --- Testing macro ---
 const testRunningMacro = test.macro(async (t, language, requestName) => {
   // Await requests parsing to get request
-  const request = t.context.requests[language][requestName];
-  const tmpPath = t.context.tmpPaths[language][requestName];
+  const request = t.context.requests[language.name][requestName];
+  const tmpPath = t.context.tmpPaths[language.name][requestName];
   const mountPath = await createEnvironment(request, tmpPath, repoPath);
+
+  // In the case of java
+  const compiledName =
+    language.name === 'java@11.0'
+      ? `${filesFromRequests[requestName]}.class`
+      : 'compiled';
 
   // File paths
   const inFile = path.join(mountPath, inName);
@@ -49,82 +62,164 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
   // Create in file
   await fs.writeFile(inFile, input);
 
-  // Firstly, make sure compilation was successful and files exist
-  await t.notThrowsAsync(
-    exec(
-      `podman run -v ${mountPath}:/app/mount executioner ./compile.sh ${request.fileName} ${request.language} ${compiledName}`
-    ),
-    'Compilation threw error'
-  );
-  await t.notThrowsAsync(
-    fs.access(path.join(mountPath, compiledName)),
-    'Compiled file missing'
-  );
+  // Language is compiled, compile with arguments and check compilation success
+  let compileCommand = `podman run -v ${mountPath}:/app/mount executioner ./compile.sh`;
+  if (language.compiled) {
+    compileCommand += ` ${request.fileName} ${language.name} ${compiledName}`;
+    await t.notThrowsAsync(
+      exec(compileCommand),
+      'Compilation threw error'
+    );
+    await t.notThrowsAsync(
+      fs.access(path.join(mountPath, compiledName)),
+      'Compiled file missing'
+    );
+  } else {
+    await t.notThrowsAsync(
+      exec(compileCommand),
+      'Demoter building threw error'
+    );
+  }
+
+  // Ensure demoter was built regardless
   await t.notThrowsAsync(
     fs.access(path.join(mountPath, 'demoter.out')),
     'Built demoter missing'
   );
 
+  // Compose run command
+  let runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${maxMem} -e MAX_TIME=${maxTime} executioner ./run.sh `
+  if (language.compiled) {
+    runCommand += compiledName;
+  } else {
+    runCommand += request.fileName;
+  }
+  runCommand += ` ${language.name} ${inName} ${outName} ${errorName}`
+
+  // Execute the run command
+  const runningScript = exec(runCommand);
+
   // Assertion logic based on the request is kept within the test code to have more control
   switch (requestName) {
     case requestTypes.testAccepted: {
-      // Check that execution successed
-      await t.notThrowsAsync(
-        exec(
-          `podman run -v ${mountPath}:/app/mount executioner ./run.sh ${compiledName} ${request.language} ${inName} ${outName} ${errorName}`
-        ),
-        'Container execution threw error'
-      );
+      // Check that execution successful
+      const execResult = await t.try('Checking the result of execution', async (tt) => {
+        await tt.notThrowsAsync(
+          runningScript,
+          'Container execution threw error'
+        );
+        // Ensure the out and error files exist and contents are correct
+        await tt.notThrowsAsync(fs.access(outFile), 'Output file does not exist');
+        await tt.notThrowsAsync(
+          fs.access(errorFile),
+          'Error out file does not exist'
+        );
 
-      // Ensure the out and error files exist and contents are correct
-      await t.notThrowsAsync(fs.access(outFile), 'Output file does not exist');
-      await t.notThrowsAsync(
-        fs.access(errorFile),
-        'Error out file does not exist'
-      );
+        const errorContents = await fs.readFile(errorFile);
+        const outContents = await fs.readFile(outFile);
 
-      const errorContents = await fs.readFile(errorFile);
-      const outContents = await fs.readFile(outFile);
+        if (!tt.is(errorContents.length, 0,'Error file is not empty')) {
+          tt.log(`-- ${errorName}  --`)
+          tt.log(errorContents.toString())
 
-      t.is(errorContents.length, 0, 'Error out file is not empty');
-      t.not(outContents.length, 0, 'Output file is empty');
+          // If error then out file might help too
+          if (tt.not(outContents.length, 0, 'Output file is empty')) {
+            tt.log(`-- ${outName} --`)
+            tt.log(outContents.toString())
+          }
+        }
+
+        return tt
+      })
+      execResult.commit({retainLogs: true})
+
       break;
     }
     default: {
       // Check that execution failed
-      await t.throwsAsync(
-        exec(
-          `podman run -v ${mountPath}:/app/mount executioner ./run.sh ${compiledName} ${request.language} ${inName} ${outName} ${errorName}`
-        ),
-        undefined,
-        'Container execution did not throw error'
-      );
+      const execResult = await t.try('Checking the result of execution', async (tt) => {
 
-      // Ensure the out and error files exist and contents are correct
-      await t.notThrowsAsync(fs.access(outFile), 'Output file does not exist');
-      await t.notThrowsAsync(
-        fs.access(errorFile),
-        'Error out file does not exist'
-      );
+        const didThrow = await tt.throwsAsync(
+          runningScript,
+          undefined,
+          'Container execution did not throw error'
+        );
+
+
+        // Ensure the out and error files exist and contents are correct
+        await tt.notThrowsAsync(fs.access(outFile), 'Output file does not exist');
+        await tt.notThrowsAsync(
+          fs.access(errorFile),
+          'Error out file does not exist'
+        );
+        const errorContents = await fs.readFile(errorFile);
+        const outContents = await fs.readFile(outFile);
+
+        // If empty, maybe error is in out file
+        if (!tt.not(errorContents.length === 0, 'Error out file is empty')) {
+          tt.log(`-- ${errorName} --`)
+          tt.log(`Empty`)
+          tt.log(`-- ${outName} -- `)
+          tt.log(outContents.toString())
+          tt.log(`-- run script -- `)
+          tt.log((await runningScript).stderr)
+        } else if (!didThrow) {
+          tt.log(`-- ${errorName} --`)
+          tt.log(errorContents.toString())
+          tt.log(`-- ${outName} -- `)
+          tt.log(outContents.toString())
+        }
+      });
+
+      execResult.commit({ retainLogs: true });
+
       const errorContents = await fs.readFile(errorFile);
-
-      t.not(errorContents.length === 0, 'Error out file is empty');
+      const outContents = await fs.readFile(outFile);
 
       // Additional checks for Mle and Tle
       switch (requestName) {
-        case requestTypes.testMle:
-          t.regex(
-            errorContents.toString(),
-            new RegExp('Out of memory!'),
-            'Mle output did not match'
-          );
+        case requestTypes.testMle: {
+          // Python make it hard to check for now
+          const checkMessage = await t.try('Checking if MLE recognised', async (tt) => {
+            if (!tt.regex(
+              errorContents.toString(),
+              new RegExp('Out of memory!'),
+              'MLE output did not match'
+            )) {
+              tt.log(`-- ${errorName} --`)
+              tt.log(errorContents.toString())
+              tt.log(`-- ${outName} -- `)
+              tt.log(outContents.toString())
+              tt.log(`-- run script stdout -- `)
+              tt.log((await runningScript).stdout)
+              tt.log(`-- run script stderr -- `)
+              tt.log((await runningScript).stderr)
+            }
+          })
+          checkMessage.commit({retainLogs: true});
           break;
-        case requestTypes.testTle:
-          t.regex(
-            errorContents.toString(),
-            new RegExp('Out of time!'),
-            'Tle output did not match'
-          );
+        }
+        case requestTypes.testTle: {
+
+          const checkMessage = await t.try('Checking if TLE recognised', async (tt) => {
+            if (!tt.regex(
+              errorContents.toString(),
+              new RegExp('Out of time!'),
+              'Tle output did not match'
+            )) {
+              tt.log(`-- ${errorName} --`)
+              tt.log(errorContents.toString())
+              tt.log(`-- ${outName} -- `)
+              tt.log(outContents.toString())
+              tt.log(`-- run script stdout -- `)
+              tt.log((await runningScript).stdout)
+              tt.log(`-- run script stderr -- `)
+              tt.log((await runningScript).stderr)
+            }
+          })
+          checkMessage.commit({retainLogs: true});
+          break;
+        }
       }
     }
   }
@@ -135,16 +230,20 @@ test.before(
   'Preparing the execution environment',
   prepareEnvironmentMacro,
   requiredTypes,
-  languageDirs,
-  sampleSourceCodePath
+  requiredLanguages.map((language) => language.name),
+  sampleSourceCodePath,
+  'running'
 );
-test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
+test.after.always(
+  'Cleaning up execution environment',
+  cleanEnvironmentMacro
+);
 
 // Create tests from requests
-for (const language of languageDirs) {
+for (const language of requiredLanguages) {
   for (const request of requiredTypes) {
     test(
-      `Testing the docker running script with ${request} for ${language}`,
+      `Testing the container run script with ${request} for ${language.name}`,
       testRunningMacro,
       language,
       request

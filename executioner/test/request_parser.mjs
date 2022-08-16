@@ -11,9 +11,8 @@ export const requestTypes = Object.freeze({
   testError: 'testError',
   testMle: 'testMle',
   testTle: 'testTle',
+  testHang: 'testHang',
 });
-
-export const languageDirs = Object.freeze(['gcc@11.3']);
 
 // Specifying the file names for each request type
 const requestFiles = Object.freeze({
@@ -24,6 +23,7 @@ const requestFiles = Object.freeze({
   test_error: requestTypes.testError,
   test_mle: requestTypes.testMle,
   test_tle: requestTypes.testTle,
+  test_hang: requestTypes.testHang,
 });
 
 // Reverse requestFiles objects to get file names from requestType
@@ -34,7 +34,12 @@ export const filesFromRequests = Object.fromEntries(
 // Returns a promise for a collection of requests generated from the passed directory
 // The problem argument is the problem for which the source code solves
 // Each sub directory is treated as a supported language
-export async function parseRequests(sourceCodeDir, problem, requiredTypes) {
+export async function parseRequests(
+  sourceCodeDir,
+  problem,
+  requiredTypes,
+  requiredLanguages
+) {
   // If undefined, assume all request types required
   if (requiredTypes === undefined) {
     requiredTypes = Object.keys(requestTypes);
@@ -45,18 +50,18 @@ export async function parseRequests(sourceCodeDir, problem, requiredTypes) {
     throw new Error(`Could not find ${sourceCodeDir} directory`);
   });
 
+  // Iterates through the languages required
+  // Returns an array of entries of [language, requests]
   return Object.fromEntries(
     await Promise.all(
-      languageDirs.map(async (language) => {
-        // Reading the files in the language dir and iterating through them Each
-        // read file is placed into a request and returned as a { type, request }
-        // object, and then the array of objects is mapped to a single
-        // [type]: [request] object
+      requiredLanguages.map(async (language) => {
         const languagePath = path.join(sourceCodeDir, language);
         const files = await fs.readdir(languagePath).catch(() => {
           throw new Error(`Could not find ${language} language directory`);
         });
 
+        // Reading the files in the language dir and iterating through them Each
+        // Returns an array of entries of [type, request]
         const requests = Object.fromEntries(
           (
             await Promise.all(
