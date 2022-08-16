@@ -38,7 +38,7 @@ const testCompilingMacro = test.macro(async (t, language, requestName) => {
       ? `${filesFromRequests[requestName]}.class`
       : 'compiled';
 
-  const compileCommand = `podman run -v ${mountPath}:/app/mount executioner ./compile.sh ${request.fileName} ${request.language} ${compiledName}`
+  const compileCommand = `podman run -v ${mountPath}:/app/mount executioner ./compile.sh ${request.fileName} ${request.language} ${compiledName}`;
   const compilingScript = exec(compileCommand);
 
   // Assertion logic based on the request is kept within the test code to have more control

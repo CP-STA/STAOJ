@@ -5,5 +5,5 @@ const rl = require('readline').createInterface({
 
 rl.on('line', async (input) => {
   console.log(input);
-  await new Promise((resolve) => setTimeout(resolve, 100000))
+  await new Promise((resolve) => setTimeout(resolve, 100000));
 });

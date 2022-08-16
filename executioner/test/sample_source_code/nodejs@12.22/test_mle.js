@@ -6,6 +6,6 @@ const rl = require('readline').createInterface({
 rl.on('line', (input) => {
   const bulk = [];
   while (true) {
-    bulk.push('Bulk')
+    bulk.push('Bulk');
   }
 });

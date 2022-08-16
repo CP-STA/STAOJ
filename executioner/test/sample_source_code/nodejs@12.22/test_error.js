@@ -4,5 +4,5 @@ const rl = require('readline').createInterface({
 });
 
 rl.on('line', (input) => {
-  throw 'Error'
+  throw 'Error';
 });

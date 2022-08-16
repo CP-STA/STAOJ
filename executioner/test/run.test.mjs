@@ -14,11 +14,7 @@ const exec = util.promisify(cp.exec);
 // --- Testing consts ---
 const repoPath = path.resolve('../');
 const thisPath = path.resolve('.');
-const sampleSourceCodePath = path.join(
-  thisPath,
-  'test',
-  'sample_source_code'
-);
+const sampleSourceCodePath = path.join(thisPath, 'test', 'sample_source_code');
 
 // Required types and languages
 const requiredTypes = [
@@ -28,7 +24,9 @@ const requiredTypes = [
   requestTypes.testTle,
   requestTypes.testHang,
 ];
-const requiredLanguages = JSON.parse(readFileSync(path.join(thisPath, 'supported_languages.json')));
+const requiredLanguages = JSON.parse(
+  readFileSync(path.join(thisPath, 'supported_languages.json'))
+);
 
 // Constrains
 const maxMem = 128000;
@@ -66,10 +64,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
   let compileCommand = `podman run -v ${mountPath}:/app/mount executioner ./compile.sh`;
   if (language.compiled) {
     compileCommand += ` ${request.fileName} ${language.name} ${compiledName}`;
-    await t.notThrowsAsync(
-      exec(compileCommand),
-      'Compilation threw error'
-    );
+    await t.notThrowsAsync(exec(compileCommand), 'Compilation threw error');
     await t.notThrowsAsync(
       fs.access(path.join(mountPath, compiledName)),
       'Compiled file missing'
@@ -88,13 +83,13 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
   );
 
   // Compose run command
-  let runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${maxMem} -e MAX_TIME=${maxTime} executioner ./run.sh `
+  let runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${maxMem} -e MAX_TIME=${maxTime} executioner ./run.sh `;
   if (language.compiled) {
     runCommand += compiledName;
   } else {
     runCommand += request.fileName;
   }
-  runCommand += ` ${language.name} ${inName} ${outName} ${errorName}`
+  runCommand += ` ${language.name} ${inName} ${outName} ${errorName}`;
 
   // Execute the run command
   const runningScript = exec(runCommand);
@@ -103,73 +98,83 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
   switch (requestName) {
     case requestTypes.testAccepted: {
       // Check that execution successful
-      const execResult = await t.try('Checking the result of execution', async (tt) => {
-        await tt.notThrowsAsync(
-          runningScript,
-          'Container execution threw error'
-        );
-        // Ensure the out and error files exist and contents are correct
-        await tt.notThrowsAsync(fs.access(outFile), 'Output file does not exist');
-        await tt.notThrowsAsync(
-          fs.access(errorFile),
-          'Error out file does not exist'
-        );
+      const execResult = await t.try(
+        'Checking the result of execution',
+        async (tt) => {
+          await tt.notThrowsAsync(
+            runningScript,
+            'Container execution threw error'
+          );
+          // Ensure the out and error files exist and contents are correct
+          await tt.notThrowsAsync(
+            fs.access(outFile),
+            'Output file does not exist'
+          );
+          await tt.notThrowsAsync(
+            fs.access(errorFile),
+            'Error out file does not exist'
+          );
 
-        const errorContents = await fs.readFile(errorFile);
-        const outContents = await fs.readFile(outFile);
+          const errorContents = await fs.readFile(errorFile);
+          const outContents = await fs.readFile(outFile);
 
-        if (!tt.is(errorContents.length, 0,'Error file is not empty')) {
-          tt.log(`-- ${errorName}  --`)
-          tt.log(errorContents.toString())
+          if (!tt.is(errorContents.length, 0, 'Error file is not empty')) {
+            tt.log(`-- ${errorName}  --`);
+            tt.log(errorContents.toString());
 
-          // If error then out file might help too
-          if (tt.not(outContents.length, 0, 'Output file is empty')) {
-            tt.log(`-- ${outName} --`)
-            tt.log(outContents.toString())
+            // If error then out file might help too
+            if (tt.not(outContents.length, 0, 'Output file is empty')) {
+              tt.log(`-- ${outName} --`);
+              tt.log(outContents.toString());
+            }
           }
-        }
 
-        return tt
-      })
-      execResult.commit({retainLogs: true})
+          return tt;
+        }
+      );
+      execResult.commit({ retainLogs: true });
 
       break;
     }
     default: {
       // Check that execution failed
-      const execResult = await t.try('Checking the result of execution', async (tt) => {
+      const execResult = await t.try(
+        'Checking the result of execution',
+        async (tt) => {
+          const didThrow = await tt.throwsAsync(
+            runningScript,
+            undefined,
+            'Container execution did not throw error'
+          );
 
-        const didThrow = await tt.throwsAsync(
-          runningScript,
-          undefined,
-          'Container execution did not throw error'
-        );
+          // Ensure the out and error files exist and contents are correct
+          await tt.notThrowsAsync(
+            fs.access(outFile),
+            'Output file does not exist'
+          );
+          await tt.notThrowsAsync(
+            fs.access(errorFile),
+            'Error out file does not exist'
+          );
+          const errorContents = await fs.readFile(errorFile);
+          const outContents = await fs.readFile(outFile);
 
-
-        // Ensure the out and error files exist and contents are correct
-        await tt.notThrowsAsync(fs.access(outFile), 'Output file does not exist');
-        await tt.notThrowsAsync(
-          fs.access(errorFile),
-          'Error out file does not exist'
-        );
-        const errorContents = await fs.readFile(errorFile);
-        const outContents = await fs.readFile(outFile);
-
-        // If empty, maybe error is in out file
-        if (!tt.not(errorContents.length === 0, 'Error out file is empty')) {
-          tt.log(`-- ${errorName} --`)
-          tt.log(`Empty`)
-          tt.log(`-- ${outName} -- `)
-          tt.log(outContents.toString())
-          tt.log(`-- run script -- `)
-          tt.log((await runningScript).stderr)
-        } else if (!didThrow) {
-          tt.log(`-- ${errorName} --`)
-          tt.log(errorContents.toString())
-          tt.log(`-- ${outName} -- `)
-          tt.log(outContents.toString())
+          // If empty, maybe error is in out file
+          if (!tt.not(errorContents.length === 0, 'Error out file is empty')) {
+            tt.log(`-- ${errorName} --`);
+            tt.log(`Empty`);
+            tt.log(`-- ${outName} -- `);
+            tt.log(outContents.toString());
+            tt.log(`-- run script -- `);
+            tt.log((await runningScript).stderr);
+          } else if (!didThrow) {
+            tt.log(`-- ${errorName} --`);
+            tt.log(errorContents.toString());
+            tt.log(`-- ${outName} -- `);
+            tt.log(outContents.toString());
+          }
         }
-      });
+      );
 
       execResult.commit({ retainLogs: true });
 
@@ -180,44 +185,53 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
       switch (requestName) {
         case requestTypes.testMle: {
           // Python make it hard to check for now
-          const checkMessage = await t.try('Checking if MLE recognised', async (tt) => {
-            if (!tt.regex(
-              errorContents.toString(),
-              new RegExp('Out of memory!'),
-              'MLE output did not match'
-            )) {
-              tt.log(`-- ${errorName} --`)
-              tt.log(errorContents.toString())
-              tt.log(`-- ${outName} -- `)
-              tt.log(outContents.toString())
-              tt.log(`-- run script stdout -- `)
-              tt.log((await runningScript).stdout)
-              tt.log(`-- run script stderr -- `)
-              tt.log((await runningScript).stderr)
+          const checkMessage = await t.try(
+            'Checking if MLE recognised',
+            async (tt) => {
+              if (
+                !tt.regex(
+                  errorContents.toString(),
+                  new RegExp('Out of memory!'),
+                  'MLE output did not match'
+                )
+              ) {
+                tt.log(`-- ${errorName} --`);
+                tt.log(errorContents.toString());
+                tt.log(`-- ${outName} -- `);
+                tt.log(outContents.toString());
+                tt.log(`-- run script stdout -- `);
+                tt.log((await runningScript).stdout);
+                tt.log(`-- run script stderr -- `);
+                tt.log((await runningScript).stderr);
+              }
             }
-          })
-          checkMessage.commit({retainLogs: true});
+          );
+          checkMessage.commit({ retainLogs: true });
           break;
         }
         case requestTypes.testTle: {
-
-          const checkMessage = await t.try('Checking if TLE recognised', async (tt) => {
-            if (!tt.regex(
-              errorContents.toString(),
-              new RegExp('Out of time!'),
-              'Tle output did not match'
-            )) {
-              tt.log(`-- ${errorName} --`)
-              tt.log(errorContents.toString())
-              tt.log(`-- ${outName} -- `)
-              tt.log(outContents.toString())
-              tt.log(`-- run script stdout -- `)
-              tt.log((await runningScript).stdout)
-              tt.log(`-- run script stderr -- `)
-              tt.log((await runningScript).stderr)
+          const checkMessage = await t.try(
+            'Checking if TLE recognised',
+            async (tt) => {
+              if (
+                !tt.regex(
+                  errorContents.toString(),
+                  new RegExp('Out of time!'),
+                  'Tle output did not match'
+                )
+              ) {
+                tt.log(`-- ${errorName} --`);
+                tt.log(errorContents.toString());
+                tt.log(`-- ${outName} -- `);
+                tt.log(outContents.toString());
+                tt.log(`-- run script stdout -- `);
+                tt.log((await runningScript).stdout);
+                tt.log(`-- run script stderr -- `);
+                tt.log((await runningScript).stderr);
+              }
             }
-          })
-          checkMessage.commit({retainLogs: true});
+          );
+          checkMessage.commit({ retainLogs: true });
           break;
         }
       }
@@ -234,10 +248,7 @@ test.before(
   sampleSourceCodePath,
   'running'
 );
-test.after.always(
-  'Cleaning up execution environment',
-  cleanEnvironmentMacro
-);
+test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 
 // Create tests from requests
 for (const language of requiredLanguages) {
