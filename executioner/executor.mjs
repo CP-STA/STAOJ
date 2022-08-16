@@ -83,7 +83,7 @@ export async function execute(repoPath, sendMessage, request) {
 
     // Parse the constrains
     const [maxMem, maxTime] = await fs
-      .readFile(`${problemPath}/constrains.json`)
+      .readFile(`${problemPath}/constraints.json`)
       .then((file) => JSON.parse(file.toString()))
       .then((constrains) => [
         parseInt(constrains.memory_kb),
