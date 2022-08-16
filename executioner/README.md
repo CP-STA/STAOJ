@@ -9,16 +9,20 @@ Resource limiting is performed using the measurer program under the tools
 directory in this repository. The result and status of the testing is sent
 continually to the interface.
 
-Currently the executioner is unstable due to changes in the interface spec. A stable version is available on the stable-web-socket branch using the old interface. The executioner will be worked on to become deployable within the upcoming commits
+Currently the executioner is unstable due to changes in the interface spec. A
+stable version is available on the stable-web-socket branch using the old
+interface. The executioner will be worked on to become deployable within the
+upcoming commits
 
 In the meanwhile, the run and compile container scripts work well and support:
 
-- gcc 11.3
+- gcc 11.3 (c++)
 - java 11
 - python 3.10
 - ruby 3.0
-- nodejs 12.22
+- nodejs 12.22 (javascript)
 - rust 1.59
+- mono 6.8 (c#)
 
 They can be examined working by running:
 
@@ -27,7 +31,13 @@ npm i
 npm test
 ```
 
-Which runs the testing program which tests the container scripts with different states for each langauge.
+Which runs the testing program which tests the container scripts with different
+states for each langauge.
+
+## Issues
+
+Currently, nodejs MLE testing is failing, appears to be timing out before
+registering an MLE error.
 
 ---
 

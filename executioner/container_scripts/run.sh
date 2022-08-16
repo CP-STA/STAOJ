@@ -35,11 +35,16 @@ run() {
     "nodejs@12.22")
       # Node accepts mem in mb so divide by 1000
       passed_mem=$((MAX_MEM/1000))
-      MAX_MEM=-1 ./demoter.out node --max-old-space-size=$passed_mem "$1" 1> "$4" 2> "$5" < "$3"
+      MAX_MEM=-1 ./demoter.out node --max-old-space-size="$passed_mem" "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
     "rust@1.59")
       ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
+      return "$?"
+      ;;
+    "mono@6.8")
+      passed_mem="$MAX_MEM"
+      MONO_GC_PARAMS=max-heap-size="${passed_mem}k" MAX_MEM=-1 ./demoter.out mono "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
     *)
@@ -92,6 +97,13 @@ interpret() {
     "rust@1.59")
       if ! grep "$MLE" "$1"; then
         if grep "memory allocation of .* failed" "$1"; then
+          echo "$MLE" >> "$1"
+        fi
+      fi
+      ;;
+    "mono@6.8")
+      if ! grep "$MLE" "$1"; then
+        if grep "System.OutOfMemoryException" "$1"; then
           echo "$MLE" >> "$1"
         fi
       fi

@@ -26,6 +26,9 @@ compile() {
     "rust@1.59")
       rustc "$1" -o "$3"
       ;;
+    "mono@6.8")
+      mcs "$1" -out:"$3"
+      ;;
     *)
       throw_error "$2 is not supported"
       ;;

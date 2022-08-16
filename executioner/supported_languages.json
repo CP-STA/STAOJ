@@ -28,5 +28,10 @@
     "name": "rust@1.59",
     "compiled": true,
     "extensions": ["rs"]
+  },
+  {
+    "name": "mono@6.8",
+    "compiled": true,
+    "extensions": ["cs"]
   }
 ]
