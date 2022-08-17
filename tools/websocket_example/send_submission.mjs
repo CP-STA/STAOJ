@@ -13,7 +13,7 @@ client.on('open', function open() {
       to: "executioner",
       id: uuidv4(),
       source_code_file_name: "two.cpp",
-      language: "gcc@11.3",
+      language: "g++@11.3",
       source_code_content: `# include <bits/stdc++.h>
 using namespace std;
 typedef long long ll;
@@ -24,7 +24,7 @@ int main () {
   return 0;
 }
 `,
-      problem: "two_times"
+      problem: "two-times"
     }
 ));
   client.close()

@@ -58,7 +58,7 @@ export const prepareEnvironmentMacro = test.macro(
     // Iterate through tmpPaths and delete tmp directories if they exist
     for (const languageRequests of Object.values(t.context.tmpPaths)) {
       for (const tmpPath of Object.values(languageRequests)) {
-        await fs.rmdir(tmpPath, { recursive: true }).catch(()=>{});
+        await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
       }
     }
   }
