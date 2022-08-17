@@ -1,8 +1,13 @@
 [
   {
-    "name": "gcc@11.3",
+    "name": "g++@11.3",
     "compiled": true,
     "extensions": ["cpp", "c++", "hpp"]
+  },
+  {
+    "name": "gcc@11.3",
+    "compiled": true,
+    "extensions": ["c"]
   },
   {
     "name": "java@11.0",

@@ -20,6 +20,10 @@ run() {
       MAX_MEM=-1 ./demoter.out java -Xmx"${passed_mem}k" "${1%.*}" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
+    "g++@11.3")
+      ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
+      return "$?"
+      ;;
     "gcc@11.3")
       ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
       return "$?"

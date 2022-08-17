@@ -16,7 +16,8 @@ upcoming commits
 
 In the meanwhile, the run and compile container scripts work well and support:
 
-- gcc 11.3 (c++)
+- gcc 11.3 (c)
+- g++ 11.3 (c++)
 - java 11
 - python 3.10
 - ruby 3.0
