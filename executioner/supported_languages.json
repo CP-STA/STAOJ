@@ -1,41 +1,41 @@
 [
   {
-    "name": "g++@11.3",
+    "name": "gcc-11.3",
     "compiled": true,
     "extensions": ["cpp", "c++", "hpp"]
   },
   {
-    "name": "gcc@11.3",
+    "name": "gcc-11.3-c",
     "compiled": true,
     "extensions": ["c"]
   },
   {
-    "name": "java@11.0",
+    "name": "java-11",
     "compiled": true,
     "extensions": ["java"]
   },
   {
-    "name": "python@3.10",
+    "name": "python-3.10",
     "compiled": false,
     "extensions": ["py"]
   },
   {
-    "name": "ruby@3.0",
+    "name": "ruby-3.0",
     "compiled": false,
     "extensions": ["rb"]
   },
   {
-    "name": "nodejs@12.22",
+    "name": "nodejs-12.22",
     "compiled": false,
     "extensions": ["js", "mjs"]
   },
   {
-    "name": "rust@1.59",
+    "name": "rust-1.59",
     "compiled": true,
     "extensions": ["rs"]
   },
   {
-    "name": "mono@6.8",
+    "name": "mono-6.8",
     "compiled": true,
     "extensions": ["cs"]
   }

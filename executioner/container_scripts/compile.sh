@@ -17,19 +17,19 @@
 # Arguments are the same as the script
 compile() {
   case "$2" in 
-    "gcc@11.3")
+    "gcc-11.3-c")
       gcc "$1" -o "$3"
       ;;
-    "g++@11.3")
+    "gcc-11.3")
       g++ "$1" -o "$3"
       ;;
-    "java@11.0")
+    "java-11")
       javac "$1"
       ;;
-    "rust@1.59")
+    "rust-1.59")
       rustc "$1" -o "$3"
       ;;
-    "mono@6.8")
+    "mono-6.8")
       mcs "$1" -out:"$3"
       ;;
     *)

@@ -15,38 +15,38 @@
 run() {
   # Max mem and max time env vars should already be set in container
   case "$2" in
-    "java@11.0")
+    "java-11")
       passed_mem=$MAX_MEM
       MAX_MEM=-1 ./demoter.out java -Xmx"${passed_mem}k" "${1%.*}" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "g++@11.3")
+    "gcc-11.3")
       ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "gcc@11.3")
+    "gcc-11.3-c")
       ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "python@3.10")
+    "python-3.10")
       ./demoter.out python3 "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "ruby@3.0")
+    "ruby-3.0")
       ./demoter.out ruby "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "nodejs@12.22")
+    "nodejs-12.22")
       # Node accepts mem in mb so divide by 1000
       passed_mem=$((MAX_MEM/1000))
       MAX_MEM=-1 ./demoter.out node --max-old-space-size="$passed_mem" "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "rust@1.59")
+    "rust-1.59")
       ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "mono@6.8")
+    "mono-6.8")
       passed_mem="$MAX_MEM"
       MONO_GC_PARAMS=max-heap-size="${passed_mem}k" MAX_MEM=-1 ./demoter.out mono "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
