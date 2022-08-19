@@ -24,9 +24,9 @@ const requiredTypes = [
   requestTypes.testTle,
   requestTypes.testHang,
 ];
-const requiredLanguages = JSON.parse(
-  readFileSync(path.join(thisPath, 'supported_languages.json'))
-);
+const requiredLanguages = Object.entries(JSON.parse(
+  readFileSync(path.join(repoPath, 'problems', 'supported-languages.json')).toString()
+)).map(([language, data]) => ({name: language, compiled: data.compiled}));
 
 // Constrains
 const maxMem = 128000;
@@ -46,7 +46,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
 
   // In the case of java
   const compiledName =
-    language.name === 'java@11.0'
+    language.name === 'java-11'
       ? `${filesFromRequests[requestName]}.class`
       : 'compiled';
 

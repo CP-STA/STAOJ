@@ -63,49 +63,49 @@ TLE="Out of time!"
 # Accepts the error file name and language and interprets the error message based on the language
 interpret() {
   case "$2" in
-    "java@11.0")
+    "java-11")
       if ! grep "$MLE" "$1"; then
         if grep "OutOfMemoryError" "$1"; then
           echo "$MLE" >> "$1"
         fi
       fi
       ;;
-    "gcc@11.3")
+    "gcc-11.3")
       if ! grep "$MLE" "$1"; then
         if grep "std::bad_alloc" "$1"; then
           echo "$MLE" >> "$1"
         fi
       fi
       ;;
-    "python@3.10")
+    "python-3.10")
       if ! grep "$MLE" "$1"; then
         if grep "MemoryError" "$1"; then
           echo "$MLE" >> "$1"
         fi
       fi
       ;;
-    "ruby@3.0")
+    "ruby-3.0")
       if ! grep "$MLE" "$1"; then
         if grep "failed to allocate memory" "$1"; then
           echo "$MLE" >> "$1"
         fi
       fi
       ;;
-    "nodejs@12.22")
+    "nodejs-12.22")
       if ! grep "$MLE" "$1"; then
         if grep "heap out of memory" "$1"; then
           echo "$MLE" >> "$1"
         fi
       fi
       ;;
-    "rust@1.59")
+    "rust-1.59")
       if ! grep "$MLE" "$1"; then
         if grep "memory allocation of .* failed" "$1"; then
           echo "$MLE" >> "$1"
         fi
       fi
       ;;
-    "mono@6.8")
+    "mono-6.8")
       if ! grep "$MLE" "$1"; then
         if grep "System.OutOfMemoryException" "$1"; then
           echo "$MLE" >> "$1"

@@ -19,11 +19,11 @@ const sampleSourceCodePath = path.join(thisPath, 'test', 'sample_source_code');
 // Define the required types and languages to test
 // Must use read file sync as tests are defined synchronously
 const requiredTypes = [requestTypes.compileSuccess, requestTypes.compileError];
-const requiredLanugages = JSON.parse(
-  readFileSync(path.join(thisPath, 'supported_languages.json')).toString()
-)
-  .filter((language) => language.compiled)
-  .map((language) => language.name);
+const requiredLanugages = Object.entries(JSON.parse(
+  readFileSync(path.join(repoPath, 'problems', 'supported-languages.json')).toString()
+))
+  .filter(([_, info]) => info.compiled)
+  .map(([language, _]) => language);
 
 // --- Testing macro ---
 const testCompilingMacro = test.macro(async (t, language, requestName) => {
@@ -34,7 +34,7 @@ const testCompilingMacro = test.macro(async (t, language, requestName) => {
 
   // Compiled name (exception for java)
   const compiledName =
-    language === 'java@11.0'
+    language === 'java-11'
       ? `${filesFromRequests[requestName]}.class`
       : 'compiled';
 
