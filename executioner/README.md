@@ -37,8 +37,8 @@ states for each langauge.
 
 ## Issues
 
-Currently, nodejs MLE testing is failing, appears to be timing out before
-registering an MLE error.
+~~Currently, nodejs MLE testing is failing, appears to be timing out before
+registering an MLE error.~~
 
 ---
 
