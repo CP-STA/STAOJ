@@ -17,10 +17,10 @@
 # Arguments are the same as the script
 compile() {
   case "$2" in 
-    "gcc-11.3-c")
+    "gcc-11.3")
       gcc "$1" -o "$3"
       ;;
-    "gcc-11.3")
+    "gpp-11.3")
       g++ "$1" -o "$3"
       ;;
     "java-11")

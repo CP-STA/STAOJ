@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
     // Check for timeout
     // Check for mem exceed in case program exits before
     if (status) {
-        if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec * 1000000.0l + usage.ru_utime.tv_usec) / max_time_in_seconds * 1000000.0l > 0.95) {
+        if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec * 1000000.0l + usage.ru_utime.tv_usec) / (max_time_in_seconds * 1000000.0l) > 0.90) {
             fprintf(stderr, "Out of time!\n");
         }
         if (max_mem != -1 && max_mem - usage.ru_maxrss < 4000) {

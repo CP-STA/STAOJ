@@ -4,8 +4,10 @@ const rl = require('readline').createInterface({
 });
 
 rl.on('line', (input) => {
-  const bulk = [];
+  const bulk = ['bulk'];
   while (true) {
-    bulk.push('Bulk');
+    // Because nodejs times out before running out memory sometimes
+    // And unexpected behaviour whilst testing sucks
+    bulk.push(bulk.slice(0));
   }
 });

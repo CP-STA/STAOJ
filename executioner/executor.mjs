@@ -18,7 +18,6 @@ const exec = util.promisify(cp.exec);
 - Complete execution
 */
 
-const supportedLanguagesPath = 'supported_languages.json';
 const tleString = 'Out of time!';
 const mleString = 'Out of memory!';
 
@@ -26,6 +25,7 @@ export async function execute(
   repoPath,
   sendMessage,
   request,
+  problemDir = 'problems',
   tmpRootDir = '/tmp'
 ) {
   // Function for logging actions in the request
@@ -46,14 +46,15 @@ export async function execute(
   const sourceCodePath = path.join(mountPath, request.fileName);
   const answersPath = path.join(tmpPath, 'answers');
   const inPath = path.join(tmpPath, 'in');
-  const problemPath = path.join(repoPath, 'problems', request.problem);
+  const problemPath = path.join(repoPath, problemDir, request.problem);
   const measurerPath = path.join(repoPath, 'tools', 'measurer');
+  const supportedLanguagesPath = path.join(repoPath, 'problems', 'supported-languages.json');
 
   let runFile = request.fileName;
 
   // --- Integrity checks before builind the environment ---
   await fs.access(problemPath).catch((e) => {
-    throw `Problim directory: ${problemPath} not found`;
+    throw `Problom directory: ${problemPath} not found`;
   });
 
   const supportLanguages = await fs
@@ -63,9 +64,7 @@ export async function execute(
       throw `Supported languages file: ${supportedLanguagesPath} not found`;
     });
 
-  const language = supportLanguages.find(
-    (lang) => lang.name === request.language
-  );
+  const language = supportLanguages[request.language]
   if (language === undefined) {
     throw `Request language: ${request.language} not supported`;
   }
@@ -138,7 +137,7 @@ export async function execute(
     let compileCommand = `podman run -v ${mountPath}:/app/mount executioner ./compile.sh`;
     if (language.compiled) {
       // Java is an exception for compiled name
-      const compiledName = language.name.includes('java')
+      const compiledName = request.language === 'java-11'
         ? `${path.parse(request.fileName).name}.class`
         : 'compiled';
       compileCommand += ` ${request.fileName} ${request.language} ${compiledName}`;
@@ -187,30 +186,30 @@ export async function execute(
       const answerFile = `test${padded}.out`;
       const errorFile = 'error.out';
 
-      sendMessage(new BMessage(state.testing, { test_case: i + 1 }));
+      sendMessage(new BMessage(state.testing, { testCase: i + 1 }));
       log(`Testing ${padded}`);
 
       // Create command and run code
-      const runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${maxMem} -e MAX_TIME=${maxTime} executioner ./run.sh ${runFile} ${language.name} ${inFile} ${outFile} ${errorFile}`;
+      const runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${maxMem} -e MAX_TIME=${maxTime} executioner ./run.sh ${runFile} ${request.language} ${inFile} ${outFile} ${errorFile}`;
       try {
         await exec(runCommand);
       } catch (e) {
         // Figure out what the error was
-        console.error(e);
         const errors = await fs.readFile(path.join(mountPath, errorFile));
-        if (errors.toString().includes(tleString)) {
+        const out = await fs.readFile(path.join(mountPath, outFile));
+        if (errors.toString().includes(mleString)) {
           sendMessage(
-            new BMessage(state.tested, { test_case: i + 1, result: 'TLE' })
-          );
-          log(`Testing ${padded} exceeded time limit`);
-        } else if (errors.toString().includes(mleString)) {
-          sendMessage(
-            new BMessage(state.tested, { test_case: i + 1, result: 'MLE' })
+            new BMessage(state.tested, { testCase: i + 1, result: 'MLE' })
           );
           log(`Testing ${padded} exceeded memory limit`);
+        } else if (errors.toString().includes(tleString)) {
+          sendMessage(
+            new BMessage(state.tested, { testCase: i + 1, result: 'TLE' })
+          );
+          log(`Testing ${padded} exceeded time limit`);
         } else {
           sendMessage(
-            new BMessage(state.tested, { test_case: i + 1, result: 'error' })
+            new BMessage(state.tested, { testCase: i + 1, result: 'error' })
           );
           log(`Testing ${padded} triggered runtime error`);
         }
@@ -247,7 +246,7 @@ export async function execute(
 
         sendMessage(
           new BMessage(state.tested, {
-            test_case: i + 1,
+            testCase: i + 1,
             result: 'accepted',
             time: timeUsed,
             memory: memUsed,
@@ -256,7 +255,7 @@ export async function execute(
         log(`Tested ${padded} and accepted`);
       } else {
         sendMessage(
-          new BMessage(state.tested, { test_case: i + 1, result: 'wrong' })
+          new BMessage(state.tested, { testCase: i + 1, result: 'wrong' })
         );
         log(`Tested ${padded} and failed`);
       }

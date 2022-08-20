@@ -16,6 +16,9 @@ const repoPath = path.resolve('../');
 const thisPath = path.resolve('.');
 const sampleSourceCodePath = path.join(thisPath, 'test', 'sample_source_code');
 
+const mleString = 'Out of memory!'
+const tleString = 'Out of time!'
+
 // Required types and languages
 const requiredTypes = [
   requestTypes.testAccepted,
@@ -28,7 +31,7 @@ const requiredLanguages = Object.entries(JSON.parse(
   readFileSync(path.join(repoPath, 'problems', 'supported-languages.json')).toString()
 )).map(([language, data]) => ({name: language, compiled: data.compiled}));
 
-// Constrains
+// Constraints
 const maxMem = 128000;
 const maxTime = 3000;
 
@@ -39,7 +42,7 @@ const errorName = 'error.out';
 
 // --- Testing macro ---
 const testRunningMacro = test.macro(async (t, language, requestName) => {
-  // Await requests parsing to get request
+  // Fetch info from context and create environment
   const request = t.context.requests[language.name][requestName];
   const tmpPath = t.context.tmpPaths[language.name][requestName];
   const mountPath = await createEnvironment(request, tmpPath, repoPath);
@@ -209,6 +212,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
           checkMessage.commit({ retainLogs: true });
           break;
         }
+        case requestTypes.testHang:
         case requestTypes.testTle: {
           const checkMessage = await t.try(
             'Checking if TLE recognised',
@@ -228,6 +232,29 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
                 tt.log((await runningScript).stdout);
                 tt.log(`-- run script stderr -- `);
                 tt.log((await runningScript).stderr);
+              }
+            }
+          );
+          checkMessage.commit({ retainLogs: true });
+          break;
+        }
+        case requestTypes.testError: {
+          const checkMessage = await t.try(
+            'Checking that its only an error',
+            async (tt) => {
+              if (errorContents.toString().includes(tleString) || errorContents.toString().includes(mleString))
+              {
+                tt.fail('Execution did not fail with general error')
+                tt.log(`-- ${errorName} --`);
+                tt.log(errorContents.toString());
+                tt.log(`-- ${outName} -- `);
+                tt.log(outContents.toString());
+                tt.log(`-- run script stdout -- `);
+                tt.log((await runningScript).stdout);
+                tt.log(`-- run script stderr -- `);
+                tt.log((await runningScript).stderr);
+              } else {
+                tt.pass()
               }
             }
           );

@@ -20,11 +20,11 @@ run() {
       MAX_MEM=-1 ./demoter.out java -Xmx"${passed_mem}k" "${1%.*}" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "gcc-11.3")
+    "gpp-11.3")
       ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
-    "gcc-11.3-c")
+    "gcc-11.3")
       ./demoter.out ./"$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
@@ -70,7 +70,7 @@ interpret() {
         fi
       fi
       ;;
-    "gcc-11.3")
+    "gpp-11.3")
       if ! grep "$MLE" "$1"; then
         if grep "std::bad_alloc" "$1"; then
           echo "$MLE" >> "$1"
