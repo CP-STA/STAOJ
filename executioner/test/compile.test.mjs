@@ -19,9 +19,13 @@ const sampleSourceCodePath = path.join(thisPath, 'test', 'sample_source_code');
 // Define the required types and languages to test
 // Must use read file sync as tests are defined synchronously
 const requiredTypes = [requestTypes.compileSuccess, requestTypes.compileError];
-const requiredLanugages = Object.entries(JSON.parse(
-  readFileSync(path.join(repoPath, 'problems', 'supported-languages.json')).toString()
-))
+const requiredLanugages = Object.entries(
+  JSON.parse(
+    readFileSync(
+      path.join(repoPath, 'problems', 'supported-languages.json')
+    ).toString()
+  )
+)
   .filter(([_, info]) => info.compiled)
   .map(([language, _]) => language);
 

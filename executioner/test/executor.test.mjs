@@ -3,7 +3,11 @@ import { execute } from '../executor.mjs';
 import path from 'path';
 import { promises as fs, readFileSync } from 'fs';
 import { Message, state } from '../message.mjs';
-import { filesFromRequests, parseRequests, requestTypes } from './request_parser.mjs';
+import {
+  filesFromRequests,
+  parseRequests,
+  requestTypes,
+} from './request_parser.mjs';
 
 // Sets the message id to null, as that as the id should exist but the specific
 // value doesn't matter while testing
@@ -26,16 +30,20 @@ const requiredTypes = [
   requestTypes.testTle,
   requestTypes.testHang,
 ];
-const requiredLanguages = Object.entries(JSON.parse(
-  readFileSync(path.join(repoPath, 'problems', 'supported-languages.json')).toString()
-)).map(([language, data]) => ({name: language, compiled: data.compiled}));
+const requiredLanguages = Object.entries(
+  JSON.parse(
+    readFileSync(
+      path.join(repoPath, 'problems', 'supported-languages.json')
+    ).toString()
+  )
+).map(([language, data]) => ({ name: language, compiled: data.compiled }));
 
 // Helper function to generate repeated expected test case messages
 function generateExpectedTestMessages(totalTestCases, resultObject) {
   return Array.from(Array(totalTestCases).keys()).flatMap((testCase) => [
-    new TMessage(state.testing, { testCase: testCase+1 }),
-    new TMessage(state.tested, { testCase: testCase+1, ...resultObject }),
-  ])
+    new TMessage(state.testing, { testCase: testCase + 1 }),
+    new TMessage(state.tested, { testCase: testCase + 1, ...resultObject }),
+  ]);
 }
 
 // The expected messages to be sent by the executor for each request type
@@ -46,8 +54,12 @@ const expected = {
   ],
   [requestTypes.testAccepted]: [
     new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'success'}),
-    ...generateExpectedTestMessages(testCases, { result: 'accepted', time: null, memory: null }),
+    new TMessage(state.compiled, { result: 'success' }),
+    ...generateExpectedTestMessages(testCases, {
+      result: 'accepted',
+      time: null,
+      memory: null,
+    }),
   ],
   [requestTypes.testWrong]: [
     new TMessage(state.compiling),
@@ -74,99 +86,132 @@ const expected = {
     new TMessage(state.compiled, { result: 'success' }),
     ...generateExpectedTestMessages(testCases, { result: 'TLE' }),
   ],
-}
+};
 
 const testExecutorMacro = test.macro(async (t, language, requestName) => {
-
   // Getting the neccessary data from the text context
   const request = t.context.requests[language.name][requestName];
 
   let i = language.compiled ? 0 : 2;
-  let count = 1
+  let count = 1;
   let failed = false;
 
   // The mocked sendMessage function to check sent messages
   async function mockedSendMessage(message) {
     // Prevent followthrough of failure messages
     if (failed) {
-      return
+      return;
     }
 
-    const expectedMessage = expected[requestName][i]
+    const expectedMessage = expected[requestName][i];
 
-    if (!t.is(message.state, expectedMessage.state, `Message ${count}: Expected ${expectedMessage.state} but got ${message.state}`)) {
+    if (
+      !t.is(
+        message.state,
+        expectedMessage.state,
+        `Message ${count}: Expected ${expectedMessage.state} but got ${message.state}`
+      )
+    ) {
       failed = true;
-      return
+      return;
     }
 
-    const testResult = await t.try(`Checking that message ${count} is the same as expected`, (tt) => {
-      // Check that the message states are the same
-      // Check that the keys are the same
-      if (!tt.deepEqual(Object.keys(message), Object.keys(expectedMessage), 'A resulting message is missing some keys')) {
+    const testResult = await t.try(
+      `Checking that message ${count} is the same as expected`,
+      (tt) => {
+        // Check that the message states are the same
+        // Check that the keys are the same
+        if (
+          !tt.deepEqual(
+            Object.keys(message),
+            Object.keys(expectedMessage),
+            'A resulting message is missing some keys'
+          )
+        ) {
+          // Printing the differences
+          const additionalKeys = Object.keys(message).filter(
+            (key) => !Object.keys(expectedMessage).includes(key)
+          );
+          const missingKeys = Object.keys(expectedMessage).filter(
+            (key) => !Object.keys(message).includes(key)
+          );
+          tt.log(
+            `Message ${count}: ${message.state} has different keys than expected:`
+          );
+          missingKeys.length !== 0 && tt.log(` - Missing ${missingKeys}`);
+          additionalKeys.length !== 0 &&
+            tt.log(` - Unexpectedly has ${additionalKeys}`);
 
+          failed = true;
+          return;
+        }
 
-        // Printing the differences
-        const additionalKeys = Object.keys(message).filter((key) => !Object.keys(expectedMessage).includes(key));
-        const missingKeys = Object.keys(expectedMessage).filter((key) => !Object.keys(message).includes(key));
-        tt.log(`Message ${count}: ${message.state} has different keys than expected:`)
-        missingKeys.length !== 0 && tt.log(` - Missing ${missingKeys}`)
-        additionalKeys.length !== 0 && tt.log(` - Unexpectedly has ${additionalKeys}`)
+        // Check that the neccessary values are the same
+        if (
+          !tt.true(
+            Object.entries(expectedMessage)
+              .filter(([_, value]) => value !== null)
+              .every(
+                ([key, value]) =>
+                  Object.keys(message).includes(key) &&
+                  Object.values(message).includes(value)
+              ),
+            "A resulting message's value was different than expected"
+          )
+        ) {
+          // Printing the differences
+          const differentEntries = Object.entries(message)
+            .filter(([key, value]) => expectedMessage[key] !== value)
+            .map(([key, value]) => [key, value, expectedMessage[key]]);
+          const differentEntriesString = differentEntries.reduce(
+            (str, [key, v1, v2]) =>
+              v2 !== null ? str + ` {${key}: ${v2} but got ${v1}}` : str,
+            ''
+          );
+          tt.log(
+            `Message ${count}: ${message.state} has different values than expected:`
+          );
+          tt.log(` -${differentEntriesString}`);
 
-        failed = true;
-        return
+          failed = true;
+          return;
+        }
       }
-
-      // Check that the neccessary values are the same
-      if (!tt.true(Object.entries(expectedMessage)
-        .filter(([_, value]) => value !== null)
-        .every(([key, value]) => Object.keys(message).includes(key) && Object.values(message).includes(value)), 'A resulting message\'s value was different than expected')) {
-
-        // Printing the differences
-        const differentEntries = Object.entries(message)
-          .filter(([key, value]) => expectedMessage[key] !== value)
-          .map(([key, value]) => [key, value, expectedMessage[key]]);
-        const differentEntriesString = differentEntries
-          .reduce((str, [key, v1, v2]) => v2 !== null ? str + ` {${key}: ${v2} but got ${v1}}` : str, '') 
-        tt.log(`Message ${count}: ${message.state} has different values than expected:`);
-        tt.log(` -${differentEntriesString}`);
-
-        failed = true;
-        return
-      }
-    })
-    testResult.commit({retainLogs: true});
+    );
+    testResult.commit({ retainLogs: true });
     i++;
     count++;
   }
 
   // Defen the console logging functions
-  console.log = () => {}
-  console.timeEnd = () => {}
-  console.time = () => {}
-  await execute(repoPath, mockedSendMessage, request, 'problems-private')
-})
+  console.log = () => {};
+  console.timeEnd = () => {};
+  console.time = () => {};
+  await execute(repoPath, mockedSendMessage, request, 'problems-private');
+});
 
 test.before('Prepping the environment', async (t) => {
   t.context.requests = await parseRequests(
     sampleSourceCodePath,
     problem,
     requiredTypes,
-    requiredLanguages.map((langauge) => langauge.name),
+    requiredLanguages.map((langauge) => langauge.name)
   ).catch((e) => {
     t.fail(e.message);
   });
 
   // Get the tmp names used by executor
-  const tmpPaths = requiredLanguages.map((language) => language.name).reduce((langAcc, lang) => {
-    langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
-      typeAcc[
-        type
-      ] = `/tmp/request_testing_${lang}_${filesFromRequests[type]}`;
-      return typeAcc;
+  const tmpPaths = requiredLanguages
+    .map((language) => language.name)
+    .reduce((langAcc, lang) => {
+      langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
+        typeAcc[
+          type
+        ] = `/tmp/request_testing_${lang}_${filesFromRequests[type]}`;
+        return typeAcc;
+      }, {});
+      return langAcc;
     }, {});
-    return langAcc;
-  }, {});
-
 
   // Iterate through tmpPaths and delete tmp directories if they exist
   for (const languageRequests of Object.values(tmpPaths)) {
@@ -174,7 +219,7 @@ test.before('Prepping the environment', async (t) => {
       await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
     }
   }
-})
+});
 
 // Create tests from requests
 for (const language of requiredLanguages) {

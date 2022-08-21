@@ -48,7 +48,11 @@ export async function execute(
   const inPath = path.join(tmpPath, 'in');
   const problemPath = path.join(repoPath, problemDir, request.problem);
   const measurerPath = path.join(repoPath, 'tools', 'measurer');
-  const supportedLanguagesPath = path.join(repoPath, 'problems', 'supported-languages.json');
+  const supportedLanguagesPath = path.join(
+    repoPath,
+    'problems',
+    'supported-languages.json'
+  );
 
   let runFile = request.fileName;
 
@@ -64,7 +68,7 @@ export async function execute(
       throw `Supported languages file: ${supportedLanguagesPath} not found`;
     });
 
-  const language = supportLanguages[request.language]
+  const language = supportLanguages[request.language];
   if (language === undefined) {
     throw `Request language: ${request.language} not supported`;
   }
@@ -137,9 +141,10 @@ export async function execute(
     let compileCommand = `podman run -v ${mountPath}:/app/mount executioner ./compile.sh`;
     if (language.compiled) {
       // Java is an exception for compiled name
-      const compiledName = request.language === 'java-11'
-        ? `${path.parse(request.fileName).name}.class`
-        : 'compiled';
+      const compiledName =
+        request.language === 'java-11'
+          ? `${path.parse(request.fileName).name}.class`
+          : 'compiled';
       compileCommand += ` ${request.fileName} ${request.language} ${compiledName}`;
       runFile = compiledName;
 
@@ -196,7 +201,6 @@ export async function execute(
       } catch (e) {
         // Figure out what the error was
         const errors = await fs.readFile(path.join(mountPath, errorFile));
-        const out = await fs.readFile(path.join(mountPath, outFile));
         if (errors.toString().includes(mleString)) {
           sendMessage(
             new BMessage(state.tested, { testCase: i + 1, result: 'MLE' })

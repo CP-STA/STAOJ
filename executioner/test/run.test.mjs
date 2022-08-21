@@ -16,8 +16,8 @@ const repoPath = path.resolve('../');
 const thisPath = path.resolve('.');
 const sampleSourceCodePath = path.join(thisPath, 'test', 'sample_source_code');
 
-const mleString = 'Out of memory!'
-const tleString = 'Out of time!'
+const mleString = 'Out of memory!';
+const tleString = 'Out of time!';
 
 // Required types and languages
 const requiredTypes = [
@@ -27,9 +27,13 @@ const requiredTypes = [
   requestTypes.testTle,
   requestTypes.testHang,
 ];
-const requiredLanguages = Object.entries(JSON.parse(
-  readFileSync(path.join(repoPath, 'problems', 'supported-languages.json')).toString()
-)).map(([language, data]) => ({name: language, compiled: data.compiled}));
+const requiredLanguages = Object.entries(
+  JSON.parse(
+    readFileSync(
+      path.join(repoPath, 'problems', 'supported-languages.json')
+    ).toString()
+  )
+).map(([language, data]) => ({ name: language, compiled: data.compiled }));
 
 // Constraints
 const maxMem = 128000;
@@ -242,9 +246,11 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
           const checkMessage = await t.try(
             'Checking that its only an error',
             async (tt) => {
-              if (errorContents.toString().includes(tleString) || errorContents.toString().includes(mleString))
-              {
-                tt.fail('Execution did not fail with general error')
+              if (
+                errorContents.toString().includes(tleString) ||
+                errorContents.toString().includes(mleString)
+              ) {
+                tt.fail('Execution did not fail with general error');
                 tt.log(`-- ${errorName} --`);
                 tt.log(errorContents.toString());
                 tt.log(`-- ${outName} -- `);
@@ -254,7 +260,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
                 tt.log(`-- run script stderr -- `);
                 tt.log((await runningScript).stderr);
               } else {
-                tt.pass()
+                tt.pass();
               }
             }
           );
