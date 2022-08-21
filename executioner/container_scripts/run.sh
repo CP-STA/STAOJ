@@ -131,7 +131,7 @@ test -f demoter.out || throw_error "demoter.out not found"
 
 printf "Running\n"
 if ! run "$@"; then 
-  cat error.out 1>&2
+  cat "$5" 1>&2
   interpret "$5" "$2"
   throw_error "Execution failed"
 fi
