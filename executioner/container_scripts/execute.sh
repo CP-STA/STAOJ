@@ -36,6 +36,9 @@ if [ "$3" -eq 1 ]; then
     result="error"
   fi
   printf "compiled %s\n" "$result"
+  if [ $result = "error" ]; then
+    exit 0
+  fi
 
 else
   # Just build demoter otherwise

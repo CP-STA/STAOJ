@@ -183,11 +183,10 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
     count++;
   }
 
-  // Defen the console logging functions
-  console.log = () => {};
-  console.timeEnd = () => {};
-  console.time = () => {};
-  await execute(repoPath, mockedSendMessage, request, 'problems-private');
+  await execute(repoPath, mockedSendMessage, request, {
+    problemDir: 'problems-private',
+    overwriteTmpPath: true,
+  });
 });
 
 test.before('Prepping the environment', async (t) => {

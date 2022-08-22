@@ -1,40 +1,39 @@
 import { Message, state } from './message.mjs';
 import { promises as fs } from 'fs';
-import util from 'util';
 import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
 import path from 'path';
-
-const exec = util.promisify(cp.exec);
+import rl from 'readline';
 
 /*
 - This is where the actual execution of a request in a container occurs
 - First it builds the environment, creating a tmp dir and the dir structure
 - It reads the problem info and writes the test cases and source codes to files
-- Builds the container
-- Compiles the source code
-- Runs the test cases isolated each (for now) (at the expense of slower execution)
-- Checks answers of test cases 
-- Complete execution
+- It then runs the main execution script within the container
+  - This compiles the source code (if neccessary) and builds the demoter
+  - Then it runs the test cases sequentially
+- Test case results are checked asynchronously, reading the contiainer stdout for cues
+- Then completes execution
 */
 
 const tleString = 'Out of time!';
 const mleString = 'Out of memory!';
 
-export async function execute(
-  repoPath,
-  sendMessage,
-  request,
-  problemDir = 'problems',
-  tmpRootDir = '/tmp'
-) {
-  // Function for logging actions in the request
-  function log(message) {
-    console.log(`${request.id}: ${message}`);
-  }
-
-  console.time(`${request.id}: Execution completed in`);
-  log('Preparing execution environment');
+/**
+ * Executes the passed request in a containerised environment and communicate
+ * the ongoing status with the sendMessage callback
+ *
+ * @param repoPath Path to the STAOJ repo
+ * @param sendMessage Callback for sending messages
+ * @param request Request object to execute
+ * @param options Additional optional params: `problemDir`, `tmpRootDir`, `log`,
+ * `overwriteTmpPath`
+ */
+export async function execute(repoPath, sendMessage, request, options) {
+  const problemDir = options.problemDir || 'problems';
+  const tmpRootDir = options.tmpRootDir || '/tmp';
+  const log = options.log || ((msg) => {});
+  const overwriteTmpPath = options.overwriteTmpPath || false;
 
   // Bind id arg to message as that remains the same for the duration of this funcion
   // The B stands for binded
@@ -45,7 +44,10 @@ export async function execute(
   const mountPath = path.join(tmpPath, 'mount');
   const sourceCodePath = path.join(mountPath, request.fileName);
   const answersPath = path.join(tmpPath, 'answers');
-  const inPath = path.join(tmpPath, 'in');
+  const inDir = 'in';
+  const outDir = 'out';
+  const inPath = path.join(mountPath, inDir);
+  const outPath = path.join(mountPath, outDir);
   const problemPath = path.join(repoPath, problemDir, request.problem);
   const measurerPath = path.join(repoPath, 'tools', 'measurer');
   const supportedLanguagesPath = path.join(
@@ -54,9 +56,19 @@ export async function execute(
     'supported-languages.json'
   );
 
-  let runFile = request.fileName;
-
   // --- Integrity checks before builind the environment ---
+  log('Fetching data');
+  // If tmp folder exists
+  if (overwriteTmpPath) {
+    await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
+  } else {
+    try {
+      if ((await fs.lstat(tmpPath)).isDirectory()) {
+        throw `Tmp testing directory: ${tmpPath} already exists`;
+      }
+    } catch {}
+  }
+
   await fs.access(problemPath).catch((e) => {
     throw `Problom directory: ${problemPath} not found`;
   });
@@ -75,9 +87,10 @@ export async function execute(
 
   // --- Progressing to execution ---
 
-  // Using an async IIFE to ensure resources are cleaned up after execution or error (aka delete tmp dir)
-  await (async function () {
+  try {
     // --- Prepare execution environment ---
+
+    log('Preparing environment');
 
     // Prep the tmp dir
     await fs.mkdir(tmpPath);
@@ -86,6 +99,7 @@ export async function execute(
     // Create the in and out dirs and copy over demoter stuff
     await Promise.all([
       fs.mkdir(inPath),
+      fs.mkdir(outPath),
       fs.copyFile(
         path.join(measurerPath, 'demoter.c'),
         path.join(mountPath, 'demoter.c')
@@ -132,148 +146,182 @@ export async function execute(
 
     // Now we await the source code as we'll need it in a bit
     await writeSourceCode;
+    await writeTestCases;
 
     log('Environment ready');
+    log('Executing submission');
 
     // --- Begin execution ---
 
-    // Does language require compilation?
-    let compileCommand = `podman run -v ${mountPath}:/app/mount executioner ./compile.sh`;
-    if (language.compiled) {
-      // Java is an exception for compiled name
-      const compiledName =
-        request.language === 'java-11'
-          ? `${path.parse(request.fileName).name}.class`
-          : 'compiled';
-      compileCommand += ` ${request.fileName} ${request.language} ${compiledName}`;
-      runFile = compiledName;
+    // Whole process executed in single container instance
+    // It will compile if neccesary and then run all the test cases
+    // The executor is listening on stdout for the progress on the execution
+    // and sends the statuses via messages
 
-      // Notify for compiling language that compiling
-      sendMessage(new BMessage(state.compiling));
-      log('Compiling');
-    }
+    // An array to contain promises for message, which will resolve in order
+    const outMessages = [];
 
-    // TODO: differ between compilation failure and unexpected errors
+    // Defining how to read responses from container
+    async function handleContainerOut(data, index) {
+      const parsed = data.split(' ');
+      const status = parsed[0];
 
-    // Compile code and build demoter in container
-    try {
-      // If no arguments passed to compile.sh then just build demoter
-      await exec(compileCommand);
-    } catch (e) {
-      // Compilation error is a possible expected state, so no error thrown, return normally
-      sendMessage(new BMessage(state.compiled, { result: 'error' }));
-      log(`Compilation error: ${e}`);
-      return;
-    }
+      const message = await (async function () {
+        switch (status) {
+          case 'compiling': {
+            return new BMessage(state.compiling);
+          }
+          case 'compiled': {
+            const result = parsed[1];
 
-    // Send neccessary message if compiled
-    if (language.compiled) {
-      sendMessage(new BMessage(state.compiled, { result: 'success' }));
-      log('Compilation successful');
-    }
+            if (!['success', 'error'].includes(result)) {
+              throw 'Error parsing compiled result from container stdout';
+            }
+            return new BMessage(state.compiled, { result });
+          }
+          case 'testing': {
+            const paddedTestCase = parsed[1];
+            if (isNaN(paddedTestCase)) {
+              throw 'Error parsing test case number from container stdout';
+            }
+            return new BMessage(state.testing, {
+              testCase: parseInt(paddedTestCase),
+            });
+          }
+          case 'tested': {
+            const paddedTestCase = parsed[1];
+            const result = parsed[2];
 
-    // Begin running test cases
-    await writeTestCases;
+            if (isNaN(paddedTestCase)) {
+              throw 'Error parsing test case number from container stdout';
+            }
 
-    // Iterate through files in test case input directory
-    const inDir = await fs.readdir(inPath);
-    for (const [i, inFile] of inDir.entries()) {
-      // Padded num
-      const padded = (i + 1).toString().padStart(3, '0');
+            const testCase = parseInt(paddedTestCase);
 
-      // Copy test case to mount directory
-      await fs.copyFile(
-        path.join(inPath, inFile),
-        path.join(mountPath, inFile)
-      );
+            const outFile = `result${paddedTestCase}.out`;
+            const errorFile = `error${paddedTestCase}.out`;
+            const answerFile = `test${paddedTestCase}.out`;
 
-      const outFile = `result${padded}.out`;
-      const answerFile = `test${padded}.out`;
-      const errorFile = 'error.out';
+            const outFilePath = path.join(outPath, outFile);
+            const errorFilePath = path.join(outPath, errorFile);
+            const answersFilePath = path.join(answersPath, answerFile);
 
-      sendMessage(new BMessage(state.testing, { testCase: i + 1 }));
-      log(`Testing ${padded}`);
+            switch (result) {
+              case 'success':
+                const info = await readLastLines(outFilePath, 2);
 
-      // Create command and run code
-      const runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${maxMem} -e MAX_TIME=${maxTime} executioner ./run.sh ${runFile} ${request.language} ${inFile} ${outFile} ${errorFile}`;
-      try {
-        await exec(runCommand);
-      } catch (e) {
-        // Figure out what the error was
-        const errors = await fs.readFile(path.join(mountPath, errorFile));
-        if (errors.toString().includes(mleString)) {
-          sendMessage(
-            new BMessage(state.tested, { testCase: i + 1, result: 'MLE' })
-          );
-          log(`Testing ${padded} exceeded memory limit`);
-        } else if (errors.toString().includes(tleString)) {
-          sendMessage(
-            new BMessage(state.tested, { testCase: i + 1, result: 'TLE' })
-          );
-          log(`Testing ${padded} exceeded time limit`);
-        } else {
-          sendMessage(
-            new BMessage(state.tested, { testCase: i + 1, result: 'error' })
-          );
-          log(`Testing ${padded} triggered runtime error`);
+                // Truncate out file without info lines
+                await fs.truncate(
+                  outFilePath,
+                  (await fs.stat(outFilePath)).size - info.length
+                );
+
+                // Read the answer and result files
+                const files = await Promise.all([
+                  fs.readFile(outFilePath),
+                  fs.readFile(answersFilePath),
+                ]);
+
+                // TODO: Not sure on how strict this comparison is
+                // TODO: Restrict usage to be at max resourece limits
+
+                // If the same
+                if (files[0].equals(files[1])) {
+                  // Parse data from info to send out
+                  const infoLines = info.split('\n');
+                  const [timeUsed] = infoLines[0].split(' ').slice(-1);
+                  const [memUsed] = infoLines[1].split(' ').slice(-1);
+
+                  return new BMessage(state.tested, {
+                    testCase,
+                    result: 'accepted',
+                    time: timeUsed,
+                    memory: memUsed,
+                  });
+                } else {
+                  return new BMessage(state.tested, {
+                    testCase,
+                    result: 'wrong',
+                  });
+                }
+              case 'error':
+                // Figure out what the error was
+                const errors = await fs.readFile(errorFilePath);
+                if (errors.toString().includes(mleString)) {
+                  return new BMessage(state.tested, {
+                    testCase,
+                    result: 'MLE',
+                  });
+                } else if (errors.toString().includes(tleString)) {
+                  return new BMessage(state.tested, {
+                    testCase,
+                    result: 'TLE',
+                  });
+                } else {
+                  return new BMessage(state.tested, {
+                    testCase,
+                    result: 'error',
+                  });
+                }
+              default:
+                throw 'Error parsing tested result from container stdout';
+            }
+          }
+          default:
+            throw `Error parsing status of container execution, got ${parsed}`;
         }
+      })();
 
-        // Onto the next text case
-        continue;
-      }
+      // For the previous message to resolve before resolving the next
+      index > 0 && (await outMessages[index - 1]);
 
-      // No errors so remove stats from out file and compare to answer
-
-      // Parse info from out file
-      const info = await readLastLines(path.join(mountPath, outFile), 2);
-
-      // Truncate out file without info lines
-      await fs.truncate(
-        path.join(mountPath, outFile),
-        (await fs.stat(path.join(mountPath, outFile))).size - info.length
-      );
-
-      // Read the answer and result files
-      const files = await Promise.all([
-        fs.readFile(path.join(mountPath, outFile)),
-        fs.readFile(path.join(answersPath, answerFile)),
-      ]);
-
-      // TODO: Not sure on how strict this comparison is
-
-      // If the same
-      if (files[0].equals(files[1])) {
-        // Parse data from info to send out
-        const infoLines = info.split('\n');
-        const [timeUsed] = infoLines[0].split(' ').slice(-1);
-        const [memUsed] = infoLines[1].split(' ').slice(-1);
-
-        sendMessage(
-          new BMessage(state.tested, {
-            testCase: i + 1,
-            result: 'accepted',
-            time: timeUsed,
-            memory: memUsed,
-          })
-        );
-        log(`Tested ${padded} and accepted`);
-      } else {
-        sendMessage(
-          new BMessage(state.tested, { testCase: i + 1, result: 'wrong' })
-        );
-        log(`Tested ${padded} and failed`);
-      }
-
-      // Then remove the in and out files from the mount directory and proceed to next test
-      await Promise.all([
-        fs.unlink(path.join(mountPath, outFile)),
-        fs.unlink(path.join(mountPath, inFile)),
-      ]);
+      return message;
     }
 
-    console.timeEnd(`${request.id}: Execution completed in`);
-  })();
+    let commandArgs = ['run', '-v', `${mountPath}:/app/mount`];
 
-  // Clean resources if created
-  await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
+    // The constraints
+    commandArgs.push('-e', `MAX_MEM=${maxMem}`);
+    commandArgs.push('-e', `MAX_TIME=${maxTime}`);
+    commandArgs.push('executioner');
+
+    // The container script and args
+    commandArgs.push('./execute.sh', request.fileName, request.language);
+    commandArgs.push(language.compiled ? 1 : 0, inDir, outDir);
+
+    // Pushing the output into a line by line stream
+    const execution = cp.spawn('podman', commandArgs);
+    const outStream = rl.createInterface({
+      input: execution.stdout,
+    });
+
+    // On new line printed by container
+    outStream.on('line', (data) => {
+      // Add to array of promises for messages
+      const messageIndex = outMessages.length;
+      outMessages.push(
+        handleContainerOut(data, messageIndex)
+          .then(sendMessage)
+          .catch((e) => {
+            throw e;
+          })
+      );
+    });
+
+    // Await exit from container
+    await new Promise((resolve, reject) => {
+      return execution.on('close', (code) => {
+        code !== 0 && reject(code);
+        resolve();
+      });
+    }).catch((code) => {
+      throw `Error while executing container, exited with code ${code}`;
+    });
+  } finally {
+    log('Execution complete');
+
+    log('Cleaning up environment');
+    await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
+    log('Cleaning up complete');
+  }
 }

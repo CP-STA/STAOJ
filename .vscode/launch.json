@@ -17,6 +17,19 @@
         "EXER_SOCKET": "/workspaces/STAOJ/tools/websocket_example/staoj.exe.sock"
       },
       "cwd": "${workspaceFolder}/executioner"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run Executor",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/executioner/executor.mjs",
+      "env": {
+        "REPO_PATH": "/workspaces/STAOJ",
+      },
+      "cwd": "${workspaceFolder}/executioner"
     }
   ]
 }
