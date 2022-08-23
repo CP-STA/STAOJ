@@ -16,4 +16,5 @@ RUN apt-get install -y podman slirp4netns libfuse3-dev
 RUN usermod --add-subuids 100000-165535 --add-subgids 100000-165535 vscode
 
 # Install Nodejs
-RUN apt-get install -y nodejs npm
+RUN apt-get install -y npm nodejs
+RUN npm install n -g && n 16.13.0

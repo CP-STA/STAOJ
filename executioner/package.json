@@ -5,6 +5,7 @@
     "node": "12.22.9"
   },
   "dependencies": {
+    "firebase-admin": "^11.0.1",
     "read-last-lines": "^1.8.0",
     "ws": "^8.6.0"
   },
