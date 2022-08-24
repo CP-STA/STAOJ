@@ -123,6 +123,8 @@ Since the web server needs to call the executioner to evaluate a script in a san
 
 ### Judge Result Document Format 
 
+The judge should have six states, “queuing”, “compiling”, “complied”, “testing”, “tested”, or “done”.  The states should be communicated to the webserver as soon as the executioner enters one through the key “state”. The states should denote the following. 
+
 When the problem source code is sent to the executioner, it should either entire the state `queuing` or `compiling` depending on if there is enough system resource to compile and test the submission.  
 
 When the source has been complied (or failed to complied), it should enter the “complied” state. It should also have another key named `result`, which can either be `success` or `error`. If it is `error`, it should stop and change the `judged` field in the submission document to true. 
@@ -136,6 +138,16 @@ When all the test cases are complete, it should enter the state `done`.
 After it changed `judged` to `true`, it should not write any more document to the sub-collection. 
 
 If there is any unexpected error or the input data does not make sense, change `error` to `true` and stop.
+
+### Examples
+
+{"state": "compiling"} 
+
+{ "state": "tested", "test_case": 4, "result": "accepted", "time_ms": 457, "memory_kb": 24556} 
+
+{"state": "done"} 
+
+{"state": "tested", "result": "TLE"} 
 
 ### Trust and Input Sanitization 
 
