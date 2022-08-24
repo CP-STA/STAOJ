@@ -34,33 +34,33 @@ async function runExecutioner() {
     });
 
   try {
-    console.log('Connecting to database...')
+    console.log('Connecting to database...');
     const app = await inititaliseInterface({
       databaseURL: 'staoj-database.firebaseio.com',
     });
-    console.log('Connected to database')
-    console.log('Listening for new submissions...')
+    console.log('Connected to database');
+    console.log('Listening for new submissions...');
     app.onSubmission((request) => {
       // Set filename becasue that is not set by the interface currently
       request.fileName = `${fileBaseName}.${
         languages[request.language].extension
       }`;
 
-      console.log('Message received:', request.id)
+      console.log('Message received:', request.id);
 
       function sendMessage(message) {
-        console.log(`${message.id}:`, message.state)
+        console.log(`${message.id}:`, message.state);
 
         // If state is error then mark as error an do nothing else
         if (message.state == 'error') {
-          app.errorWithSubmission(message.id)
-          return
+          app.errorWithSubmission(message.id);
+          return;
         }
 
         // Else send message and complete if state is done
-        app.sendMessage(message)
+        app.sendMessage(message);
         if (message.state == 'done') {
-          app.completeSubmission(message.id)
+          app.completeSubmission(message.id);
         }
       }
 

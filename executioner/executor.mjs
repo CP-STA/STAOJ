@@ -60,7 +60,7 @@ export async function execute(repoPath, sendMessage, request, options) {
   log('Fetching data');
   // If tmp folder exists
   if (overwriteTmpPath) {
-    await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
+    await fs.rm(tmpPath, { recursive: true, force: true });
   } else {
     try {
       if ((await fs.lstat(tmpPath)).isDirectory()) {
@@ -321,7 +321,7 @@ export async function execute(repoPath, sendMessage, request, options) {
     log('Execution complete');
 
     log('Cleaning up environment');
-    await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
+    await fs.rm(tmpPath, { recursive: true, force: true });
     log('Cleaning up complete');
   }
 }

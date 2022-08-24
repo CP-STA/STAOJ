@@ -32,10 +32,10 @@ export function pushRequest(repoPath, sendMessage, request) {
       .then(() => {
         // If finished without error then complete with done message
         sendMessage(new Message(request.id, state.done));
-      }) 
+      })
       .catch((e) => {
         // If error with particular request then notify database
-        sendMessage(new Message(request.id, state.error))
+        sendMessage(new Message(request.id, state.error));
         throw e;
       })
       .finally(() => {

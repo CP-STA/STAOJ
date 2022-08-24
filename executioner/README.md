@@ -12,7 +12,7 @@ continually to the interface.
 Currently, the executioner interfaces with the firestore database. It connects
 to the db using a json key file and listens for changes to the submissions
 collection. Messages are conveyed by adding documents to a 'judge-results'
-collection. 
+collection.
 
 To run the executioner, the following environmental variables need to be set:
 

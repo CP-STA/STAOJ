@@ -215,7 +215,7 @@ test.before('Prepping the environment', async (t) => {
   // Iterate through tmpPaths and delete tmp directories if they exist
   for (const languageRequests of Object.values(tmpPaths)) {
     for (const tmpPath of Object.values(languageRequests)) {
-      await fs.rmdir(tmpPath, { recursive: true }).catch(() => {});
+      await fs.rm(tmpPath, { recursive: true, force: true });
     }
   }
 });
