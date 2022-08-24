@@ -15,7 +15,7 @@
     "prettier": "^2.7.1"
   },
   "scripts": {
-    "example": "./example.sh",
+    "start": "node executioner.mjs",
     "test": "ava --timeout=5m -c=4",
     "postinstall": "podman build . -t executioner"
   },

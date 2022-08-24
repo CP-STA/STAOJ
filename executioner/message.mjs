@@ -6,6 +6,7 @@ export const state = Object.freeze({
   testing: 'testing',
   tested: 'tested',
   done: 'done',
+  error: 'error',
 });
 
 // Message constructor

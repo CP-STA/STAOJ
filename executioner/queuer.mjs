@@ -29,14 +29,17 @@ export function pushRequest(repoPath, sendMessage, request) {
 
     executingCount++;
     execute(repoPath, sendMessage, request, { problemDir: 'problems-private' })
+      .then(() => {
+        // If finished without error then complete with done message
+        sendMessage(new Message(request.id, state.done));
+      }) 
       .catch((e) => {
+        // If error with particular request then notify database
+        sendMessage(new Message(request.id, state.error))
         throw e;
       })
       .finally(() => {
-        // Regardless of errors, gotta tell the server execution is done for consistency and continue
-        sendMessage(new Message(request.id, state.done));
-
-        // If didn't handle next execution, reduce executing count
+        // Regardless, run the next queued request if any
         handleExecution(queuedRequests.shift()) || executingCount--;
       });
 
