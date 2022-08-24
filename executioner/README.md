@@ -20,7 +20,7 @@ To run the executioner, the following environmental variables need to be set:
 - `GOOGLE_APPLICATION_CREDENTIALS` : Path to the firestore key file
 
 Then you'll need to install the dependencies and build the sandbox container
-with the following command:
+with the following command in the executioner repo:
 
 ```
 npm install

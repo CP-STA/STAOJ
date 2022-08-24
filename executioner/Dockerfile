@@ -12,4 +12,4 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mono-complete
 WORKDIR /app
 
 # Copy all container script files over
-COPY container_scripts/* /app/
+COPY container-scripts/* /app/

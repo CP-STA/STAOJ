@@ -14,7 +14,7 @@ const exec = util.promisify(cp.exec);
 // --- Testing consts ---
 const repoPath = path.resolve('../');
 const thisPath = path.resolve('.');
-const sampleSourceCodePath = path.join(thisPath, 'test', 'sample_source_code');
+const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
 
 const mleString = 'Out of memory!';
 const tleString = 'Out of time!';

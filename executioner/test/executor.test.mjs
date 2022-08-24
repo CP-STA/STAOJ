@@ -16,7 +16,7 @@ const TMessage = Message.bind(null, null);
 
 const repoPath = path.resolve('../');
 const thisPath = path.resolve('.');
-const sampleSourceCodePath = path.join(thisPath, 'test', 'sample_source_code');
+const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
 
 const problem = 'test-base';
 const testCases = 3;
