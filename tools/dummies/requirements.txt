@@ -1,0 +1,4 @@
+python-dotenv
+firebase-admin
+firebase 
+numpy
