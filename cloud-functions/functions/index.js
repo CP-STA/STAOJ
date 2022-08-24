@@ -28,21 +28,6 @@ function getTestCases(problem) { // eslint-disable-line no-unused-vars
     .then((res) => res.json());
 }
 
-exports.writeSubtasks = functions.firestore
-  .document("/submissions/{submissionId}")
-  .onCreate(async (snap, context) => {
-    const problem = snap.data().problem;
-    return getProblemStatement(problem)
-      .then((json) => {
-        let subtasks = {};
-        subtasks = {};
-        for (let i = 0; i < json.subtasks.length; i++) {
-          subtasks[i + 1] = true;
-        }
-        return snap.ref.set({subtasks}, {merge: true});
-      });
-  });
-
 exports.parseJudge = functions.firestore
   .document("/submissions/{submissionId}/judge-result/{judgeResultId}")
   .onCreate(async (snap, context) => {
@@ -54,7 +39,7 @@ exports.parseJudge = functions.firestore
     const testCases = await testCasesPromise;
     if (snap.data().state == "tested" && snap.data().result != "accepted") {
       const currentTestCase = snap.data().testCase;
-      const currentSubtask = testCases[currentTestCase-1];
+      const currentSubtask = testCases[currentTestCase-1].subtask;
       const key = `subtasks.${currentSubtask}`;
       const obj = {};
       obj[key] = false;
