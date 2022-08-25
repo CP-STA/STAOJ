@@ -1,6 +1,7 @@
 <script>
 	import { Query, onSnapshot, QueryDocumentSnapshot } from 'firebase/firestore';
 	import { onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { formatDate, formateFirebaseDate, getVerdict } from '$lib/utils';
 
 	/** @type Query */
@@ -33,13 +34,10 @@
 		}
 	}
 
-	onMount(() => {
-		return () => {
-			if (unsub) {
-				console.log('unsub list');
-				unsub();
-			}
-		};
+	onDestroy(() => {
+		if (unsub) {
+			unsub();
+		}
 	});
 </script>
 

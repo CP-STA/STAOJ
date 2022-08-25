@@ -46,7 +46,7 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 				verdict: 'Unknown error',
 				verdictColor: 'danger'
 			}
-		}
+		};
 		if (submissionDoc.state == 'judged') {
 			if (submissionDoc.score == 1) {
 				verdict = 'Accepted';
@@ -56,11 +56,11 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 				verdictColor = 'warning';
 			} else if (submissionDoc.score == 0) {
 				verdict = `No Score`;
-				verdictColor = 'danger';	
+				verdictColor = 'danger';
 			}
 		} else {
 			// @ts-ignore
-			({verdict, verdictColor} = verdictMap[submissionDoc.state])
+			({ verdict, verdictColor } = verdictMap[submissionDoc.state]);
 		}
 	} else if (submissionDoc.compiling) {
 		verdict = 'Compiling...';
