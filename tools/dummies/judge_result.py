@@ -24,19 +24,15 @@ with urllib.request.urlopen(f"https://raw.githubusercontent.com/CP-STA/contest-p
 subcollection = doc_ref.collection("judge-results")
 
 subcollection.add({
-  "state": "queued"
+  "state": "compiling",
+  "judgeTime": firestore.SERVER_TIMESTAMP
 })
 
 time.sleep(1)
 
 subcollection.add({
-  "state": "compiling"
-})
-
-time.sleep(1)
-
-subcollection.add({
-  "state": "compiled"
+  "state": "compiled",
+  "judgeTime": firestore.SERVER_TIMESTAMP
 })
 
 time.sleep(1)
@@ -44,7 +40,8 @@ time.sleep(1)
 for i in range(len(test_cases)):
   subcollection.add({
     "state": "testing",
-    "testCase": i +1
+    "testCase": i +1,
+    "judgeTime": firestore.SERVER_TIMESTAMP
   })
   time.sleep(.5)
   if i == 1:
@@ -53,7 +50,8 @@ for i in range(len(test_cases)):
       "result": "TLE",
       "time": int(rng.integers(100, 1000)),
       "memory": int(rng.integers(128000, 256000)),
-      "testCase": i+1 
+      "testCase": i+1,
+      "judgeTime": firestore.SERVER_TIMESTAMP
     })
   else:
     subcollection.add({
@@ -61,7 +59,8 @@ for i in range(len(test_cases)):
       "result": "accepted",
       "time": int(rng.integers(100, 1000)),
       "memory": int(rng.integers(128000, 256000)),
-      "testCase": i+1
+      "testCase": i+1,
+      "judgeTime": firestore.SERVER_TIMESTAMP
     })
 
 
