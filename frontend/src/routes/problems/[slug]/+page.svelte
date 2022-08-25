@@ -19,6 +19,7 @@
 	import { page } from '$app/stores';
 	import CodeInput from '$lib/Submission.svelte';
 	let slug = $page.params.slug;
+	const isConest = $page.url.searchParams.get('contest') == 'true';
 </script>
 
 <h1 class="text-center">{data.problem.name}</h1>
@@ -33,7 +34,7 @@
 		</div>
 	</div>
 </div>
-<CodeInput languages={data.languages} problem={slug} />
+<CodeInput languages={data.languages} problem={slug} problemName={data.problem.name} {isConest} />
 <h2>Problem Statement</h2>
 <p>
 	{@html katexString(data.problem.statement)}
