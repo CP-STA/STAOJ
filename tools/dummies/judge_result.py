@@ -10,6 +10,9 @@ import numpy as np
 # Define if waiting is needed between results
 wait = True
 
+# One Hot encoding: See https://github.com/CP-STA/STAOJ/issues/15, if it is false, we use enum.
+one_hot = False
+
 # Rng with seed to make sure every run gives the same result (except for the judgeTime)
 rng = np.random.default_rng(1)
 
@@ -38,9 +41,14 @@ subcollection.add({
   "judgeTime": firestore.SERVER_TIMESTAMP
 })
 
-doc_ref.update({
-  "compiling": True
-})
+if one_hot:
+  doc_ref.update({
+    "compiling": True
+  })
+else:
+  doc_ref.update({
+    "state": "compiling"
+  })
 
 if wait:
   time.sleep(1)
@@ -51,20 +59,30 @@ subcollection.add({
   "judgeTime": firestore.SERVER_TIMESTAMP
 })
 
-# States needs to both flipped at the same time to prevent the state going back to queuing. 
-doc_ref.update({
-  "compiling": False,
-  "compiled": True
-})
+if one_hot:
+  # States needs to both flipped at the same time to prevent the state going back to queuing. 
+  doc_ref.update({
+    "compiling": False,
+    "compiled": True
+  })
+else:
+  doc_ref.update({
+    "state": "compiled"
+  })
 
 if wait:
   time.sleep(1)
 
+if one_hot:
+  doc_ref.update({
+      "compiled": False,
+      "judging": True
+  })
+else:
+  doc_ref.update({
+    "state": "judging"
+  })
 
-doc_ref.update({
-    "compiled": False,
-    "judging": True
-})
 for i in range(len(test_cases)):
   subcollection.add({
     "state": "testing",
@@ -142,9 +160,15 @@ for i in range(len(test_cases)):
     })
 
 # Update the calculated score. 
-doc_ref.update({
-  "score": 0.7,
-  "judging": False,
-  "judged": True
-})
+if one_hot:
+  doc_ref.update({
+    "score": 0.7,
+    "judging": False,
+    "judged": True
+  })
+else:
+  doc_ref.update({
+    "score": 0.7, 
+    "state": "judged"
+  })
 

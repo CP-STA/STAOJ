@@ -28,6 +28,40 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 	let verdict: string = 'Loading...';
 	let verdictColor: string = 'dark';
 	if (!submissionDoc) {
+	} else if (submissionDoc.state) {
+		const verdictMap = {
+			compiling: {
+				verdict: 'Compiling...',
+				verdictColor: 'dark'
+			},
+			compiled: {
+				verdict: 'Compiled',
+				verdictColor: 'dark'
+			},
+			judging: {
+				verdict: 'Running tests...',
+				verdictColor: 'dark'
+			},
+			error: {
+				verdict: 'Unknown error',
+				verdictColor: 'danger'
+			}
+		}
+		if (submissionDoc.state == 'judged') {
+			if (submissionDoc.score == 1) {
+				verdict = 'Accepted';
+				verdictColor = 'success';
+			} else if (submissionDoc.score != 1 && submissionDoc.score != 0) {
+				verdict = `Partial Score ${submissionDoc.score * 100}%`;
+				verdictColor = 'warning';
+			} else if (submissionDoc.score == 0) {
+				verdict = `No Score`;
+				verdictColor = 'danger';	
+			}
+		} else {
+			// @ts-ignore
+			({verdict, verdictColor} = verdictMap[submissionDoc.state])
+		}
 	} else if (submissionDoc.compiling) {
 		verdict = 'Compiling...';
 		verdictColor = 'dark';
