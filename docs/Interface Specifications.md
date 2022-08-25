@@ -80,7 +80,7 @@ We should have the following top level collections:
 - users: stores the data of users
 - submissions: stores all the submissions (note we will filter based on the user field to get the submissions of a users instead of putting submission as a sub-collection of a user)
 
-Each submission should have a sub-collection named "judge-result" in which each document refers to the judge result of a test case. 
+Each submission should have a sub-collection named "judge-results" in which each document refers to the judge result of a test case. 
 
 ### Submission Document Format
 

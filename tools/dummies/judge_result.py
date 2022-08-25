@@ -21,7 +21,7 @@ rng = np.random.default_rng(1)
 with urllib.request.urlopen(f"https://raw.githubusercontent.com/CP-STA/contest-problems/main/{problem}/test-cases.json") as url:
     test_cases = json.loads(url.read().decode())
 
-subcollection = doc_ref.collection("judge-result")
+subcollection = doc_ref.collection("judge-results")
 
 subcollection.add({
   "state": "queued"

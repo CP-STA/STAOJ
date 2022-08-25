@@ -29,7 +29,7 @@ function getTestCases(problem) { // eslint-disable-line no-unused-vars
 }
 
 exports.parseJudge = functions.firestore
-  .document("/submissions/{submissionId}/judge-result/{judgeResultId}")
+  .document("/submissions/{submissionId}/judge-results/{judgeResultId}")
   .onCreate(async (snap, context) => {
     const db = admin.firestore();
     const submissionRef = db.collection("submissions").doc(context.params.submissionId);
