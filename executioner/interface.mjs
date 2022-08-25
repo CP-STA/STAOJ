@@ -73,7 +73,7 @@ export async function inititaliseInterface(options) {
     },
     sendMessage: (message) => {
       const { id, ...dbMessage } = message;
-      submissions.doc(id).collection('judge-result').add(dbMessage);
+      submissions.doc(id).collection('judge-results').add(dbMessage);
     },
     completeSubmission: (id) => {
       submissions.doc(id).update({ judged: true });
