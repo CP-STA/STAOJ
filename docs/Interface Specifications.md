@@ -49,7 +49,7 @@ This contains a folder of published problems, see the problem format section for
 
 This contains a folder of unpublished problems, see the problem format section for more details . 
 
-### frontend [git submodule]
+### frontend
 
 The code for the frontend, hosted on vercel. 
 
