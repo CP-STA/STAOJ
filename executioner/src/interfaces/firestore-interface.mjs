@@ -1,5 +1,5 @@
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { Request } from '../request.mjs';
 
 export async function inititaliseInterface(options) {
@@ -66,7 +66,9 @@ export async function inititaliseInterface(options) {
         });
     },
     sendMessage: (message) => {
+      // Destruc message and add server time
       const { id, ...dbMessage } = message;
+      dbMessage.judgeTime = FieldValue.serverTimestamp();
       submissions.doc(id).collection('judge-results').add(dbMessage);
     },
     completeSubmission: (id) => {

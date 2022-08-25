@@ -1,4 +1,3 @@
-import path from 'path';
 import { inititaliseInterface } from './interfaces/firestore-interface.mjs';
 import { pushRequest } from './queuer.mjs';
 
@@ -23,6 +22,7 @@ async function runExecutioner() {
     console.log('Connected to database');
     console.log('Listening for new submissions...');
     app.onSubmission((request) => {
+      // Wrapper send message function
       function sendMessage(message) {
         console.log(`${message.id}:`, message.state);
 
@@ -31,12 +31,13 @@ async function runExecutioner() {
           app.errorWithSubmission(message.id);
           return;
         }
-
-        // Else send message and complete if state is done
-        app.sendMessage(message);
         if (message.state == 'done') {
           app.completeSubmission(message.id);
+          return;
         }
+
+        // Else send message
+        app.sendMessage(message);
       }
 
       pushRequest(repoPath, sendMessage, request);

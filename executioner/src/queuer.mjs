@@ -50,7 +50,6 @@ export function pushRequest(repoPath, sendMessage, request) {
   if (executingCount < limit) {
     handleExecution(request);
   } else {
-    sendMessage(new Message(request.id, state.queuing));
     queuedRequests.push(request);
   }
 }

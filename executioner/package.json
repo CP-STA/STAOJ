@@ -2,7 +2,8 @@
   "name": "executioner",
   "version": "0.8",
   "engines": {
-    "node": "12.22.9"
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
     "firebase-admin": "^11.0.1",

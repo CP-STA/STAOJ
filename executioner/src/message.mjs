@@ -1,6 +1,5 @@
 // State enum
 export const state = Object.freeze({
-  queuing: 'queuing',
   compiling: 'compiling',
   compiled: 'compiled',
   testing: 'testing',
