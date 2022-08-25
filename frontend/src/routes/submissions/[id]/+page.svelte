@@ -3,7 +3,7 @@
 	import { db } from '$lib/firebase';
 	import { query, onSnapshot, orderBy, collection, doc, limit } from 'firebase/firestore';
 	import { browser } from '$app/env';
-	import { getVerdict } from '$lib/utils';
+	import { getVerdict, formatFirebaseDate, formatFirebaseDateFromDoc } from '$lib/utils';
 	import { onDestroy } from 'svelte';
 	/** @type string */
 	const id = $page.params.id;
@@ -90,9 +90,11 @@
 <p>
 	Problem: {#if submissionDoc}<a href="/problems/{submissionDoc.problem}"
 			>{submissionDoc.problemName}</a
-		>{:else}{'['}loading...{']'}{/if}
+		>{:else}Loading...{/if}
 	<br />
 	Submission: {id}
+  <br />
+  Submission Time: {formatFirebaseDateFromDoc(submissionDoc)}
 </p>
 
 <h2>Verdict: <span class="text-{verdictColor}"> {verdict} </span></h2>

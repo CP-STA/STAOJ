@@ -2,7 +2,7 @@
 	import { Query, onSnapshot, QueryDocumentSnapshot } from 'firebase/firestore';
 	import { onMount } from 'svelte';
 	import { onDestroy } from 'svelte';
-	import { formatDate, formateFirebaseDate, getVerdict } from '$lib/utils';
+	import { formatDate, formatFirebaseDate, getVerdict } from '$lib/utils';
 
 	/** @type Query */
 	export let q;
@@ -58,7 +58,7 @@
 					><a class="p-0" href="/submissions/{doc.id}{isConest ? '?contest=true' : ''}">{doc.id}</a
 					></td
 				>
-				<td>{formateFirebaseDate(doc.data().submissionTime)}</td>
+				<td>{formatFirebaseDate(doc.data().submissionTime)}</td>
 				<td class="text-{getVerdict(doc.data()).verdictColor}">{getVerdict(doc.data()).verdict}</td>
 			</tr>
 		{/each}

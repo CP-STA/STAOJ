@@ -22,7 +22,7 @@
 		QueryDocumentSnapshot
 	} from 'firebase/firestore';
 	import MonacoBlock from '$lib/MonacoBlock.svelte';
-	import { formatDate, formateFirebaseDate } from '$lib/utils';
+	import { formatDate, formatFirebaseDate } from '$lib/utils';
 	import PreviousSubmissions from '$lib/PreviousSubmissions.svelte';
 	import Header from './Header.svelte';
 	import { getVerdict } from '$lib/utils';
@@ -180,7 +180,7 @@
 											{recentSubmissionDoc.id}
 										</a></td
 									>
-									<td>{formateFirebaseDate(recentSubmissionDoc.data().submissionTime)}</td>
+									<td>{formatFirebaseDate(recentSubmissionDoc.data().submissionTime)}</td>
 									<td class="text-{getVerdict(recentSubmissionDoc.data()).verdictColor}"
 										>{getVerdict(recentSubmissionDoc.data()).verdict}</td
 									>
