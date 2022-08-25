@@ -9,6 +9,10 @@ import {
   createEnvironment,
   prepareEnvironmentMacro,
 } from './hook_macros.mjs';
+import {
+  getSourceCodeFileName,
+  getSupportedLanguagesSync,
+} from '../src/utils/functions.mjs';
 const exec = util.promisify(cp.exec);
 
 // --- Testing consts ---
@@ -19,6 +23,8 @@ const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
 const mleString = 'Out of memory!';
 const tleString = 'Out of time!';
 
+const supportedLanguages = getSupportedLanguagesSync(repoPath);
+
 // Required types and languages
 const requiredTypes = [
   requestTypes.testAccepted,
@@ -27,13 +33,7 @@ const requiredTypes = [
   requestTypes.testTle,
   requestTypes.testHang,
 ];
-const requiredLanguages = Object.entries(
-  JSON.parse(
-    readFileSync(
-      path.join(repoPath, 'problems', 'supported-languages.json')
-    ).toString()
-  )
-).map(([language, data]) => ({ name: language, compiled: data.compiled }));
+const requiredLanguages = Object.keys(supportedLanguages);
 
 // Constraints
 const maxMem = 128000;
@@ -49,11 +49,19 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
   // Fetch info from context and create environment
   const request = t.context.requests[language.name][requestName];
   const tmpPath = t.context.tmpPaths[language.name][requestName];
+
+  // Adding fileName to the request
+  request.fileName = getSourceCodeFileName(
+    filesFromRequests[requestName],
+    supportedLanguages,
+    language.name
+  );
+
   const mountPath = await createEnvironment(request, tmpPath, repoPath);
 
   // In the case of java
   const compiledName =
-    language.name === 'java-11'
+    language.extension === 'java'
       ? `${filesFromRequests[requestName]}.class`
       : 'compiled';
 
@@ -277,9 +285,10 @@ test.before(
   'Preparing the execution environment',
   prepareEnvironmentMacro,
   requiredTypes,
-  requiredLanguages.map((language) => language.name),
+  requiredLanguages,
   sampleSourceCodePath,
-  'running'
+  'running',
+  path.join(thisPath, 'test', 'tmp')
 );
 test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 
@@ -287,9 +296,9 @@ test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 for (const language of requiredLanguages) {
   for (const request of requiredTypes) {
     test(
-      `Testing the container run script with ${request} for ${language.name}`,
+      `Testing the container run script with ${request} for ${language}`,
       testRunningMacro,
-      language,
+      { ...supportedLanguages[language], name: language },
       request
     );
   }

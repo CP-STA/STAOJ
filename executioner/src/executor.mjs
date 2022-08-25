@@ -4,6 +4,7 @@ import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
 import path from 'path';
 import rl from 'readline';
+import { getSourceCodeFileName } from './utils/functions.mjs';
 
 /*
 - This is where the actual execution of a request in a container occurs
@@ -16,6 +17,12 @@ import rl from 'readline';
 - Then completes execution
 */
 
+// File names according to spec
+const supportedLangaugesFile = 'supported-languages.json';
+const demoterCodeFile = 'demoter.c';
+const demoterMakeFile = 'Makefile';
+const problemConstraintsFile = 'constraints.json';
+const problemTestCasesFile = 'test-cases.json';
 const tleString = 'Out of time!';
 const mleString = 'Out of memory!';
 
@@ -26,14 +33,16 @@ const mleString = 'Out of memory!';
  * @param repoPath Path to the STAOJ repo
  * @param sendMessage Callback for sending messages
  * @param request Request object to execute
- * @param options Additional optional params: `problemDir`, `tmpRootDir`, `log`,
- * `overwriteTmpPath`
+ * @param options Additional optional params: `problemDir`, `tmpRootDir`,
+ * `measurerDir`, `log`, `overwriteTmpPath`
  */
 export async function execute(repoPath, sendMessage, request, options) {
   const problemDir = options.problemDir || 'problems';
+  const measurerDir = options.measurerDir || path.join('tools', 'measurer');
   const tmpRootDir = options.tmpRootDir || '/tmp';
   const log = options.log || ((msg) => {});
   const overwriteTmpPath = options.overwriteTmpPath || false;
+  const baseFileName = options.baseFileName || 'Solution';
 
   // Bind id arg to message as that remains the same for the duration of this funcion
   // The B stands for binded
@@ -42,29 +51,29 @@ export async function execute(repoPath, sendMessage, request, options) {
   // Setting the env paths
   const tmpPath = path.join(tmpRootDir, `request_${request.id}`);
   const mountPath = path.join(tmpPath, 'mount');
-  const sourceCodePath = path.join(mountPath, request.fileName);
   const answersPath = path.join(tmpPath, 'answers');
   const inDir = 'in';
   const outDir = 'out';
   const inPath = path.join(mountPath, inDir);
   const outPath = path.join(mountPath, outDir);
   const problemPath = path.join(repoPath, problemDir, request.problem);
-  const measurerPath = path.join(repoPath, 'tools', 'measurer');
+  const measurerPath = path.join(repoPath, measurerDir);
   const supportedLanguagesPath = path.join(
     repoPath,
-    'problems',
-    'supported-languages.json'
+    problemDir,
+    supportedLangaugesFile
   );
 
   // --- Integrity checks before builind the environment ---
   log('Fetching data');
-  // If tmp folder exists
+
+  // If allowed, overwrite the request tmpPath if it exists
   if (overwriteTmpPath) {
     await fs.rm(tmpPath, { recursive: true, force: true });
   } else {
     try {
       if ((await fs.lstat(tmpPath)).isDirectory()) {
-        throw `Tmp testing directory: ${tmpPath} already exists`;
+        throw `Temporary testing directory for ${request.id}: ${tmpPath} already exists`;
       }
     } catch {}
   }
@@ -92,6 +101,23 @@ export async function execute(repoPath, sendMessage, request, options) {
 
     log('Preparing environment');
 
+    // Adding fileName to request
+    request.fileName = getSourceCodeFileName(
+      baseFileName,
+      supportLanguages,
+      request.language
+    );
+    const sourceCodePath = path.join(mountPath, request.fileName);
+
+    // Create the tmp root dir if it doesn't alreayd exist
+    await fs
+      .access(tmpRootDir)
+      .catch((e) => {
+        console.log(e.message);
+        return fs.mkdir(tmpRootDir);
+      })
+      .catch(() => {});
+
     // Prep the tmp dir
     await fs.mkdir(tmpPath);
     await Promise.all([fs.mkdir(mountPath), fs.mkdir(answersPath)]);
@@ -101,12 +127,12 @@ export async function execute(repoPath, sendMessage, request, options) {
       fs.mkdir(inPath),
       fs.mkdir(outPath),
       fs.copyFile(
-        path.join(measurerPath, 'demoter.c'),
-        path.join(mountPath, 'demoter.c')
+        path.join(measurerPath, demoterCodeFile),
+        path.join(mountPath, demoterCodeFile)
       ),
       fs.copyFile(
-        path.join(measurerPath, 'Makefile'),
-        path.join(mountPath, 'Makefile')
+        path.join(measurerPath, demoterMakeFile),
+        path.join(mountPath, demoterMakeFile)
       ),
     ]);
 
@@ -116,7 +142,7 @@ export async function execute(repoPath, sendMessage, request, options) {
     // Write the problem tests to the test directory and return a list of the write file promises
     // Promise will be awaited later
     const writeTestCases = fs
-      .readFile(path.join(problemPath, 'test-cases.json'))
+      .readFile(path.join(problemPath, problemTestCasesFile))
       .then((file) => JSON.parse(file.toString()))
       .then((tests) => {
         return tests.flatMap((test, i) => {
@@ -134,7 +160,7 @@ export async function execute(repoPath, sendMessage, request, options) {
 
     // Parse the constraints
     const [maxMem, maxTime] = await fs
-      .readFile(path.join(problemPath, 'constraints.json'))
+      .readFile(path.join(problemPath, problemConstraintsFile))
       .then((file) => JSON.parse(file.toString()))
       .then((constraints) => [
         parseInt(constraints.memory),
@@ -272,7 +298,7 @@ export async function execute(repoPath, sendMessage, request, options) {
         }
       })();
 
-      // For the previous message to resolve before resolving the next
+      // Wait for the previous message to resolve before resolving the next to ensure messages are sent in order
       index > 0 && (await outMessages[index - 1]);
 
       return message;
@@ -301,7 +327,10 @@ export async function execute(repoPath, sendMessage, request, options) {
       const messageIndex = outMessages.length;
       outMessages.push(
         handleContainerOut(data, messageIndex)
-          .then(sendMessage)
+          .then((message) => {
+            sendMessage(message);
+            log(`Message sent: ${message.state}`);
+          })
           .catch((e) => {
             throw e;
           })
@@ -317,9 +346,9 @@ export async function execute(repoPath, sendMessage, request, options) {
     }).catch((code) => {
       throw `Error while executing container, exited with code ${code}`;
     });
-  } finally {
     log('Execution complete');
-
+  } finally {
+    // Upon execution completion do cleanup
     log('Cleaning up environment');
     await fs.rm(tmpPath, { recursive: true, force: true });
     log('Cleaning up complete');

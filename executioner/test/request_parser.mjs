@@ -1,6 +1,6 @@
 import path from 'path';
 import { promises as fs } from 'fs';
-import { Request } from '../request.mjs';
+import { Request } from '../src/request.mjs';
 
 // Exported enum of possible requests
 export const requestTypes = Object.freeze({
@@ -86,7 +86,6 @@ export async function parseRequests(
                   new Request(
                     `testing_${language}_${name}`,
                     problem,
-                    file,
                     await readContent,
                     language
                   ),

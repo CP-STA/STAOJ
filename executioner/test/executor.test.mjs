@@ -1,13 +1,14 @@
 import test from 'ava';
-import { execute } from '../executor.mjs';
+import { execute } from '../src/executor.mjs';
 import path from 'path';
 import { promises as fs, readFileSync } from 'fs';
-import { Message, state } from '../message.mjs';
+import { Message, state } from '../src/message.mjs';
 import {
   filesFromRequests,
   parseRequests,
   requestTypes,
 } from './request_parser.mjs';
+import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
 
 // Sets the message id to null, as that as the id should exist but the specific
 // value doesn't matter while testing
@@ -21,6 +22,8 @@ const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
 const problem = 'test-base';
 const testCases = 3;
 
+const supportedLanguages = getSupportedLanguagesSync(repoPath);
+
 // Required types and languages for these tests
 const requiredTypes = [
   requestTypes.testAccepted,
@@ -30,13 +33,7 @@ const requiredTypes = [
   requestTypes.testTle,
   requestTypes.testHang,
 ];
-const requiredLanguages = Object.entries(
-  JSON.parse(
-    readFileSync(
-      path.join(repoPath, 'problems', 'supported-languages.json')
-    ).toString()
-  )
-).map(([language, data]) => ({ name: language, compiled: data.compiled }));
+const requiredLanguages = Object.keys(supportedLanguages);
 
 // Helper function to generate repeated expected test case messages
 function generateExpectedTestMessages(totalTestCases, resultObject) {
@@ -91,17 +88,27 @@ const expected = {
 const testExecutorMacro = test.macro(async (t, language, requestName) => {
   // Getting the neccessary data from the text context
   const request = t.context.requests[language.name][requestName];
+  const messages = [];
 
+  // The mocked sendMessage function to accumulate the messages
+  function mockedSendMessage(message) {
+    messages.push(message);
+  }
+
+  await t.notThrowsAsync(
+    execute(repoPath, mockedSendMessage, request, {
+      problemDir: 'problems-private',
+      tmpRootDir: path.join(thisPath, 'test', 'tmp'),
+      overwriteTmpPath: true,
+      baseFileName: filesFromRequests[requestName],
+    })
+  );
+
+  // Iterate through messages
   let i = language.compiled ? 0 : 2;
   let count = 1;
-  let failed = false;
-
-  // The mocked sendMessage function to check sent messages
-  async function mockedSendMessage(message) {
+  for (const message of messages) {
     // Prevent followthrough of failure messages
-    if (failed) {
-      return;
-    }
 
     const expectedMessage = expected[requestName][i];
 
@@ -112,8 +119,7 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
         `Message ${count}: Expected ${expectedMessage.state} but got ${message.state}`
       )
     ) {
-      failed = true;
-      return;
+      break;
     }
 
     const testResult = await t.try(
@@ -182,11 +188,6 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
     i++;
     count++;
   }
-
-  await execute(repoPath, mockedSendMessage, request, {
-    problemDir: 'problems-private',
-    overwriteTmpPath: true,
-  });
 });
 
 test.before('Prepping the environment', async (t) => {
@@ -194,23 +195,23 @@ test.before('Prepping the environment', async (t) => {
     sampleSourceCodePath,
     problem,
     requiredTypes,
-    requiredLanguages.map((langauge) => langauge.name)
+    requiredLanguages
   ).catch((e) => {
     t.fail(e.message);
   });
 
   // Get the tmp names used by executor
-  const tmpPaths = requiredLanguages
-    .map((language) => language.name)
-    .reduce((langAcc, lang) => {
-      langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
-        typeAcc[
-          type
-        ] = `/tmp/request_testing_${lang}_${filesFromRequests[type]}`;
-        return typeAcc;
-      }, {});
-      return langAcc;
+  const tmpPaths = requiredLanguages.reduce((langAcc, lang) => {
+    langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
+      typeAcc[type] = path.join(
+        'test',
+        'tmp',
+        `request_testing_${lang}_${filesFromRequests[type]}`
+      );
+      return typeAcc;
     }, {});
+    return langAcc;
+  }, {});
 
   // Iterate through tmpPaths and delete tmp directories if they exist
   for (const languageRequests of Object.values(tmpPaths)) {
@@ -224,9 +225,9 @@ test.before('Prepping the environment', async (t) => {
 for (const language of requiredLanguages) {
   for (const request of requiredTypes) {
     test(
-      `Testing the executor with ${request} for ${language.name}`,
+      `Testing the executor with ${request} for ${language}`,
       testExecutorMacro,
-      language,
+      { ...supportedLanguages[language], name: language },
       request
     );
   }

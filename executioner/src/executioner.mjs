@@ -1,6 +1,5 @@
-import { promises as fs } from 'fs';
 import path from 'path';
-import { inititaliseInterface } from './interface.mjs';
+import { inititaliseInterface } from './interfaces/firestore-interface.mjs';
 import { pushRequest } from './queuer.mjs';
 
 async function runExecutioner() {
@@ -16,23 +15,6 @@ async function runExecutioner() {
     logError('REPO_PATH is undefined');
   }
 
-  const fileBaseName = 'Solution';
-  const supportedLanugagesPath = path.join(
-    repoPath,
-    'problems',
-    'supported-languages.json'
-  );
-  const languages = await fs
-    .readFile(supportedLanugagesPath)
-    .catch((e) => {
-      logError(`Could not find languages file at ${supportedLanugagesPath}`);
-    })
-    .then((data) => data.toString())
-    .then((file) => JSON.parse(file))
-    .catch((e) => {
-      logError(`Failed to parse JSON at ${supportedLanugagesPath}`);
-    });
-
   try {
     console.log('Connecting to database...');
     const app = await inititaliseInterface({
@@ -41,13 +23,6 @@ async function runExecutioner() {
     console.log('Connected to database');
     console.log('Listening for new submissions...');
     app.onSubmission((request) => {
-      // Set filename becasue that is not set by the interface currently
-      request.fileName = `${fileBaseName}.${
-        languages[request.language].extension
-      }`;
-
-      console.log('Message received:', request.id);
-
       function sendMessage(message) {
         console.log(`${message.id}:`, message.state);
 

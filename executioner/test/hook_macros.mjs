@@ -7,6 +7,7 @@ import path from 'path';
 const problem = undefined;
 
 // For creating the bare minimum to emulate the executor environment
+// Requires request.fileName to be set
 export async function createEnvironment(request, tmpPath, repoPath) {
   const mountPath = path.join(tmpPath, 'mount');
   const measurerPath = path.join(repoPath, 'tools', 'measurer');
@@ -33,7 +34,14 @@ export async function createEnvironment(request, tmpPath, repoPath) {
 
 // Macro to be run before tests to prepare for running container
 export const prepareEnvironmentMacro = test.macro(
-  async (t, requiredTypes, requiredLanguages, sampleSourceCodePath, action) => {
+  async (
+    t,
+    requiredTypes,
+    requiredLanguages,
+    sampleSourceCodePath,
+    action,
+    tmpRootDir
+  ) => {
     // Parse requests
     t.context.requests = await parseRequests(
       sampleSourceCodePath,
@@ -47,9 +55,10 @@ export const prepareEnvironmentMacro = test.macro(
     // Generate the tmp environment names for the request
     t.context.tmpPaths = requiredLanguages.reduce((langAcc, lang) => {
       langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
-        typeAcc[
-          type
-        ] = `/tmp/request_testing_container_${action}_with_${filesFromRequests[type]}_for_${lang}`;
+        typeAcc[type] = path.join(
+          tmpRootDir,
+          `request_testing_container_${action}_with_${filesFromRequests[type]}_for_${lang}`
+        );
         return typeAcc;
       }, {});
       return langAcc;

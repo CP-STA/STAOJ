@@ -9,6 +9,10 @@ import {
   createEnvironment,
   prepareEnvironmentMacro,
 } from './hook_macros.mjs';
+import {
+  getSourceCodeFileName,
+  getSupportedLanguagesSync,
+} from '../src/utils/functions.mjs';
 const exec = util.promisify(cp.exec);
 
 // --- Testing consts ---
@@ -16,16 +20,12 @@ const repoPath = path.resolve('../');
 const thisPath = path.resolve('.');
 const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
 
+const supportedLanguages = getSupportedLanguagesSync(repoPath);
+
 // Define the required types and languages to test
 // Must use read file sync as tests are defined synchronously
 const requiredTypes = [requestTypes.compileSuccess, requestTypes.compileError];
-const requiredLanugages = Object.entries(
-  JSON.parse(
-    readFileSync(
-      path.join(repoPath, 'problems', 'supported-languages.json')
-    ).toString()
-  )
-)
+const requiredLanguages = Object.entries(supportedLanguages)
   .filter(([_, info]) => info.compiled)
   .map(([language, _]) => language);
 
@@ -34,6 +34,15 @@ const testCompilingMacro = test.macro(async (t, language, requestName) => {
   // Await requests parsing to get request
   const request = t.context.requests[language][requestName];
   const tmpPath = t.context.tmpPaths[language][requestName];
+
+  // Adding fileName to the request
+  request.fileName = getSourceCodeFileName(
+    filesFromRequests[requestName],
+    supportedLanguages,
+    language
+  );
+
+  // Create the environment in the mount path
   const mountPath = await createEnvironment(request, tmpPath, repoPath);
 
   // Compiled name (exception for java)
@@ -86,14 +95,15 @@ test.before(
   'Preparing the execution environment',
   prepareEnvironmentMacro,
   requiredTypes,
-  requiredLanugages,
+  requiredLanguages,
   sampleSourceCodePath,
-  'compiling'
+  'compiling',
+  path.join(thisPath, 'test', 'tmp')
 );
 test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 
 // Create tests from requests
-for (const language of requiredLanugages) {
+for (const language of requiredLanguages) {
   for (const request of requiredTypes) {
     test(
       `Testing the container compile script with ${request} for ${language}`,

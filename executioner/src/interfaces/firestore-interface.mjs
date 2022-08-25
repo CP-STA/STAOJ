@@ -1,6 +1,6 @@
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Request } from './request.mjs';
+import { Request } from '../request.mjs';
 
 export async function inititaliseInterface(options) {
   const databaseURL =
@@ -54,17 +54,11 @@ export async function inititaliseInterface(options) {
               const id = change.doc.id;
               const { problem, language, sourceCode } = rawSubmission;
 
-              console.log('New:', rawSubmission, id);
+              console.log('New submission:', id, '\n', rawSubmission, id);
 
               // File names no longer stored, so cannot be read, so they must be
               // set later or removed from request in future
-              const newRequest = new Request(
-                id,
-                problem,
-                undefined,
-                sourceCode,
-                language
-              );
+              const newRequest = new Request(id, problem, sourceCode, language);
 
               handleSubmission(newRequest);
             }
