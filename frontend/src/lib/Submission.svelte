@@ -172,12 +172,13 @@
 									<th scope="col">Verdict</th>
 								</tr>
 								<tr>
-									<th scope="row"
+									<td
 										><a
+											class="p-0"
 											href="/submissions/{recentSubmissionDoc.id}{isConest ? '?contest=true' : ''}"
 										>
 											{recentSubmissionDoc.id}
-										</a></th
+										</a></td
 									>
 									<td>{formateFirebaseDate(recentSubmissionDoc.data().submissionTime)}</td>
 									<td class="text-{getVerdict(recentSubmissionDoc.data()).verdictColor}"

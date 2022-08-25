@@ -54,8 +54,9 @@
 	{:else}
 		{#each submissions as doc}
 			<tr>
-				<th scope="row"
-					><a href="/submissions/{doc.id}{isConest ? '?contest=true' : ''}">{doc.id}</a></th
+				<td
+					><a class="p-0" href="/submissions/{doc.id}{isConest ? '?contest=true' : ''}">{doc.id}</a
+					></td
 				>
 				<td>{formateFirebaseDate(doc.data().submissionTime)}</td>
 				<td class="text-{getVerdict(doc.data()).verdictColor}">{getVerdict(doc.data()).verdict}</td>

@@ -86,12 +86,15 @@
 	});
 </script>
 
-<h1>Submission {id}</h1>
+<h1>Submission Result</h1>
 <p>
-	For problem {#if submissionDoc}<a href="/problems/{submissionDoc.problem}"
+	Problem: {#if submissionDoc}<a href="/problems/{submissionDoc.problem}"
 			>{submissionDoc.problemName}</a
 		>{:else}{'['}loading...{']'}{/if}
+	<br />
+	Submission: {id}
 </p>
+
 <h2>Verdict: <span class="text-{verdictColor}"> {verdict} </span></h2>
 
 <table class="table">
