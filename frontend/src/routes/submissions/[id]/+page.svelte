@@ -1,9 +1,9 @@
 <script>
 	import { page } from '$app/stores';
 	import { db } from '$lib/firebase';
-	import { query, onSnapshot, orderBy, collection, doc, limit } from 'firebase/firestore';
+	import { query, onSnapshot, orderBy, collection, doc, limit, documentId, where } from 'firebase/firestore';
 	import { browser } from '$app/env';
-	import { getVerdict, formatFirebaseDate, formatFirebaseDateFromDoc } from '$lib/utils';
+	import { getVerdict, formatFirebaseDate, formatFirebaseDateFromDoc, sleep } from '$lib/utils';
 	import { onDestroy } from 'svelte';
 	/** @type string */
 	const id = $page.params.id;
@@ -20,7 +20,7 @@
 		error: 'Runtime Errror',
 		wrong: 'Wrong Answer'
 	};
-
+	
 	let resultColorMap = {
 		accepted: 'success',
 		TLE: 'danger',
@@ -28,7 +28,7 @@
 		error: 'danger',
 		wrong: 'danger'
 	};
-
+	
 	/** @type {import("@firebase/firestore").DocumentData | undefined} */
 	let submissionDoc;
 	let verdict = 'Loading...';
@@ -39,10 +39,29 @@
 	}
 
 	/** @type {import("@firebase/firestore").Unsubscribe | undefined} */
-	let testResultsUnsub;
-	/** @type {import("@firebase/firestore").Unsubscribe | undefined} */
 	let submissionDocUnsub;
-	if (browser && true) {
+
+	/** @param {number} retries the number of retries remaining */ 
+	function retrySubmissionDoc(retries) {
+		if (retries > 0) {
+			submissionDocUnsub = onSnapshot(
+				doc(db, "submissions", id), 
+				(doc) => {
+				submissionDoc = doc.data()
+			}, 
+			async (error) => {
+				console.error(error);
+				console.log("Retrying getting sumission document after .5 second"); 
+				await sleep(500);
+				console.log(`Retrying... remaning retries ${retries - 1}`);
+				retrySubmissionDoc(retries - 1);
+			})
+		}
+	}
+	/** @type {import("@firebase/firestore").Unsubscribe | undefined} */
+	let testResultsUnsub;
+	/** @param {number} retries the number of retries remaining */ 
+	function retryTestResults(retries) {
 		testResultsUnsub = onSnapshot(q, (snapshot) => {
 			/** @type any[] */
 			let newJudgeResults = [];
@@ -70,12 +89,21 @@
 				}
 			});
 			judgeResults = newJudgeResults;
-		});
-		submissionDocUnsub = onSnapshot(doc(db, 'submissions', id), (doc) => {
-			submissionDoc = doc.data();
+		}, 
+		async (error) => {
+			console.error(error);
+			console.log("Retrying getting results document after .5 second"); 
+			await sleep(500);
+			console.log(`Retrying... remaning retries ${retries - 1}`);
+			retryTestResults(retries - 1);	
 		});
 	}
 
+	if (browser && true) {
+		retryTestResults(16);
+		retrySubmissionDoc(16);
+	}
+	
 	onDestroy(() => {
 		if (testResultsUnsub) {
 			testResultsUnsub();
@@ -89,12 +117,12 @@
 <h1>Submission Result</h1>
 <p>
 	Problem: {#if submissionDoc}<a href="/problems/{submissionDoc.problem}"
-			>{submissionDoc.problemName}</a
-		>{:else}Loading...{/if}
+	>{submissionDoc.problemName}</a
+	>{:else}Loading...{/if}
 	<br />
 	Submission: {id}
-  <br />
-  Submission Time: {formatFirebaseDateFromDoc(submissionDoc)}
+	<br />
+	Submission Time: {formatFirebaseDateFromDoc(submissionDoc)}
 </p>
 
 <h2>Verdict: <span class="text-{verdictColor}"> {verdict} </span></h2>
@@ -108,15 +136,16 @@
 		<th scope="col" class="text-center">Verdict</th>
 	</tr>
 	{#if testCasesResults}
-		{#each Object.entries(testCasesResults) as [i, testCaseResult]}
-			<tr>
-				<th scope="row">{i}</th>
-				{#if submissionDoc && submissionDoc.subtasksCount != 0}<td>{testCaseResult.subtask}</td
-					>{/if}
-				<td class="text-end">{testCaseResult.time ? testCaseResult.time : ''}</td>
-				<td class="text-end">{testCaseResult.memory ? testCaseResult.memory : ''}</td>
-				<td class="text-center text-{testCaseResult.color}">{testCaseResult.verdict}</td>
-			</tr>
+	{#each Object.entries(testCasesResults) as [i, testCaseResult]}
+	<tr>
+		<th scope="row">{i}</th>
+		{#if submissionDoc && submissionDoc.subtasksCount != 0}<td>{testCaseResult.subtask}</td
+			>{/if}
+			<td class="text-end">{testCaseResult.time ? testCaseResult.time : ''}</td>
+			<td class="text-end">{testCaseResult.memory ? testCaseResult.memory : ''}</td>
+			<td class="text-center text-{testCaseResult.color}">{testCaseResult.verdict}</td>
+		</tr>
 		{/each}
-	{/if}
-</table>
+		{/if}
+	</table>
+	

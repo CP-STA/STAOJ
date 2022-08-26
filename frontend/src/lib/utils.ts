@@ -98,3 +98,7 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 	}
 	return { verdict, verdictColor };
 }
+
+export function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
