@@ -82,9 +82,9 @@ Each submission document should contain the following fields:
 - `subtasksCount` (int): the number of subtasks in the problem. 0 means there is no subtask. 
 - `sourceCode` (string): the source code.
 - `language` (string): the language id of the source code (e.g. `python-3.10`).
-- `submissionTime` ([firebase.firestore.Timestamp](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.Timestamp)): the time of time the server receives the submission in ISO format 
+- `submissionTime` ([firebase.firestore.Timestamp](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.Timestamp)): the time of time the server receives the submission
 - `state` (string | undefined): The state of the judge. Undefined implicitly means its queuing.
-- `failedSubtasks` (string[] | undefined): the failed subtasks, counting from 1. Undefined means there is no failed subtasks. Having a length of 0 also means there is no failed subtask. 
+- `failedSubtasks` (string[] | undefined): the failed subtasks, counting from 1. Undefined means there is no failed subtasks. Having a length of 0 also means there is no failed subtask.
 - `score` (number | undefined): the score of the problem. Undefined means it is not finished judging, whereas 0 means there is no score.
 
 The id of the firebase document should be the id of the submission. 
