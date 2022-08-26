@@ -22,6 +22,7 @@ export function initTestInterface(options) {
     sendMessage: (message) => {
       // Destructure message and add server time
       const { id, ...dbMessage } = message;
+      dbMessage.judgeTime = Date.now();
       executeCallback('onMessageSent', handleMessageSent, id, dbMessage);
     },
     completeSubmission: (id) => {

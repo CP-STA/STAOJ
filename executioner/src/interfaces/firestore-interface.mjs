@@ -66,9 +66,9 @@ export async function initFirestoreInterface(options) {
         });
     },
     sendMessage: (message) => {
-      // Destruc message and add server time
+      // Destructure message and add server time
       const { id, ...dbMessage } = message;
-      dbMessage.judgeTime = FieldValue.serverTimestamp();
+      dbMessage.judgeTime = Date.now();
       submissions.doc(id).collection('judge-results').add(dbMessage);
     },
     completeSubmission: (id) => {
