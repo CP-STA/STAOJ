@@ -1,10 +1,8 @@
 import test from 'ava';
-import { parseRequests, filesFromRequests } from './request_parser.mjs';
+import { parseRequests} from './request_parser.mjs';
+import { filesFromRequests, tmpRootPath } from './globals.mjs';
 import { promises as fs } from 'fs';
 import path from 'path';
-
-// Consts
-const problem = undefined;
 
 // For creating the bare minimum to emulate the executor environment
 // Requires request.fileName to be set
@@ -38,14 +36,11 @@ export const prepareEnvironmentMacro = test.macro(
     t,
     requiredTypes,
     requiredLanguages,
-    sampleSourceCodePath,
     action,
-    tmpRootDir
   ) => {
     // Parse requests
     t.context.requests = await parseRequests(
-      sampleSourceCodePath,
-      problem,
+      undefined,
       requiredTypes,
       requiredLanguages
     ).catch((e) => {
@@ -56,7 +51,7 @@ export const prepareEnvironmentMacro = test.macro(
     t.context.tmpPaths = requiredLanguages.reduce((langAcc, lang) => {
       langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
         typeAcc[type] = path.join(
-          tmpRootDir,
+          tmpRootPath,
           `request_testing_container_${action}_with_${filesFromRequests[type]}_for_${lang}`
         );
         return typeAcc;

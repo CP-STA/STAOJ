@@ -2,6 +2,7 @@ import { initFirestoreInterface } from './interfaces/firestore-interface.mjs';
 import { initTestInterface } from './interfaces/test-interface.mjs';
 import { pushRequest } from './queuer.mjs';
 import { Request } from './request.mjs';
+import path from 'path'
 
 // For logging errors neatly
 function logError(message, exit = true) {
@@ -10,12 +11,8 @@ function logError(message, exit = true) {
 }
 
 export async function runExecutioner(app) {
-  // Assigning the environmental variables
-  const repoPath = process.env.REPO_PATH;
 
-  if (repoPath === undefined) {
-    logError('REPO_PATH is undefined');
-  }
+  const repoPath = path.resolve('../')
 
   console.log('Listening for new submissions...');
   app.onSubmission((request) => {

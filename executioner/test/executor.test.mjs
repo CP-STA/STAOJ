@@ -1,12 +1,11 @@
 import test from 'ava';
 import { execute } from '../src/executor.mjs';
 import path from 'path';
-import { promises as fs, readFileSync } from 'fs';
+import { promises as fs } from 'fs';
+import { repoPath, requestTypes, filesFromRequests, testProblem, tmpRootPath } from './globals.mjs';
 import { Message, state } from '../src/message.mjs';
 import {
-  filesFromRequests,
   parseRequests,
-  requestTypes,
 } from './request_parser.mjs';
 import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
 
@@ -14,13 +13,6 @@ import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
 // value doesn't matter while testing
 // The T stands for Test
 const TMessage = Message.bind(null, null);
-
-const repoPath = path.resolve('../');
-const thisPath = path.resolve('.');
-const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
-
-const problem = 'test-base';
-const testCases = 3;
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
@@ -52,7 +44,7 @@ const expected = {
   [requestTypes.testAccepted]: [
     new TMessage(state.compiling),
     new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testCases, {
+    ...generateExpectedTestMessages(testProblem.testCases, {
       result: 'accepted',
       time: null,
       memory: null,
@@ -61,27 +53,27 @@ const expected = {
   [requestTypes.testWrong]: [
     new TMessage(state.compiling),
     new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testCases, { result: 'wrong' }),
+    ...generateExpectedTestMessages(testProblem.testCases, { result: 'wrong' }),
   ],
   [requestTypes.testError]: [
     new TMessage(state.compiling),
     new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testCases, { result: 'error' }),
+    ...generateExpectedTestMessages(testProblem.testCases, { result: 'error' }),
   ],
   [requestTypes.testMle]: [
     new TMessage(state.compiling),
     new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testCases, { result: 'MLE' }),
+    ...generateExpectedTestMessages(testProblem.testCases, { result: 'MLE' }),
   ],
   [requestTypes.testTle]: [
     new TMessage(state.compiling),
     new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testCases, { result: 'TLE' }),
+    ...generateExpectedTestMessages(testProblem.testCases, { result: 'TLE' }),
   ],
   [requestTypes.testHang]: [
     new TMessage(state.compiling),
     new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testCases, { result: 'TLE' }),
+    ...generateExpectedTestMessages(testProblem.testCases, { result: 'TLE' }),
   ],
 };
 
@@ -97,8 +89,8 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
 
   await t.notThrowsAsync(
     execute(repoPath, mockedSendMessage, request, {
-      problemDir: 'problems-private',
-      tmpRootDir: path.join(thisPath, 'test', 'tmp'),
+      problemDir: testProblem.dir,
+      tmpRootDir: tmpRootPath,
       overwriteTmpPath: true,
       baseFileName: filesFromRequests[requestName],
     })
@@ -192,8 +184,7 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
 
 test.before('Prepping the environment', async (t) => {
   t.context.requests = await parseRequests(
-    sampleSourceCodePath,
-    problem,
+    testProblem.name,
     requiredTypes,
     requiredLanguages
   ).catch((e) => {
@@ -204,8 +195,7 @@ test.before('Prepping the environment', async (t) => {
   const tmpPaths = requiredLanguages.reduce((langAcc, lang) => {
     langAcc[lang] = requiredTypes.reduce((typeAcc, type) => {
       typeAcc[type] = path.join(
-        'test',
-        'tmp',
+        tmpRootPath,
         `request_testing_${lang}_${filesFromRequests[type]}`
       );
       return typeAcc;

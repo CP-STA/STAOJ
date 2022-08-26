@@ -1,41 +1,17 @@
 import path from 'path';
 import { promises as fs } from 'fs';
 import { Request } from '../src/request.mjs';
+import { filesFromRequests, sampleSourceCodePath, requestTypes } from './globals.mjs';
 
-// Exported enum of possible requests
-export const requestTypes = Object.freeze({
-  compileError: 'compileError',
-  compileSuccess: 'compileSuccess',
-  testAccepted: 'testAccepted',
-  testWrong: 'testWrong',
-  testError: 'testError',
-  testMle: 'testMle',
-  testTle: 'testTle',
-  testHang: 'testHang',
-});
-
-// Specifying the file names for each request type
-const requestFiles = Object.freeze({
-  compile_error: requestTypes.compileError,
-  compile_success: requestTypes.compileSuccess,
-  test_accepted: requestTypes.testAccepted,
-  test_wrong: requestTypes.testWrong,
-  test_error: requestTypes.testError,
-  test_mle: requestTypes.testMle,
-  test_tle: requestTypes.testTle,
-  test_hang: requestTypes.testHang,
-});
-
-// Reverse requestFiles objects to get file names from requestType
-export const filesFromRequests = Object.fromEntries(
-  Object.entries(requestFiles).map(([key, value]) => [value, key])
+// Reverse filesFromRequest object to get requestType from file name
+const requestsFromFiles = Object.fromEntries(
+  Object.entries(filesFromRequests).map(([key, value]) => [value, key])
 );
 
 // Returns a promise for a collection of requests generated from the passed directory
 // The problem argument is the problem for which the source code solves
 // Each sub directory is treated as a supported language
 export async function parseRequests(
-  sourceCodeDir,
   problem,
   requiredTypes,
   requiredLanguages
@@ -46,8 +22,8 @@ export async function parseRequests(
   }
 
   // Check that passes directory exists
-  await fs.access(sourceCodeDir).catch(() => {
-    throw new Error(`Could not find ${sourceCodeDir} directory`);
+  await fs.access(sampleSourceCodePath).catch(() => {
+    throw new Error(`Could not find ${sampleSourceCodePath} directory`);
   });
 
   // Iterates through the languages required
@@ -55,7 +31,7 @@ export async function parseRequests(
   return Object.fromEntries(
     await Promise.all(
       requiredLanguages.map(async (language) => {
-        const languagePath = path.join(sourceCodeDir, language);
+        const languagePath = path.join(sampleSourceCodePath, language);
         const files = await fs.readdir(languagePath).catch(() => {
           throw new Error(`Could not find ${language} language directory`);
         });
@@ -68,7 +44,7 @@ export async function parseRequests(
               files.map(async (file) => {
                 // Reading the file, parsing the name, and adding to object
                 const name = path.parse(file).name;
-                const requestType = requestFiles[name];
+                const requestType = requestsFromFiles[name];
                 if (requestType === undefined) {
                   throw new Error(
                     `${name} is not an expected request type filename`

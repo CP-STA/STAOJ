@@ -1,24 +1,19 @@
 import test from 'ava';
-import { promises as fs, readFileSync } from 'fs';
+import { promises as fs } from 'fs';
 import cp from 'child_process';
 import util from 'util';
 import path from 'path';
-import { requestTypes, filesFromRequests } from './request_parser.mjs';
+import { repoPath, requestTypes, filesFromRequests } from './globals.mjs';
 import {
   cleanEnvironmentMacro,
   createEnvironment,
   prepareEnvironmentMacro,
-} from './hook_macros.mjs';
+} from './macros.mjs';
 import {
   getSourceCodeFileName,
   getSupportedLanguagesSync,
 } from '../src/utils/functions.mjs';
 const exec = util.promisify(cp.exec);
-
-// --- Testing consts ---
-const repoPath = path.resolve('../');
-const thisPath = path.resolve('.');
-const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
@@ -96,9 +91,7 @@ test.before(
   prepareEnvironmentMacro,
   requiredTypes,
   requiredLanguages,
-  sampleSourceCodePath,
   'compiling',
-  path.join(thisPath, 'test', 'tmp')
 );
 test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 

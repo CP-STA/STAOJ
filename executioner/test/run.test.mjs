@@ -1,27 +1,19 @@
 import test from 'ava';
-import { promises as fs, readFileSync } from 'fs';
+import { promises as fs } from 'fs';
 import cp from 'child_process';
 import util from 'util';
 import path from 'path';
-import { requestTypes, filesFromRequests } from './request_parser.mjs';
+import { requestTypes, testProblem, repoPath, filesFromRequests, mleString, tleString } from './globals.mjs';
 import {
   cleanEnvironmentMacro,
   createEnvironment,
   prepareEnvironmentMacro,
-} from './hook_macros.mjs';
+} from './macros.mjs';
 import {
   getSourceCodeFileName,
   getSupportedLanguagesSync,
 } from '../src/utils/functions.mjs';
 const exec = util.promisify(cp.exec);
-
-// --- Testing consts ---
-const repoPath = path.resolve('../');
-const thisPath = path.resolve('.');
-const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
-
-const mleString = 'Out of memory!';
-const tleString = 'Out of time!';
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
@@ -34,10 +26,6 @@ const requiredTypes = [
   requestTypes.testHang,
 ];
 const requiredLanguages = Object.keys(supportedLanguages);
-
-// Constraints
-const maxMem = 128000;
-const maxTime = 3000;
 
 // File names
 const inName = 'sample.in';
@@ -98,7 +86,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
   );
 
   // Compose run command
-  let runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${maxMem} -e MAX_TIME=${maxTime} executioner ./run.sh `;
+  let runCommand = `podman run -v ${mountPath}:/app/mount -e MAX_MEM=${testProblem.maxMem} -e MAX_TIME=${testProblem.maxTime} executioner ./run.sh `;
   if (language.compiled) {
     runCommand += compiledName;
   } else {
@@ -286,9 +274,7 @@ test.before(
   prepareEnvironmentMacro,
   requiredTypes,
   requiredLanguages,
-  sampleSourceCodePath,
   'running',
-  path.join(thisPath, 'test', 'tmp')
 );
 test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 
