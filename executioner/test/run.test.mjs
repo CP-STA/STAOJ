@@ -3,7 +3,14 @@ import { promises as fs } from 'fs';
 import cp from 'child_process';
 import util from 'util';
 import path from 'path';
-import { requestTypes, testProblem, repoPath, filesFromRequests, mleString, tleString } from './globals.mjs';
+import {
+  requestTypes,
+  testProblem,
+  repoPath,
+  filesFromRequests,
+  mleString,
+  tleString,
+} from './globals.mjs';
 import {
   cleanEnvironmentMacro,
   createEnvironment,
@@ -274,7 +281,7 @@ test.before(
   prepareEnvironmentMacro,
   requiredTypes,
   requiredLanguages,
-  'running',
+  'running'
 );
 test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 

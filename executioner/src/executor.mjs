@@ -1,10 +1,11 @@
-import { Message, state } from './message.mjs';
+import { Message, state } from './utils/types/message.mjs';
 import { promises as fs } from 'fs';
 import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
 import path from 'path';
 import rl from 'readline';
-import { getSourceCodeFileName } from './utils/functions.mjs';
+import { getSourceCodeFileName, isContainerImageBuilt } from './utils/functions.mjs';
+import { InvalidDataError } from './utils/types/errors.mjs';
 
 /*
 - This is where the actual execution of a request in a container occurs
@@ -39,7 +40,7 @@ const mleString = 'Out of memory!';
 export async function execute(repoPath, sendMessage, request, options) {
   const problemDir = options.problemDir || 'problems';
   const measurerDir = options.measurerDir || path.join('tools', 'measurer');
-  const tmpRootDir = options.tmpRootDir || '/tmp';
+  const tmpRootPath = options.tmpRootPath || '/tmp';
   const log = options.log || ((msg) => {});
   const overwriteTmpPath = options.overwriteTmpPath || false;
   const baseFileName = options.baseFileName || 'Solution';
@@ -49,7 +50,7 @@ export async function execute(repoPath, sendMessage, request, options) {
   const BMessage = Message.bind(null, request.id);
 
   // Setting the env paths
-  const tmpPath = path.join(tmpRootDir, `request_${request.id}`);
+  const tmpPath = path.join(tmpRootPath, `request_${request.id}`);
   const mountPath = path.join(tmpPath, 'mount');
   const answersPath = path.join(tmpPath, 'answers');
   const inDir = 'in';
@@ -77,24 +78,35 @@ export async function execute(repoPath, sendMessage, request, options) {
         await fs.lstat(tmpPath).catch(() => ({ isDirectory: () => false }))
       ).isDirectory()
     ) {
-      throw `Temporary testing directory for ${request.id}: ${tmpPath} already exists`;
+      throw new Error(
+        `Temporary testing directory for ${request.id}: ${tmpPath} already exists`
+      );
     }
   }
 
+  // Make sure image is built
+  if (!(await isContainerImageBuilt('executioner'))) {
+    throw  'Container image is not built, please run `npm install`'
+  }
+
   await fs.access(problemPath).catch((e) => {
-    throw `Problom directory: ${problemPath} not found`;
+    throw new Error(`Problom directory ${problemPath} not found`);
   });
 
   const supportLanguages = await fs
     .readFile(supportedLanguagesPath)
     .then((file) => JSON.parse(file.toString()))
     .catch((e) => {
-      throw `Supported languages file: ${supportedLanguagesPath} not found`;
+      throw new Error(
+        `Supported languages file ${supportedLanguagesPath} not found`
+      );
     });
 
   const language = supportLanguages[request.language];
   if (language === undefined) {
-    throw `Request language: ${request.language} not supported`;
+    throw new InvalidDataError(
+      `Request language ${request.language} not supported`
+    );
   }
 
   // --- Progressing to execution ---
@@ -114,10 +126,9 @@ export async function execute(repoPath, sendMessage, request, options) {
 
     // Create the tmp root dir if it doesn't already exist
     await fs
-      .access(tmpRootDir)
+      .access(tmpRootPath)
       .catch((e) => {
-        console.log(e.message);
-        return fs.mkdir(tmpRootDir);
+        return fs.mkdir(tmpRootPath);
       })
       .catch(() => {});
 
@@ -158,7 +169,7 @@ export async function execute(repoPath, sendMessage, request, options) {
         });
       })
       .catch((e) => {
-        throw 'Error parsing problem tests file';
+        throw new Error('Error parsing problem tests file');
       });
 
     // Parse the constraints
@@ -170,7 +181,7 @@ export async function execute(repoPath, sendMessage, request, options) {
         parseInt(constraints.time),
       ])
       .catch((e) => {
-        throw 'Error parsing problem constraints file';
+        throw new Error('Error parsing problem constraints file');
       });
 
     // Now we await the source code as we'll need it in a bit
@@ -204,14 +215,18 @@ export async function execute(repoPath, sendMessage, request, options) {
             const result = parsed[1];
 
             if (!['success', 'error'].includes(result)) {
-              throw 'Error parsing compiled result from container stdout';
+              throw new Error(
+                'Error parsing compiled result from container stdout'
+              );
             }
             return new BMessage(state.compiled, { result });
           }
           case 'testing': {
             const paddedTestCase = parsed[1];
             if (isNaN(paddedTestCase)) {
-              throw 'Error parsing test case number from container stdout';
+              throw new Error(
+                'Error parsing test case number from container stdout'
+              );
             }
             return new BMessage(state.testing, {
               testCase: parseInt(paddedTestCase),
@@ -222,7 +237,9 @@ export async function execute(repoPath, sendMessage, request, options) {
             const result = parsed[2];
 
             if (isNaN(paddedTestCase)) {
-              throw 'Error parsing test case number from container stdout';
+              throw new Error(
+                'Error parsing test case number from container stdout'
+              );
             }
 
             const testCase = parseInt(paddedTestCase);
@@ -293,11 +310,15 @@ export async function execute(repoPath, sendMessage, request, options) {
                   });
                 }
               default:
-                throw 'Error parsing tested result from container stdout';
+                throw new Error(
+                  'Error parsing tested result from container stdout'
+                );
             }
           }
           default:
-            throw `Error parsing status of container execution, got ${parsed}`;
+            throw new Error(
+              `Error parsing status of container execution, got ${parsed}`
+            );
         }
       })();
 
@@ -349,7 +370,9 @@ export async function execute(repoPath, sendMessage, request, options) {
         resolve();
       });
     }).catch((code) => {
-      throw `Error while executing container, exited with code ${code}`;
+      throw new Error(
+        `Error while executing container, exited with code ${code}`
+      );
     });
     log('Execution complete');
   } finally {

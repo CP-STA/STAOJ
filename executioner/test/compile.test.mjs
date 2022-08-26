@@ -91,7 +91,7 @@ test.before(
   prepareEnvironmentMacro,
   requiredTypes,
   requiredLanguages,
-  'compiling',
+  'compiling'
 );
 test.after.always('Cleaning up execution environment', cleanEnvironmentMacro);
 

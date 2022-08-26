@@ -1,12 +1,12 @@
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
-import { FieldValue, getFirestore } from 'firebase-admin/firestore';
-import { Request } from '../request.mjs';
+import { getFirestore } from 'firebase-admin/firestore';
+import { Request } from '../utils/types/request.mjs';
 
 export async function initFirestoreInterface(options) {
   const databaseURL =
     options.databaseURL ||
     (() => {
-      throw 'Need to pass `databaseURL` to interface options';
+      throw new Error('Need to pass `databaseURL` to interface options');
     })();
   const readOld = options.readOld || false;
   const submissionsCollectionPath =
@@ -14,7 +14,9 @@ export async function initFirestoreInterface(options) {
 
   // Assert that the neccessary env variable is set to connect to db
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS === undefined) {
-    throw 'The GOOGLE_APPLICATION_CREDENTIALS environmental variable must be set to the path of the database key file';
+    throw new Error(
+      'The GOOGLE_APPLICATION_CREDENTIALS environmental variable must be set to the path of the database key file'
+    );
   }
 
   // connect to cloud and ensure is connected
@@ -28,7 +30,7 @@ export async function initFirestoreInterface(options) {
   try {
     await submissions.get();
   } catch (e) {
-    throw `Unable to connect to database:\n${e}`;
+    throw new Error(`Unable to connect to database:\n${e}`);
   }
 
   let readOldYet = false;
@@ -67,15 +69,46 @@ export async function initFirestoreInterface(options) {
     },
     sendMessage: (message) => {
       // Destructure message and add server time
-      const { id, ...dbMessage } = message;
-      dbMessage.judgeTime = Date.now();
-      submissions.doc(id).collection('judge-results').add(dbMessage);
-    },
-    completeSubmission: (id) => {
-      submissions.doc(id).update({ judged: true });
-    },
-    errorWithSubmission: (id) => {
-      submissions.doc(id).update({ error: true });
+      const { id, ...data } = message;
+      data.judgeTime = Date.now();
+
+      const updateSubmissonState = (state) => {
+        submissions.doc(id).update({ state });
+      };
+
+      // If state is error then mark as error an do nothing else
+      switch (data.state) {
+        case 'queuing':
+          // Need to change this later to support multiple executioners and
+          // prevent nasty race conditions
+          updateSubmissonState('judging');
+          return;
+        case 'compiling':
+          updateSubmissonState('compiling');
+          return;
+        case 'compiled':
+          if (data.result === 'success') {
+            updateSubmissonState('compiled');
+          } else if (data.result === 'error') {
+            updateSubmissonState('compileError');
+          } else {
+            throw new Error(
+              `Unexpected result: ${data.result} received from compiled message`
+            );
+          }
+          return;
+        case 'done':
+          updateSubmissonState('judged');
+          return;
+        case 'error':
+          updateSubmissonState('error');
+          return;
+        case 'invalid':
+          updateSubmissonState('invalidData');
+          return;
+      }
+      // Otherwise add as judge result
+      submissions.doc(id).collection('judge-results').add(data);
     },
   };
 }

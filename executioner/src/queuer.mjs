@@ -1,5 +1,6 @@
 import { execute } from './executor.mjs';
-import { Message, state } from './message.mjs';
+import { Message, state } from './utils/types/message.mjs';
+import { InvalidDataError } from './utils/types/errors.mjs'
 
 const limit = 1;
 const queuedRequests = [];
@@ -15,11 +16,14 @@ let executingCount = 0;
  * @param repoPath Path of the parent repository
  * @param sendMessage Callback used to send Messages
  * @param request The Request to execute or queue
+ * @param options Options passed directly to the executor
  */
-export async function pushRequest(repoPath, sendMessage, request) {
+export async function pushRequest(repoPath, sendMessage, request, options) {
   if (request === undefined) {
-    throw 'Error: Pushed request is undefined';
+    throw new InvalidDataError('Pushed request is undefined');
   }
+
+    sendMessage(new Message(request.id, state.queuing));
 
   // Wrapper to handle passing the right args to execution and handling promise result
   // I'm worried that this might actually be recursion and possibly cause overhead over time
@@ -30,16 +34,17 @@ export async function pushRequest(repoPath, sendMessage, request) {
 
     executingCount++;
     try {
-      await execute(repoPath, sendMessage, request, {
-        problemDir: 'problems-private',
-        overwriteTmpPath: true,
-      });
+      await execute(repoPath, sendMessage, request, options);
 
       // If finished without error then complete with done message
       sendMessage(new Message(request.id, state.done));
     } catch (e) {
-      // If error with particular request then notify database and let it propogate
-      sendMessage(new Message(request.id, state.error));
+      // If error then identify type and let it propogate
+      if (e instanceof InvalidDataError) {
+        sendMessage(new Message(request.id, state.invalid));
+      } else {
+        sendMessage(new Message(request.id, state.error));
+      }
       throw e;
     } finally {
       // Regardless, run the next queued request if any

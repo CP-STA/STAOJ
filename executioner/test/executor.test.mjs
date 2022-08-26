@@ -2,11 +2,15 @@ import test from 'ava';
 import { execute } from '../src/executor.mjs';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { repoPath, requestTypes, filesFromRequests, testProblem, tmpRootPath } from './globals.mjs';
-import { Message, state } from '../src/message.mjs';
 import {
-  parseRequests,
-} from './request_parser.mjs';
+  repoPath,
+  requestTypes,
+  filesFromRequests,
+  testProblem,
+  tmpRootPath,
+} from './globals.mjs';
+import { Message, state } from '../src/utils/types/message.mjs';
+import { parseRequests } from './request-parser.mjs';
 import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
 
 // Sets the message id to null, as that as the id should exist but the specific
@@ -90,7 +94,7 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
   await t.notThrowsAsync(
     execute(repoPath, mockedSendMessage, request, {
       problemDir: testProblem.dir,
-      tmpRootDir: tmpRootPath,
+      tmpRootPath: tmpRootPath,
       overwriteTmpPath: true,
       baseFileName: filesFromRequests[requestName],
     })

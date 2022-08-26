@@ -1,5 +1,6 @@
 import test from 'ava';
-import { parseRequests} from './request_parser.mjs';
+import { isContainerImageBuilt } from '../src/utils/functions.mjs';
+import { parseRequests } from './request-parser.mjs';
 import { filesFromRequests, tmpRootPath } from './globals.mjs';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -32,12 +33,12 @@ export async function createEnvironment(request, tmpPath, repoPath) {
 
 // Macro to be run before tests to prepare for running container
 export const prepareEnvironmentMacro = test.macro(
-  async (
-    t,
-    requiredTypes,
-    requiredLanguages,
-    action,
-  ) => {
+  async (t, requiredTypes, requiredLanguages, action) => {
+    // Make sure image is built
+    if (!(await isContainerImageBuilt('executioner'))) {
+      throw  'Container image is not built, please run `npm install`'
+    }
+
     // Parse requests
     t.context.requests = await parseRequests(
       undefined,
@@ -71,6 +72,10 @@ export const prepareEnvironmentMacro = test.macro(
 // Macro to be run after container to clear tmp directories
 export const cleanEnvironmentMacro = test.macro(async (t) => {
   // Iterate through tmpPaths and delete tmp directory
+  if (!t.context.tmpPaths) {
+    return
+  }
+  
   for (const languageRequests of Object.values(t.context.tmpPaths)) {
     for (const tmpPath of Object.values(languageRequests)) {
       await fs.rm(tmpPath, { recursive: true, force: true });

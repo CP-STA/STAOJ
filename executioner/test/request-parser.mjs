@@ -1,7 +1,11 @@
 import path from 'path';
 import { promises as fs } from 'fs';
-import { Request } from '../src/request.mjs';
-import { filesFromRequests, sampleSourceCodePath, requestTypes } from './globals.mjs';
+import { Request } from '../src/utils/types/request.mjs';
+import {
+  filesFromRequests,
+  sampleSourceCodePath,
+  requestTypes,
+} from './globals.mjs';
 
 // Reverse filesFromRequest object to get requestType from file name
 const requestsFromFiles = Object.fromEntries(
@@ -11,11 +15,7 @@ const requestsFromFiles = Object.fromEntries(
 // Returns a promise for a collection of requests generated from the passed directory
 // The problem argument is the problem for which the source code solves
 // Each sub directory is treated as a supported language
-export async function parseRequests(
-  problem,
-  requiredTypes,
-  requiredLanguages
-) {
+export async function parseRequests(problem, requiredTypes, requiredLanguages) {
   // If undefined, assume all request types required
   if (requiredTypes === undefined) {
     requiredTypes = Object.keys(requestTypes);

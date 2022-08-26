@@ -1,7 +1,6 @@
-import path from 'path'
+import path from 'path';
 
-
-// Contains any general const of functions shared between tests
+// Contains any general constansts used across tests
 
 export const testProblem = Object.freeze({
   name: 'test-base',
@@ -38,10 +37,13 @@ export const filesFromRequests = Object.freeze({
 // Paths
 export const repoPath = path.resolve('../');
 export const thisPath = path.resolve('.');
-export const sampleSourceCodePath = path.join(thisPath, 'test', 'sample-submissions');
-export const tmpRootPath = path.join(thisPath, 'test', 'tmp')
+export const sampleSourceCodePath = path.join(
+  thisPath,
+  'test',
+  'sample-submissions'
+);
+export const tmpRootPath = path.join(thisPath, 'test', 'tmp');
 
 // Demoter consts
 export const mleString = 'Out of memory!';
 export const tleString = 'Out of time!';
-

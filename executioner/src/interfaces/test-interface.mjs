@@ -2,7 +2,6 @@ export function initTestInterface(options) {
   // storing the callbacks
   let handleSubmission;
   let handleMessageSent;
-  let handleStateChange;
 
   // Cheeky little function that checks that a callback exists before calling
   // Else complain nicely
@@ -10,7 +9,7 @@ export function initTestInterface(options) {
     if (typeof callback === 'function') {
       callback(...args);
     } else {
-      throw `No ${setBy} callback set`;
+      throw new Error(`No ${setBy} callback set`);
     }
   }
 
@@ -25,21 +24,12 @@ export function initTestInterface(options) {
       dbMessage.judgeTime = Date.now();
       executeCallback('onMessageSent', handleMessageSent, id, dbMessage);
     },
-    completeSubmission: (id) => {
-      executeCallback('onStateChange', handleStateChange, id, 'judged');
-    },
-    errorWithSubmission: (id) => {
-      executeCallback('onStateChange', handleStateChange, id, 'error');
-    },
     // These methods exist for testing purposes specifically
     pushSubmission: (request) => {
       executeCallback('onSubmission', handleSubmission, request);
     },
     onMessageSent: (callback) => {
       handleMessageSent = callback;
-    },
-    onStateChange: (callback) => {
-      handleStateChange = callback;
     },
   };
 }

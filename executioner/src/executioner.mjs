@@ -1,8 +1,8 @@
 import { initFirestoreInterface } from './interfaces/firestore-interface.mjs';
 import { initTestInterface } from './interfaces/test-interface.mjs';
 import { pushRequest } from './queuer.mjs';
-import { Request } from './request.mjs';
-import path from 'path'
+import { Request } from './utils/types/request.mjs';
+import path from 'path';
 
 // For logging errors neatly
 function logError(message, exit = true) {
@@ -11,36 +11,29 @@ function logError(message, exit = true) {
 }
 
 export async function runExecutioner(app) {
-
-  const repoPath = path.resolve('../')
+  const repoPath = path.resolve('../');
+  const thisPath = path.resolve('./');
 
   console.log('Listening for new submissions...');
   app.onSubmission((request) => {
-    // Wrapper send message function
+    // Wrapper send message function to log stuff
     function sendMessage(message) {
       console.log(`${message.id}:`, message.state);
-
-      // If state is error then mark as error an do nothing else
-      if (message.state == 'error') {
-        app.errorWithSubmission(message.id);
-        return;
-      }
-      if (message.state == 'done') {
-        app.completeSubmission(message.id);
-        return;
-      }
-
-      // Else send message
       app.sendMessage(message);
     }
 
-    pushRequest(repoPath, sendMessage, request).catch(logError);
+    pushRequest(repoPath, sendMessage, request, {
+        problemDir: 'problems-private',
+        tmpRootPath: path.join(thisPath, 'tmp'),
+        overwriteTmpPath: true,
+      }).catch(logError);
   });
 }
 
 // --- Starts here ---
 
 console.log('Connecting to database...');
+
 initFirestoreInterface({
   databaseURL: 'staoj-database.firebaseio.com',
 })
@@ -55,7 +48,6 @@ initFirestoreInterface({
 /*
 const app = initTestInterface();
 
-app.onStateChange((id, state) => { console.log(id, `state changed to ${state}`)})
 app.onMessageSent((id, message) => { console.log(id, `message received ${message.state}`)})
 
 runExecutioner(app).catch((e) => { console.error(e) })
