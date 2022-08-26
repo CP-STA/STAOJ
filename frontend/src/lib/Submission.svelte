@@ -39,6 +39,9 @@
 	/** @type boolean */
 	export let isConest;
 
+	/** @type subtasksCount */
+	export let subtasksCount;
+
 	/** @type MonacoBlock */
 	let monacoBlock;
 
@@ -109,6 +112,7 @@
 			sourceCode: monacoBlock.getCode(),
 			language: selectedLanguage,
 			submissionTime: serverTimestamp(),
+			subtasksCount: subtasksCount,
 			judged: false,
 			error: false
 		});

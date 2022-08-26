@@ -17,9 +17,18 @@
 	/** @type {import('./$types').PageData} */
 	export let data;
 	import { page } from '$app/stores';
-	import CodeInput from '$lib/Submission.svelte';
+	import Submission from '$lib/Submission.svelte';
 	let slug = $page.params.slug;
 	const isConest = $page.url.searchParams.get('contest') == 'true';
+
+	function getSubtasksCount() {
+		if (data.problem.subtasks) {
+			return data.problem.subtasks.length;
+		} 
+		else {
+			return 0;
+		}
+	}
 </script>
 
 <h1 class="text-center">{data.problem.name}</h1>
@@ -34,7 +43,13 @@
 		</div>
 	</div>
 </div>
-<CodeInput languages={data.languages} problem={slug} problemName={data.problem.name} {isConest} />
+<Submission
+	languages={data.languages}
+	problem={slug}
+	problemName={data.problem.name}
+	{isConest}
+	subtasksCount={getSubtasksCount()}
+/>
 <h2>Problem Statement</h2>
 <p>
 	{@html katexString(data.problem.statement)}
@@ -52,6 +67,11 @@
 		</p>
 	{/each}
 {/if}
+
+<h2>Input</h2>
+<p>{@html katexString(data.problem.input)}</p>
+<h2>Output</h2>
+<p>{@html katexString(data.problem.output)}</p>
 
 <h2>Examples</h2>
 {#each data.problem.examples as example}
