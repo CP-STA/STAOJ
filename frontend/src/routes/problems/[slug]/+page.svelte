@@ -24,8 +24,7 @@
 	function getSubtasksCount() {
 		if (data.problem.subtasks) {
 			return data.problem.subtasks.length;
-		} 
-		else {
+		} else {
 			return 0;
 		}
 	}
