@@ -2,7 +2,7 @@ import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { Request } from '../request.mjs';
 
-export async function inititaliseInterface(options) {
+export async function initFirestoreInterface(options) {
   const databaseURL =
     options.databaseURL ||
     (() => {

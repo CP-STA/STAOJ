@@ -71,11 +71,14 @@ export async function execute(repoPath, sendMessage, request, options) {
   if (overwriteTmpPath) {
     await fs.rm(tmpPath, { recursive: true, force: true });
   } else {
-    try {
-      if ((await fs.lstat(tmpPath)).isDirectory()) {
-        throw `Temporary testing directory for ${request.id}: ${tmpPath} already exists`;
-      }
-    } catch {}
+    console.log('checking');
+    if (
+      (
+        await fs.lstat(tmpPath).catch(() => ({ isDirectory: () => false }))
+      ).isDirectory()
+    ) {
+      throw `Temporary testing directory for ${request.id}: ${tmpPath} already exists`;
+    }
   }
 
   await fs.access(problemPath).catch((e) => {
@@ -109,7 +112,7 @@ export async function execute(repoPath, sendMessage, request, options) {
     );
     const sourceCodePath = path.join(mountPath, request.fileName);
 
-    // Create the tmp root dir if it doesn't alreayd exist
+    // Create the tmp root dir if it doesn't already exist
     await fs
       .access(tmpRootDir)
       .catch((e) => {
@@ -332,7 +335,9 @@ export async function execute(repoPath, sendMessage, request, options) {
             log(`Message sent: ${message.state}`);
           })
           .catch((e) => {
-            throw e;
+            // It's quite difficult to propogate these errors so I have to print them here :(
+            console.error('Error:', e);
+            process.exit(1);
           })
       );
     });

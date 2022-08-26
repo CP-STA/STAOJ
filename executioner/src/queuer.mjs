@@ -16,39 +16,43 @@ let executingCount = 0;
  * @param sendMessage Callback used to send Messages
  * @param request The Request to execute or queue
  */
-export function pushRequest(repoPath, sendMessage, request) {
+export async function pushRequest(repoPath, sendMessage, request) {
   if (request === undefined) {
     throw 'Error: Pushed request is undefined';
   }
 
   // Wrapper to handle passing the right args to execution and handling promise result
-  function handleExecution(request) {
+  // I'm worried that this might actually be recursion and possibly cause overhead over time
+  async function handleExecution(request) {
     if (request === undefined) {
       return false;
     }
 
     executingCount++;
-    execute(repoPath, sendMessage, request, { problemDir: 'problems-private' })
-      .then(() => {
-        // If finished without error then complete with done message
-        sendMessage(new Message(request.id, state.done));
-      })
-      .catch((e) => {
-        // If error with particular request then notify database
-        sendMessage(new Message(request.id, state.error));
-        throw e;
-      })
-      .finally(() => {
-        // Regardless, run the next queued request if any
-        handleExecution(queuedRequests.shift()) || executingCount--;
+    try {
+      await execute(repoPath, sendMessage, request, {
+        problemDir: 'problems-private',
+        overwriteTmpPath: true,
       });
 
+      // If finished without error then complete with done message
+      sendMessage(new Message(request.id, state.done));
+    } catch (e) {
+      // If error with particular request then notify database and let it propogate
+      sendMessage(new Message(request.id, state.error));
+      throw e;
+    } finally {
+      // Regardless, run the next queued request if any
+      handleExecution(queuedRequests.shift()).then((executed) => {
+        executed || executingCount--;
+      });
+    }
     return true;
   }
 
   // Run or queue depending on if slot open
   if (executingCount < limit) {
-    handleExecution(request);
+    await handleExecution(request);
   } else {
     queuedRequests.push(request);
   }
