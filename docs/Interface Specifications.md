@@ -1,4 +1,4 @@
-# Interface Specifications (V2)
+# Interface Specifications (V3)
 
 This document specifies the definitions of many interfaces for the STAOJ so that development can happen concurrently, and different modules can talk to each other without problem. This helps with decoupling the different parts of the system. The definitions of these interface only states what “should” happen if the interface is properly implemented, leaving the implementation details to the respective authors to write. The people who use the interface should just expect that the interface works by magic like a black box. 
 
@@ -10,32 +10,22 @@ Unless stated otherwise `time` should be an integer in millisecond, `memory` sho
 
 These are the changes from V1:
 
-### Inconsistency
-- `constrains` and `constraints` were both used in version 1 in previous version. Rename all `constrains` to `constraints`.
+### Rename
+- Rename `judge-result` to `judge-results`.
 
-### Naming Convention
-- Use camelCase instead of snake_case for dictionary keys.
-- Change the problem ids from using snake_case to hyphen-case. 
-- Change the problem ids to only allowed lower case english letters, numbers and dash (-). 
-- Rename `test_cases.json` to `test-cases.json`. 
-- Rename `time_ms` to `time` and `memory_kb` to `memory`. 
-- Add complied `statement.json`
-
-### Ways of Communication
-- Change how the executioner communicates with the database.
-
-### Misc
-- Change the git folder structure
-  - Rename `problems` to `problems-private`
-  - Add `problems` to refer to `CP-STA/contest-problems`
-  - Remove `webserver`
-  - Add `frontend` to refer to git submodule `CP-STA/contest-problems`
+### Executioner communication with the Frontend
+- Remove boolean variables `judged` and `error` in favour of a enum string `state`.
+- Add `problemName` and `subtasksCount` in `submissions/{submission}` for the frontend. 
+- Add `score` and `failedSubtasks` in `submission/{submissions}` for the frontend.
+- Remove states `queuing`, `compiling`, `compiled`, `done` from the list of possible states in `judge-results/{result}`, in favour of putting them in `submission/{submissions}`.
+- Add `judgeTime` in `judge-results/{result}` to refer to the time the time the server receives message.
+- Remove REPO_PATH environment variable.
 
 ## Code Structure
 
-The main repo is at https://github.com/STAOJ/STAOJ. The path of this repo should be available for every process through the environmental variable REPO_PATH. 
+The main repo is at https://github.com/CP-STA/STAOJ. 
 
-The repo for the published problems should be at https://github.com/STAOJ/problems, and the problems for the upcoming contests should be at https://github.com/STAOJ/problems-private. The problems repo does not have to share an overlapping history with the private repo because the problems might not be written concurrently.  
+The repo for the published problems should be at https://github.com/CP-STA/problems, and the problems for the upcoming contests should be at https://github.com/CO-STA/problems-private. 
 
 ## Folder Structure
 
@@ -88,32 +78,34 @@ Each submission document should contain the following fields:
 
 - `user` (string): the uid of the submission user. 
 - `problem` (string): the id of the problem (e.g. `hello-world`).
+- `problemName` (string): the name of the problem (e.g. `Hello World`)
+- `subtasksCount` (int): the number of subtasks in the problem. 0 means there is no subtask. 
 - `sourceCode` (string): the source code.
 - `language` (string): the language id of the source code (e.g. `python-3.10`).
-- `submissionTime` ([firebase.firestore.Timestamp](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.Timestamp)): the time of time the server receives the submission in ISO format
-- `judged` (boolean): `true` iff the executioner has not finished judging, otherwise `false`.
-- `error` (boolean): `true` iff there is some generic error prevents the submission from being judged. This includes invalid document format. 
+- `submissionTime` ([firebase.firestore.Timestamp](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.Timestamp)): the time of time the server receives the submission
+- `state` (string | undefined): The state of the judge. Undefined implicitly means its queuing.
+- `failedSubtasks` (string[] | undefined): the failed subtasks, counting from 1. Undefined means there is no failed subtasks. Having a length of 0 also means there is no failed subtask.
+- `score` (number | undefined): the score of the problem. Undefined means it is not finished judging, whereas 0 means there is no score.
 
-The id of the firebase document should be the id of the submission (it is not used currently anywhere). 
+The id of the firebase document should be the id of the submission. 
 
 To make it easier add new functionalities and upgrade the system, any part of the system should ignore any field it does not recognize. 
 
 #### Data Validation
 
-There should be security rules that validate the contents. Moreover, a user should not be able to change or delete the content of a document once they are created. However, not all fields can be validated thoroughly. In particular, these fields will be validated:
+There should be security rules that validate the contents. Moreover, a user should not be able to change or delete the content of a document once they are created. However, not all fields can be validated thoroughly. In particular, these fields will be validated when the user first submits the submission:
 
 - `user` is the uid of the signed in user.
-- `judged` is false when the submission is first submitted. 
-- `error` is false when the submission is first submitted.
 - `submissionTime` is the time when the server receives the submission. 
+- `state`, `failedSubtasks` and `score` do not exist. 
 
 These values will not be validated due to technical difficulties:
 
 - `problem` is a valid problem id.
+- `problemName` is actually the name of the problem. 
 - `language` is a valid language id.
 - `sourceCode` is safe to run.
-
-Both `error` and `judged` logically should not be both true at the same time. If they are both true, any part of the program that depends on the two values should just fail because that signals a potential logical bug somewhere else. It's better to get the programmer's attention to fix it than to fail silently. 
+- `subtasksCount` is actually the number of subtasks in the problem document
 
 ## Interface Between the Database and Executioner
 
@@ -123,39 +115,25 @@ Since the web server needs to call the executioner to evaluate a script in a san
 
 ### Judge Result Document Format 
 
-The judge should have six states, “queuing”, “compiling”, “complied”, “testing”, “tested”, or “done”.  The states should be communicated to the webserver as soon as the executioner enters one through the key “state”. The states should denote the following. 
+The judge should have six states `compiling`, `complied`, `compileError`, `judging`, `judged`, `invalidData`, `error`. These states should be reflected by the `state` field in `submissions/{submission}`. The first four states states should be self explanatory. 
 
-When the problem source code is sent to the executioner, it should either entire the state `queuing` or `compiling` depending on if there is enough system resource to compile and test the submission.  
+- `invalidData` means the submission data is invalid but it should have been prevented by the frontend logic (for example, `language` is not noa valid language id. These are most likely unrecoverable data.
+- `error` refers to unexpected error such as failing to launch podman, permission denied, etc. It means there might be a bug in the executioner and we can try to recover the run later. 
 
-When the source has been complied (or failed to complied), it should enter the “complied” state. It should also have another key named `result`, which can either be `success` or `error`. If it is `error`, it should stop and change the `judged` field in the submission document to true. 
+Deciding which kind of error it is is tricky because it is not clear which kind of error it is from the symptom. For example, not being able to find the `problem` might mean the data is invalid or the some bug caused filed not found. I would suggest use `invalidData` sparingly because it's far more likely that we have made an error (in frontend or backend) than someone deliberately trying to attack the system. 
 
-As soon as a test case begins, it should enter the state `testing`, with another key named `testCase` with an integer key (not a string of the integer) which denotes the number of the test case, counting from 1.  
-
-When the test case completes, it should enter the state `tested` before it runs the next test case. In this state, it should communicate the result of the test case and the number of the test case in `testCase`. There should be four possible results `accepted`, `wrong` (wrong answer), `TLE` (time limit exceeded), `MLE` (memory limit exceeded), or `error` (runtime error). If the result is `wrong`, `TLE`, `MLE`, or `error`, it should continue running the next test cases, other parts of the system should deal with tallying the score. If the result is `accepted`, it should also have a key `time`, which value is an integer denotes the run time in millisecond, and a key `memory` which value is an integer denoting the memory used in kb (kilobytes).  
-
-When all the test cases are complete, it should enter the state `done`.  
-
-After it changed `judged` to `true`, it should not write any more document to the sub-collection. 
-
-If there is any unexpected error or the input data does not make sense, change `error` to `true` and stop.
-
-### Examples
-
-{"state": "compiling"} 
-
-{ "state": "tested", "test_case": 4, "result": "accepted", "time_ms": 457, "memory_kb": 24556} 
-
-{"state": "done"} 
-
-{"state": "tested", "result": "TLE"} 
-
-### Trust and Input Sanitization 
-
-Check Data Structure -> Submission Document Format -> Data Validation to see which fields can be trusted. If the `problem` or `language` does not match one in the database, it should change `error` to `true` and stop. There is no need for a nice error message because as frontend validates these fields, these fields being invalid means either a bug or someone deliberate is deliberately trying to attack the system. The executioner should not trust the code and execute it with proper sandboxing.
+For each `judge-results/{result}`. There should be the following fields:
+- state (string): either `testing` or `tested`
+- judgeTime ([firebase.firestore.Timestamp](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.Timestamp)): The time of the judgement at the executioner (not `serverTimestamp()`). Remember to sync the executioner's clock. 
+- testCase (int): the number of test case, counting from 1.
+- subtask (int | undefined): the subtask number this test case belongs to, counting from 1. undefined means there is no subtask in this problem.
+- result (string | undefined): either `accepted`, `MLE`, `TLE`, `error` or `wrong`. It should be undefined if state is `testing`
+- memory (int | undefined): the amount of memory used by the program in kb. 0 means 0kb of memory is used (which is probably impossible). undefined means there is no memory usage available.
+- time (int | undefined): the amount of memory used by the program in ms. 0 means 0ms is used (sub millisecond execution). undefined means there is no time usage available.
 
 ## Problems and Test Cases
 
-The problem folder should be read by the frontend and the executioner. It should exists at the path `REPO_PATH/problems`. In the folder, each problem should be stored in a sub-folder (no nesting should exist).  For example, `REPO_PATH/problems/hello-world` is the folder for the hello world problem. The name of the folder should be unique and should be used by many parts of the system to identify the problem. It should only lowercase english letters, numbers, and dash (-) lest some component in the tech stack cannot handle spaces or special characters. In the problem folder there should be five files handwritten, named “statement.md”, “test-cases.json”, “constraints.json”, “solution.xxx”, “generator.xxx”, where xxx is the suffix of whatever programming language the file uses, and one complied file `statement.json`. The following sections will explain what each file is used for. 
+The problem folder should be read by the frontend and the executioner. It should exists at the path `STAOJ/problems`. In the folder, each problem should be stored in a sub-folder (no nesting should exist).  For example, `STAOJ/problems/hello-world` is the folder for the hello world problem. The name of the folder should be unique and should be used by many parts of the system to identify the problem. It should only lowercase english letters, numbers, and dash (-) lest some component in the tech stack cannot handle spaces or special characters. In the problem folder there should be five files handwritten, named “statement.md”, “test-cases.json”, “constraints.json”, “solution.xxx”, “generator.xxx”, where xxx is the suffix of whatever programming language the file uses, and one complied file `statement.json`. The following sections will explain what each file is used for. 
 
 In addition, in the folder REPO_PATH/problem, you will find a python script named “audit.py”, run “python3 audit.py problem_name” to automatically check for the file formats and styles.  You need to installed the dependencies “pytest” and “pytest-depends” 
 
