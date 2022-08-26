@@ -46,6 +46,10 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 				verdict: 'Compiled',
 				verdictColor: 'dark'
 			},
+			compileError: {
+				verdict: 'Compilation Error',
+				verdictColor: 'danger'
+			},
 			judging: {
 				verdict: 'Running tests...',
 				verdictColor: 'dark'
