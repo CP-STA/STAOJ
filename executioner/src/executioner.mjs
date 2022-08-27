@@ -2,6 +2,10 @@ import path from 'path';
 import { execute } from './executor.mjs';
 import { Message, state } from './utils/types/message.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
+import {
+  isContainerImageBuilt,
+  getContainerCount,
+} from './utils/functions.mjs';
 
 // For logging errors neatly
 function logError(error, exit = true) {
@@ -9,7 +13,22 @@ function logError(error, exit = true) {
   exit && process.exit(1);
 }
 
-export function runExecutioner(app, options) {
+export async function runExecutioner(app, options) {
+  const checkPodman = options.checkPodman ?? true;
+
+  if (checkPodman) {
+    // Some checks with podman
+    // Make sure image is built
+    if (!(await isContainerImageBuilt('executioner'))) {
+      throw 'Container image is not built, please run `npm install`';
+    }
+
+    // Make sure there aren't too many containers made
+    if ((await getContainerCount()) > 2000) {
+      throw 'Podman currently has stored over 1000 containers and will soon fail at 2048, try running `podman rmi --all --force`';
+    }
+  }
+
   const repoPath = path.resolve('../');
 
   console.log('Listening for new submissions...');
@@ -45,10 +64,10 @@ export function runExecutioner(app, options) {
 
       executingCount++;
       try {
-        await execute(repoPath, sendMessage, request, options);
+        const result = await execute(repoPath, sendMessage, request, options);
 
         // If finished without error then complete with done message
-        sendMessage(new Message(request.id, state.done));
+        sendMessage(new Message(request.id, state.done, result));
       } catch (e) {
         // If error then identify type and let it propogate
         if (e instanceof InvalidDataError) {

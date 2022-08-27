@@ -54,8 +54,9 @@ export function getSourceCodeFileName(baseName, supportedLanguages, language) {
 // Check that the container image is built
 // Otherwise the error messages are quite unhelpful
 export async function isContainerImageBuilt(name) {
+  const command = `podman image exists ${name}`;
   try {
-    await exec(`podman image exists ${name}`);
+    await exec(command);
     return true;
   } catch (e) {
     if (e.code === 1) {
@@ -63,9 +64,21 @@ export async function isContainerImageBuilt(name) {
     } else if (e.code === 127) {
       throw new Error('Podman is not installed or in the path');
     } else {
-      throw new Error(
-        `Something went wrong calling 'podman image exists ${name}'`
-      );
+      throw new Error(`Something went wrong calling '${command}'`);
+    }
+  }
+}
+
+// Get the number of containers in podman, too many will lead to errors
+export async function getContainerCount() {
+  const command = `podman ps -a | wc -l`;
+  try {
+    return parseInt((await exec(command)).stdout);
+  } catch (e) {
+    if (e.code === 127) {
+      throw new Error('Podman is not installed or in the path');
+    } else {
+      throw new Error(`Something went wrong calling '${command}'`);
     }
   }
 }

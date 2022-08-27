@@ -20,10 +20,10 @@ export function Message(uuid, state, props) {
   if (state !== undefined) {
     this.state = state;
   }
-  // Adding additonal props to the message if any passed
+  // Adding additonal props to the message if any passed and not undefined
   if (props !== undefined) {
     for (let prop in props) {
-      if (props.hasOwnProperty(prop)) {
+      if (props[prop] !== undefined && props.hasOwnProperty(prop)) {
         this[prop] = props[prop];
       }
     }

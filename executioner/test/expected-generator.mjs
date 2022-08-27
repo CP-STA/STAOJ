@@ -4,21 +4,23 @@ import { requestTypes } from './globals.mjs';
 // Used for generating the expected messages sent by a request for executing submissions
 export function generateExpectedMessages(requiredTypes, testCases, options) {
   // Whether compiling and compiled messages should be included
-  const includeCompiled = options.includeCompiled || false;
+  const includeCompiled = options.includeCompiled ?? false;
 
   // Whether the queuing and done messages should be excluded
-  const justExecutor = options.justExecutor || false;
+  const justExecutor = options.justExecutor ?? false;
 
   // Id for the messages
-  const messageId = options.messageId || null;
+  const messageId = options.messageId ?? null;
 
   // Any additional fields on all messages?
-  const additionalFields = options.additionalFields || {};
+  const additionalFields = options.additionalFields ?? {};
+
+  // Fields on the done message
+  const doneFields = options.doneFields ?? undefined;
 
   // Bind the id to message constructor
   const TMessage = function (...params) {
     const message = new Message(messageId, ...params);
-
     return { ...message, ...additionalFields };
   };
 
@@ -111,7 +113,7 @@ export function generateExpectedMessages(requiredTypes, testCases, options) {
       }
     })();
     if (!justExecutor) {
-      expected.push(new TMessage(state.done));
+      expected.push(new TMessage(state.done, doneFields));
     }
 
     return [type, expected];

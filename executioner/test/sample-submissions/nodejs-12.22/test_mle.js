@@ -9,5 +9,10 @@ rl.on('line', (input) => {
     // Because nodejs times out before running out memory sometimes
     // And unexpected behaviour whilst testing sucks
     bulk.push(bulk.slice(0));
+    bulk.push(bulk.slice(0));
+    bulk.push(bulk.slice(0));
+    bulk.push(bulk.slice(0));
+    bulk.push(bulk.slice(0));
+    bulk.push(bulk.slice(0));
   }
 });

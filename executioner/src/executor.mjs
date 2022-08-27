@@ -4,10 +4,7 @@ import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
 import path from 'path';
 import rl from 'readline';
-import {
-  getSourceCodeFileName,
-  isContainerImageBuilt,
-} from './utils/functions.mjs';
+import { getSourceCodeFileName } from './utils/functions.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
 
 /*
@@ -25,7 +22,7 @@ import { InvalidDataError } from './utils/types/errors.mjs';
 const supportedLangaugesFile = 'supported-languages.json';
 const demoterCodeFile = 'demoter.c';
 const demoterMakeFile = 'Makefile';
-const problemConstraintsFile = 'constraints.json';
+const problemStatementFile = 'statement.json';
 const problemTestCasesFile = 'test-cases.json';
 const tleString = 'Out of time!';
 const mleString = 'Out of memory!';
@@ -41,12 +38,15 @@ const mleString = 'Out of memory!';
  * `measurerDir`, `log`, `overwriteTmpPath`
  */
 export async function execute(repoPath, sendMessage, request, options = {}) {
-  const problemDir = options.problemDir || 'problems';
-  const measurerDir = options.measurerDir || path.join('tools', 'measurer');
-  const tmpRootPath = options.tmpRootPath || '/tmp';
-  const log = options.log || ((msg) => {});
-  const overwriteTmpPath = options.overwriteTmpPath || false;
-  const baseFileName = options.baseFileName || 'Solution';
+  const problemDir = options.problemDir ?? 'problems';
+  const measurerDir = options.measurerDir ?? path.join('tools', 'measurer');
+  const tmpRootPath = options.tmpRootPath ?? '/tmp';
+  const log = options.log ?? ((msg) => {});
+  const overwriteTmpPath = options.overwriteTmpPath ?? false;
+  const baseFileName = options.baseFileName ?? 'Solution';
+
+  // What is to be returned
+  const executionResult = {};
 
   // Bind id arg to message as that remains the same for the duration of this funcion
   // The B stands for binded
@@ -75,7 +75,6 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
   if (overwriteTmpPath) {
     await fs.rm(tmpPath, { recursive: true, force: true });
   } else {
-    console.log('checking');
     if (
       (
         await fs.lstat(tmpPath).catch(() => ({ isDirectory: () => false }))
@@ -85,11 +84,6 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
         `Temporary testing directory for ${request.id}: ${tmpPath} already exists`
       );
     }
-  }
-
-  // Make sure image is built
-  if (!(await isContainerImageBuilt('executioner'))) {
-    throw 'Container image is not built, please run `npm install`';
   }
 
   await fs.access(problemPath).catch((e) => {
@@ -156,36 +150,50 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
     // Write source code, promise will be awaited later
     const writeSourceCode = fs.writeFile(sourceCodePath, request.sourceCode);
 
-    // Write the problem tests to the test directory and return a list of the write file promises
-    // Promise will be awaited later
-    const writeTestCases = fs
+    const tests = await fs
       .readFile(path.join(problemPath, problemTestCasesFile))
-      .then((file) => JSON.parse(file.toString()))
-      .then((tests) => {
-        return tests.flatMap((test, i) => {
-          // 0 pad number
-          const n = (i + 1).toString().padStart(3, '0');
-
-          // Write the in tests to mount/in and out tests to answers
-          fs.writeFile(path.join(inPath, `test${n}.in`), test.input);
-          fs.writeFile(path.join(answersPath, `test${n}.out`), test.output);
-        });
+      .catch((e) => {
+        throw new Error('Could not find problem test file');
       })
+      .then((file) => JSON.parse(file.toString()))
       .catch((e) => {
         throw new Error('Error parsing problem tests file');
       });
 
-    // Parse the constraints
-    const [maxMem, maxTime] = await fs
-      .readFile(path.join(problemPath, problemConstraintsFile))
-      .then((file) => JSON.parse(file.toString()))
-      .then((constraints) => [
-        parseInt(constraints.memory),
-        parseInt(constraints.time),
-      ])
+    // Write the problem tests to the test directory and return a list of the write file promises
+    // Promise will be awaited later
+    const writeTestCases = Promise.all(
+      tests.flatMap((test, i) => {
+        // 0 pad number
+        const n = (i + 1).toString().padStart(3, '0');
+
+        // Write the in tests to mount/in and out tests to answers
+        return [
+          fs.writeFile(path.join(inPath, `test${n}.in`), test.input),
+          fs.writeFile(path.join(answersPath, `test${n}.out`), test.output),
+        ];
+      })
+    );
+
+    // Read the problem statements file
+    const statement = await fs
+      .readFile(path.join(problemPath, problemStatementFile))
       .catch((e) => {
-        throw new Error('Error parsing problem constraints file');
+        throw new Error(
+          `Could not find problem statement file ${problemStatementFile}`
+        );
+      })
+      .then((file) => JSON.parse(file.toString()))
+      .catch((e) => {
+        throw new Error('Error parsing problem statement');
       });
+
+    const maxMem = parseInt(statement.memory);
+    const maxTime = parseInt(statement.time);
+    const subtasks = statement.subtasks;
+
+    // In case subtasks is null
+    let failed = false;
 
     // Now we await the source code as we'll need it in a bit
     await writeSourceCode;
@@ -231,8 +239,12 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
                 'Error parsing test case number from container stdout'
               );
             }
+
+            const testCase = parseInt(paddedTestCase);
+            const subtask = tests[testCase - 1].subtask;
             return new BMessage(state.testing, {
-              testCase: parseInt(paddedTestCase),
+              testCase,
+              subtask,
             });
           }
           case 'tested': {
@@ -246,6 +258,7 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
             }
 
             const testCase = parseInt(paddedTestCase);
+            const subtask = tests[testCase - 1].subtask;
 
             const outFile = `result${paddedTestCase}.out`;
             const errorFile = `error${paddedTestCase}.out`;
@@ -283,32 +296,44 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
 
                   return new BMessage(state.tested, {
                     testCase,
+                    subtask,
                     result: 'accepted',
                     time: timeUsed,
                     memory: memUsed,
                   });
                 } else {
+                  // Wrong answer means failed subtask
+                  subtask && (subtasks[subtask - 1].failed = true);
+                  failed = true;
                   return new BMessage(state.tested, {
                     testCase,
+                    subtask,
                     result: 'wrong',
                   });
                 }
               case 'error':
+                // Any error means failed subtask
+                subtask && (subtasks[subtask - 1].failed = true);
+                failed = true;
+
                 // Figure out what the error was
                 const errors = await fs.readFile(errorFilePath);
                 if (errors.toString().includes(mleString)) {
                   return new BMessage(state.tested, {
                     testCase,
+                    subtask,
                     result: 'MLE',
                   });
                 } else if (errors.toString().includes(tleString)) {
                   return new BMessage(state.tested, {
                     testCase,
+                    subtask,
                     result: 'TLE',
                   });
                 } else {
                   return new BMessage(state.tested, {
                     testCase,
+                    subtask,
                     result: 'error',
                   });
                 }
@@ -373,15 +398,41 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
         resolve();
       });
     }).catch((code) => {
-      throw new Error(
-        `Error while executing container, exited with code ${code}`
-      );
+      if (code === 125) {
+        throw new Error(
+          'You have reached the maximum containers podman can store, run `podman rmi --all --force` to clear them'
+        );
+      } else {
+        throw new Error(
+          `Error while executing container, exited with code ${code}`
+        );
+      }
     });
     log('Execution complete');
+
+    // Calculate the store and update failed tasks
+    if (subtasks.length > 0) {
+      executionResult.score = subtasks.reduce((score, task) => {
+        if (!task.failed) {
+          return score + task.score;
+        }
+        return score;
+      }, 0);
+      executionResult.failedTasks = subtasks.filter((task) => task.failed);
+    } else {
+      executionResult.score = failed ? 0 : 1;
+    }
+
+    // Make sure we don't have a weird error here
+    if (executionResult.score > 1) {
+      throw new Error(`Calculated a score greater than 1? ${executionResult}`);
+    }
   } finally {
     // Upon execution completion do cleanup
     log('Cleaning up environment');
     await fs.rm(tmpPath, { recursive: true, force: true });
     log('Cleaning up complete');
   }
+
+  return executionResult;
 }

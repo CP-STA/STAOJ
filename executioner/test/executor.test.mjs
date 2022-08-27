@@ -33,6 +33,7 @@ const expectedMessages = generateExpectedMessages(
   {
     includeCompiled: false,
     justExecutor: true,
+    doneFields: { score: null },
   }
 );
 const expectedMessagesCompiled = generateExpectedMessages(
@@ -41,6 +42,7 @@ const expectedMessagesCompiled = generateExpectedMessages(
   {
     includeCompiled: true,
     justExecutor: true,
+    doneFields: { score: null },
   }
 );
 
@@ -60,7 +62,8 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
       tmpRootPath: path.join(tmpRootPath, 'executor'),
       overwriteTmpPath: true,
       baseFileName: filesFromRequests[requestName],
-    })
+    }),
+    'Executor threw error'
   );
 
   // Pick either expected with or without compiled

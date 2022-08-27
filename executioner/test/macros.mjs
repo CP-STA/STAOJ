@@ -87,7 +87,8 @@ export const cleanEnvironmentMacro = test.macro(async (t) => {
 // (Treating null to mean any value but must be included)
 export const checkMessages = test.macro(async (t, expected, messages) => {
   // Iterate through messages
-  for (const [i, message] of Object.entries(messages)) {
+  for (const [s, message] of Object.entries(messages)) {
+    const i = parseInt(s);
     const expectedMessage = expected[i];
 
     // If their state isn't the same then break from the loop

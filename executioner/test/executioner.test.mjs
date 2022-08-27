@@ -36,6 +36,7 @@ const expectedMessages = generateExpectedMessages(
     includeCompiled: false,
     justExecutor: false,
     additionalFields: { judgeTime: null },
+    doneFields: { score: null },
   }
 );
 const expectedMessagesCompiled = generateExpectedMessages(
@@ -45,6 +46,7 @@ const expectedMessagesCompiled = generateExpectedMessages(
     includeCompiled: true,
     justExecutor: false,
     additionalFields: { judgeTime: null },
+    doneFields: { score: null },
   }
 );
 
@@ -66,6 +68,7 @@ const testExecutionerMacro = test.macro(async (t, language, requestName) => {
       tmpRootPath: path.join(thisPath, 'test', 'tmp', 'executioner'),
       overwriteTmpPath: true,
       baseFileName: filesFromRequests[requestName],
+      checkPodman: false,
     });
   });
 
