@@ -102,6 +102,9 @@ export function FirestoreInterface(options) {
           return;
         case 'done':
           updateSubmissonState('judged');
+          submissions.doc(id).update({ score: data.score });
+          data.failedSubtasks &&
+            submissions.doc(id).update({ failedSubtasks: data.failedSubtasks });
           return;
         case 'error':
           updateSubmissonState('error');

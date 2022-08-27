@@ -418,7 +418,9 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
         }
         return score;
       }, 0);
-      executionResult.failedTasks = subtasks.filter((task) => task.failed);
+      executionResult.failedSubtasks = Object.keys(
+        subtasks.filter((task) => task.failed)
+      ).map((n) => n + 1);
     } else {
       executionResult.score = failed ? 0 : 1;
     }
