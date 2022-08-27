@@ -18,7 +18,7 @@
 	/** @type string */
 	const id = $page.params.id;
 	const q = query(collection(db, 'submissions', id, 'judge-results'), orderBy('judgeTime', 'asc'));
-	const isConest = $page.url.searchParams.get('contest') == 'true';
+	const isContest = $page.url.searchParams.get('contest') == 'true';
 	/** @type any[] */
 	let judgeResults = [];
 	/** @type {{ [x: number]: { verdict: string; subtask: number; memory: number; time: number, color: string}; }} */

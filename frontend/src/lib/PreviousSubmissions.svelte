@@ -10,7 +10,7 @@
 	let submissions = [];
 
 	/** @type boolean */
-	export let isConest;
+	export let isContest;
 
 	let loading = true;
 
@@ -55,7 +55,7 @@
 		{#each submissions as doc}
 			<tr>
 				<td
-					><a class="p-0" href="/submissions/{doc.id}{isConest ? '?contest=true' : ''}">{doc.id}</a
+					><a class="p-0" href="/submissions/{doc.id}{isContest ? '?contest=true' : ''}">{doc.id}</a
 					></td
 				>
 				<td>{formatFirebaseDate(doc.data().submissionTime)}</td>

@@ -20,7 +20,7 @@
 	import { page } from '$app/stores';
 	import Submission from '$lib/Submission.svelte';
 	let slug = $page.params.slug;
-	const isConest = $page.url.searchParams.get('contest') == 'true';
+	const isContest = $page.url.searchParams.get('contest') == 'true';
 
 	function getSubtasksCount() {
 		if (data.problem.subtasks) {
@@ -51,7 +51,7 @@
 	languages={data.languages}
 	problem={slug}
 	problemName={data.problem.name}
-	{isConest}
+	{isContest}
 	subtasksCount={getSubtasksCount()}
 />
 <h2>Problem Statement</h2>

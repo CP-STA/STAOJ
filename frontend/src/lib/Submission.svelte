@@ -37,7 +37,7 @@
 	export let problemName;
 
 	/** @type boolean */
-	export let isConest;
+	export let isContest;
 
 	/** @type subtasksCount */
 	export let subtasksCount;
@@ -178,7 +178,7 @@
 									<td
 										><a
 											class="p-0"
-											href="/submissions/{recentSubmissionDoc.id}{isConest ? '?contest=true' : ''}"
+											href="/submissions/{recentSubmissionDoc.id}{isContest ? '?contest=true' : ''}"
 										>
 											{recentSubmissionDoc.id}
 										</a></td
@@ -227,7 +227,7 @@
 							where('problem', '==', problem),
 							orderBy('submissionTime', 'desc')
 						)}
-						{isConest}
+						{isContest}
 					/>
 				{/if}
 			</div>
