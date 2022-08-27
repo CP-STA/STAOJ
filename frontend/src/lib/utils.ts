@@ -38,6 +38,10 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 	if (!submissionDoc) {
 	} else if (submissionDoc.state) {
 		const verdictMap = {
+			queued: {
+				verdict: 'Queued',
+				verdictColor: 'dark'
+			},
 			compiling: {
 				verdict: 'Compiling...',
 				verdictColor: 'dark'
@@ -70,35 +74,16 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 				verdict = `No Score`;
 				verdictColor = 'danger';
 			}
-		} else {
+		} else if (submissionDoc.state in verdictMap) {
 			// @ts-ignore
 			({ verdict, verdictColor } = verdictMap[submissionDoc.state]);
+		} else {
+			verdict = 'Error (E3)';
+			verdictColor = 'danger';
 		}
-	} else if (submissionDoc.compiling) {
-		verdict = 'Compiling...';
-		verdictColor = 'dark';
-	} else if (submissionDoc.compiled) {
-		verdict = 'Compiled';
-		verdictColor = 'dark';
-	} else if (submissionDoc.judging) {
-		verdict = 'Running tests...';
-		verdictColor = 'dark';
-	} else if (submissionDoc.judged && submissionDoc.score == 1) {
-		verdict = 'Accepted';
-		verdictColor = 'success';
-	} else if (submissionDoc.judged && submissionDoc.score != 1 && submissionDoc.score != 0) {
-		verdict = `Partial Score ${submissionDoc.score * 100}%`;
-		verdictColor = 'warning';
-	} else if (submissionDoc.judged && submissionDoc.score == 0) {
-		verdict = `No Score`;
-		verdictColor = 'danger';
-	} else if (submissionDoc.error) {
-		// Being verbose here in case for sign posting so we don't forget about it in case we want slightly different behaviour in the future/
-		verdict = 'Unknown Error';
-		verdictColor = 'danger';
 	} else {
-		verdict = 'Queued';
-		verdictColor = 'dark';
+		verdict = 'Error (E2)';
+		verdictColor = 'danger';
 	}
 	return { verdict, verdictColor };
 }

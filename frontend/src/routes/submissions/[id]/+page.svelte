@@ -79,7 +79,7 @@
 				let newJudgeResults = [];
 				snapshot.forEach((document) => {
 					newJudgeResults.push(document.data());
-					if (document.data().state == 'testing' && !testCasesResults[document.data().testCase]) {
+					if (document.data().state == 'testing') {
 						// @ts-ignore
 						testCasesResults[document.data().testCase] = {
 							verdict: 'Testing',

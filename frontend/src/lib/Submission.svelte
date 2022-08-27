@@ -112,7 +112,8 @@
 			sourceCode: monacoBlock.getCode(),
 			language: selectedLanguage,
 			submissionTime: serverTimestamp(),
-			subtasksCount: subtasksCount
+			subtasksCount: subtasksCount,
+			state: 'queued'
 		});
 		submitted = true;
 		await p;
