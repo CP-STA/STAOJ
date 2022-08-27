@@ -39,8 +39,7 @@ export async function initFirestoreInterface(options) {
   return {
     onSubmission: (handleSubmission) => {
       submissions
-        .where('judged', '==', false)
-        .where('error', '==', false)
+        .where('state', '==', 'queued')
         .onSnapshot((snapshot) => {
           // Skip the first if not readOld and trigger flag to read rest
           if (!readOld && !readOldYet) {
