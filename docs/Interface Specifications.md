@@ -1,4 +1,4 @@
-# Interface Specifications (V3)
+# Interface Specifications (V3.1)
 
 This document specifies the definitions of many interfaces for the STAOJ so that development can happen concurrently, and different modules can talk to each other without problem. This helps with decoupling the different parts of the system. The definitions of these interface only states what “should” happen if the interface is properly implemented, leaving the implementation details to the respective authors to write. The people who use the interface should just expect that the interface works by magic like a black box. 
 
@@ -83,7 +83,7 @@ Each submission document should contain the following fields:
 - `sourceCode` (string): the source code.
 - `language` (string): the language id of the source code (e.g. `python-3.10`).
 - `submissionTime` ([firebase.firestore.Timestamp](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.Timestamp)): the time of time the server receives the submission
-- `state` (string | undefined): The state of the judge. Undefined implicitly means its queuing.
+- `state` (string): The state of the judge.
 - `failedSubtasks` (string[] | undefined): the failed subtasks, counting from 1. Undefined means there is no failed subtasks. Having a length of 0 also means there is no failed subtask.
 - `score` (number | undefined): the score of the problem. Undefined means it is not finished judging, whereas 0 means there is no score.
 
@@ -97,6 +97,7 @@ There should be security rules that validate the contents. Moreover, a user shou
 
 - `user` is the uid of the signed in user.
 - `submissionTime` is the time when the server receives the submission. 
+- `state` equals to `queued`
 - `state`, `failedSubtasks` and `score` do not exist. 
 
 These values will not be validated due to technical difficulties:
@@ -115,8 +116,9 @@ Since the web server needs to call the executioner to evaluate a script in a san
 
 ### Judge Result Document Format 
 
-The judge should have six states `compiling`, `complied`, `compileError`, `judging`, `judged`, `invalidData`, `error`. These states should be reflected by the `state` field in `submissions/{submission}`. The first four states states should be self explanatory. 
+The judge should have six states `queued`, `compiling`, `complied`, `compileError`, `judging`, `judged`, `invalidData`, `error`. These states should be reflected by the `state` field in `submissions/{submission}`. The first four states states should be self explanatory. 
 
+- `queued` means it has just been submitted. It is the default value. It doesn't have to be in any queue. This is useful for getting all the unjudged submission. 
 - `invalidData` means the submission data is invalid but it should have been prevented by the frontend logic (for example, `language` is not noa valid language id. These are most likely unrecoverable data.
 - `error` refers to unexpected error such as failing to launch podman, permission denied, etc. It means there might be a bug in the executioner and we can try to recover the run later. 
 
