@@ -1,9 +1,9 @@
 import { promises as fs, readFileSync } from 'fs';
-import cp from 'child_process'
+import cp from 'child_process';
 import path from 'path';
-import {promisify} from 'util'
+import { promisify } from 'util';
 
-const exec  = promisify(cp.exec)
+const exec = promisify(cp.exec);
 
 // Maybe move this to a globals file
 const supportedLanguagesFile = 'supported-languages.json';
@@ -55,15 +55,17 @@ export function getSourceCodeFileName(baseName, supportedLanguages, language) {
 // Otherwise the error messages are quite unhelpful
 export async function isContainerImageBuilt(name) {
   try {
-    await exec(`podman image exists ${name}`)
-    return true
+    await exec(`podman image exists ${name}`);
+    return true;
   } catch (e) {
     if (e.code === 1) {
-      return false
+      return false;
     } else if (e.code === 127) {
-      throw new Error('Podman is not installed or in the path')
+      throw new Error('Podman is not installed or in the path');
     } else {
-      throw new Error(`Something went wrong calling 'podman image exists ${name}'`)
+      throw new Error(
+        `Something went wrong calling 'podman image exists ${name}'`
+      );
     }
   }
 }

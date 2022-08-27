@@ -36,7 +36,7 @@ export const prepareEnvironmentMacro = test.macro(
   async (t, requiredTypes, requiredLanguages, action) => {
     // Make sure image is built
     if (!(await isContainerImageBuilt('executioner'))) {
-      throw  'Container image is not built, please run `npm install`'
+      throw 'Container image is not built, please run `npm install`';
     }
 
     // Parse requests
@@ -73,9 +73,9 @@ export const prepareEnvironmentMacro = test.macro(
 export const cleanEnvironmentMacro = test.macro(async (t) => {
   // Iterate through tmpPaths and delete tmp directory
   if (!t.context.tmpPaths) {
-    return
+    return;
   }
-  
+
   for (const languageRequests of Object.values(t.context.tmpPaths)) {
     for (const tmpPath of Object.values(languageRequests)) {
       await fs.rm(tmpPath, { recursive: true, force: true });
@@ -83,12 +83,11 @@ export const cleanEnvironmentMacro = test.macro(async (t) => {
   }
 });
 
-// For checking that two arrays of messages are the same 
+// For checking that two arrays of messages are the same
 // (Treating null to mean any value but must be included)
 export const checkMessages = test.macro(async (t, expected, messages) => {
   // Iterate through messages
   for (const [i, message] of Object.entries(messages)) {
-
     const expectedMessage = expected[i];
 
     // If their state isn't the same then break from the loop
@@ -96,7 +95,9 @@ export const checkMessages = test.macro(async (t, expected, messages) => {
       !t.is(
         message.state,
         expectedMessage.state,
-        `Message ${i+1}: Expected ${expectedMessage.state} but got ${message.state}`
+        `Message ${i + 1}: Expected ${expectedMessage.state} but got ${
+          message.state
+        }`
       )
     ) {
       break;
@@ -119,7 +120,7 @@ export const checkMessages = test.macro(async (t, expected, messages) => {
         (key) => !Object.keys(message).includes(key)
       );
       t.log(
-        `Message ${i+1}: ${message.state} has different keys than expected:`
+        `Message ${i + 1}: ${message.state} has different keys than expected:`
       );
       missingKeys.length !== 0 && t.log(` - Missing ${missingKeys}`);
       additionalKeys.length !== 0 &&
@@ -152,7 +153,7 @@ export const checkMessages = test.macro(async (t, expected, messages) => {
         ''
       );
       t.log(
-        `Message ${i+1}: ${message.state} has different values than expected:`
+        `Message ${i + 1}: ${message.state} has different values than expected:`
       );
       t.log(` -${differentEntriesString}`);
 
@@ -160,5 +161,9 @@ export const checkMessages = test.macro(async (t, expected, messages) => {
       return;
     }
   }
-   t.is(messages.length, expected.length, 'The number of received messages does not match the expected number')
-})
+  t.is(
+    messages.length,
+    expected.length,
+    'The number of received messages does not match the expected number'
+  );
+});

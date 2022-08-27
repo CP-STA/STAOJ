@@ -29,53 +29,67 @@ const requiredTypes = [
 ];
 const requiredLanguages = Object.keys(supportedLanguages);
 
-const expectedMessages = generateExpectedMessages(requiredTypes, testProblem.testCases, {
-  includeCompiled: false,
-  justExecutor: false,
-  additionalFields: { judgeTime: null },
-})
-const expectedMessagesCompiled = generateExpectedMessages(requiredTypes, testProblem.testCases, {
-  includeCompiled: true,
-  justExecutor: false,
-  additionalFields: { judgeTime: null },
-})
+const expectedMessages = generateExpectedMessages(
+  requiredTypes,
+  testProblem.testCases,
+  {
+    includeCompiled: false,
+    justExecutor: false,
+    additionalFields: { judgeTime: null },
+  }
+);
+const expectedMessagesCompiled = generateExpectedMessages(
+  requiredTypes,
+  testProblem.testCases,
+  {
+    includeCompiled: true,
+    justExecutor: false,
+    additionalFields: { judgeTime: null },
+  }
+);
 
 const testExecutionerMacro = test.macro(async (t, language, requestName) => {
   // Getting the neccessary data from the text context
   const request = t.context.requests[language.name][requestName];
   const messages = [];
 
-  console.log = () => {}
+  console.log = () => {};
 
   const app = new TestInterface();
   app.onMessageSent((message) => {
     messages.push(message);
-  })
+  });
 
   t.notThrows(() => {
     runExecutioner(app, {
-        problemDir: 'problems-private',
-        tmpRootPath: path.join(thisPath, 'test', 'tmp', 'executioner'),
-        overwriteTmpPath: true,
-        baseFileName: filesFromRequests[requestName],
-      })
-    }
-  );
+      problemDir: 'problems-private',
+      tmpRootPath: path.join(thisPath, 'test', 'tmp', 'executioner'),
+      overwriteTmpPath: true,
+      baseFileName: filesFromRequests[requestName],
+    });
+  });
 
   setTimeout(() => {
     app.pushSubmission(request);
-  }, 1000)
+  }, 1000);
 
   await app.submissionComplete();
 
   // Pick either expected with or without compiled
-  const expected = language.compiled ? expectedMessagesCompiled : expectedMessages
+  const expected = language.compiled
+    ? expectedMessagesCompiled
+    : expectedMessages;
 
-  const testResult = await t.try('Checking the received messages', checkMessages, expected[requestName], messages);
+  const testResult = await t.try(
+    'Checking the received messages',
+    checkMessages,
+    expected[requestName],
+    messages
+  );
   testResult.commit({ retainLogs: true });
 
   // Passing at the end to ensure test stops successfully
-  t.pass()
+  t.pass();
 });
 
 test.before('Prepping the environment', async (t) => {
@@ -114,7 +128,7 @@ for (const language of requiredLanguages) {
       `Testing the executioner with ${request} for ${language}`,
       testExecutionerMacro,
       { ...supportedLanguages[language], name: language },
-      request,
+      request
     );
   }
 }

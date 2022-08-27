@@ -27,14 +27,22 @@ const requiredTypes = [
 ];
 const requiredLanguages = Object.keys(supportedLanguages);
 
-const expectedMessages = generateExpectedMessages(requiredTypes, testProblem.testCases, {
-  includeCompiled: false,
-  justExecutor: true,
-})
-const expectedMessagesCompiled = generateExpectedMessages(requiredTypes, testProblem.testCases, {
-  includeCompiled: true,
-  justExecutor: true,
-})
+const expectedMessages = generateExpectedMessages(
+  requiredTypes,
+  testProblem.testCases,
+  {
+    includeCompiled: false,
+    justExecutor: true,
+  }
+);
+const expectedMessagesCompiled = generateExpectedMessages(
+  requiredTypes,
+  testProblem.testCases,
+  {
+    includeCompiled: true,
+    justExecutor: true,
+  }
+);
 
 const testExecutorMacro = test.macro(async (t, language, requestName) => {
   // Getting the neccessary data from the text context
@@ -56,8 +64,15 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
   );
 
   // Pick either expected with or without compiled
-  const expected = language.compiled ? expectedMessagesCompiled : expectedMessages
-  const testResult = await t.try('Checking the received messages', checkMessages, expected[requestName], messages);
+  const expected = language.compiled
+    ? expectedMessagesCompiled
+    : expectedMessages;
+  const testResult = await t.try(
+    'Checking the received messages',
+    checkMessages,
+    expected[requestName],
+    messages
+  );
   testResult.commit({ retainLogs: true });
 });
 

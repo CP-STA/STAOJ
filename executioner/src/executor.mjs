@@ -4,7 +4,10 @@ import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
 import path from 'path';
 import rl from 'readline';
-import { getSourceCodeFileName, isContainerImageBuilt } from './utils/functions.mjs';
+import {
+  getSourceCodeFileName,
+  isContainerImageBuilt,
+} from './utils/functions.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
 
 /*
@@ -37,7 +40,7 @@ const mleString = 'Out of memory!';
  * @param options Additional optional params: `problemDir`, `tmpRootDir`,
  * `measurerDir`, `log`, `overwriteTmpPath`
  */
-export async function execute(repoPath, sendMessage, request, options={}) {
+export async function execute(repoPath, sendMessage, request, options = {}) {
   const problemDir = options.problemDir || 'problems';
   const measurerDir = options.measurerDir || path.join('tools', 'measurer');
   const tmpRootPath = options.tmpRootPath || '/tmp';
@@ -86,7 +89,7 @@ export async function execute(repoPath, sendMessage, request, options={}) {
 
   // Make sure image is built
   if (!(await isContainerImageBuilt('executioner'))) {
-    throw  'Container image is not built, please run `npm install`'
+    throw 'Container image is not built, please run `npm install`';
   }
 
   await fs.access(problemPath).catch((e) => {

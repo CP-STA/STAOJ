@@ -1,7 +1,7 @@
 import path from 'path';
 import { execute } from './executor.mjs';
 import { Message, state } from './utils/types/message.mjs';
-import { InvalidDataError } from './utils/types/errors.mjs'
+import { InvalidDataError } from './utils/types/errors.mjs';
 
 // For logging errors neatly
 function logError(error, exit = true) {
@@ -34,7 +34,7 @@ export function runExecutioner(app, options) {
       throw new InvalidDataError('Pushed request is undefined');
     }
 
-      sendMessage(new Message(request.id, state.queuing));
+    sendMessage(new Message(request.id, state.queuing));
 
     // Wrapper to handle passing the right args to execution and handling promise result
     // I'm worried that this might actually be recursion and possibly cause overhead over time
