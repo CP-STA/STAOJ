@@ -52,7 +52,7 @@
 	{/if}
 {:else}
 	<h1>No Upcoming Contest</h1>
-	<p>There is no currently scheduled contest at the moment. Follow our facebook to stayed tuned.</p>
+	<p>There is no currently scheduled contest at the moment. Follow our facebook to stay tuned.</p>
 {/if}
 
 <style>

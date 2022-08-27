@@ -24,8 +24,8 @@
 	let testCasesResults = {};
 	let resultMap = {
 		accepted: 'Accepted',
-		TLE: 'Time Limit Execeded',
-		MLE: 'Memory Limit Execeded',
+		TLE: 'Time Limit Exceeded',
+		MLE: 'Memory Limit Exceeded',
 		error: 'Runtime Errror',
 		wrong: 'Wrong Answer'
 	};
