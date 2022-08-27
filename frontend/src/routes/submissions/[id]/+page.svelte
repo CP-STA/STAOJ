@@ -27,7 +27,7 @@
 		accepted: 'Accepted',
 		TLE: 'Time Limit Exceeded',
 		MLE: 'Memory Limit Exceeded',
-		error: 'Runtime Errror',
+		error: 'Runtime Error',
 		wrong: 'Wrong Answer'
 	};
 
