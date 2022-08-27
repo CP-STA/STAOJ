@@ -14,6 +14,7 @@
 	import { browser } from '$app/env';
 	import { getVerdict, formatFirebaseDate, formatFirebaseDateFromDoc, sleep } from '$lib/utils';
 	import { onDestroy } from 'svelte';
+	import { formatTitle } from '$lib/utils';
 	/** @type string */
 	const id = $page.params.id;
 	const q = query(collection(db, 'submissions', id, 'judge-results'), orderBy('judgeTime', 'asc'));
@@ -126,6 +127,10 @@
 		}
 	});
 </script>
+
+<svelte:head>
+	<title>{formatTitle('Submission Result')}</title>
+</svelte:head>
 
 <h1>Submission Result</h1>
 <p>

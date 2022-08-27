@@ -1,6 +1,7 @@
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
+	import { formatTitle } from '$lib/utils';
 
 	/** @param {Date} date */
 	const formatDate = (date) => {
@@ -9,6 +10,10 @@
 		return date.toLocaleDateString(undefined, options);
 	};
 </script>
+
+<svelte:head>
+	<title>{formatTitle('Past Problems')}</title>
+</svelte:head>
 
 <h1>Past Problems</h1>
 

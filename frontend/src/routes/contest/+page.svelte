@@ -2,6 +2,7 @@
 	import { time as currentTime } from '$lib/stores';
 	/** @type {import('./$types').PageData} */
 	export let data;
+	import { formatTitle } from '$lib/utils';
 
 	const problems = data.problems;
 
@@ -20,6 +21,10 @@
 	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime);
 	$: isAvaliable = $currentTime.synced && isAfterStart && isBeforeEnd;
 </script>
+
+<svelte:head>
+	<title>{formatTitle('Upcoming Contest')}</title>
+</svelte:head>
 
 {#if !$currentTime.synced}
 	<h1>Loading...</h1>

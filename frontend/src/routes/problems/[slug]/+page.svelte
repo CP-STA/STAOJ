@@ -2,6 +2,7 @@
 	// @ts-nocheck
 
 	import katex from 'katex/dist/katex.mjs';
+	import { formatTitle } from '$lib/utils';
 
 	/** @param {String} s*/
 	function katexString(s) {
@@ -29,6 +30,10 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>{formatTitle(data.problem.name)}</title>
+</svelte:head>
 
 <h1 class="text-center">{data.problem.name}</h1>
 <p class="text-center">By {data.problem.author}</p>

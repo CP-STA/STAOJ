@@ -91,3 +91,7 @@ export function getVerdict(submissionDoc: DocumentData | null | undefined) {
 export function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function formatTitle(s: string) {
+	return `${s} | STAOJ`;
+}

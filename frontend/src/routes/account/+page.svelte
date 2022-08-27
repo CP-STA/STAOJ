@@ -4,6 +4,7 @@
 	import { app as firebaseApp } from '$lib/firebase';
 	import { getAuth, signOut, signInWithPopup, GithubAuthProvider } from 'firebase/auth';
 	import { user } from '$lib/User.svelte';
+	import { formatTitle } from '$lib/utils';
 
 	const provider = new GithubAuthProvider();
 	const auth = getAuth(firebaseApp);
@@ -19,6 +20,10 @@
 		});
 	}
 </script>
+
+<svelte:head>
+	<title>{formatTitle('Account')}</title>
+</svelte:head>
 
 <h1>
 	Account {#if $user.user}<button type="button" class="btn btn-warning" on:click={signOutHandler}
