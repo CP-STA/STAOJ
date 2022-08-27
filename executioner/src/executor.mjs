@@ -37,7 +37,7 @@ const mleString = 'Out of memory!';
  * @param options Additional optional params: `problemDir`, `tmpRootDir`,
  * `measurerDir`, `log`, `overwriteTmpPath`
  */
-export async function execute(repoPath, sendMessage, request, options) {
+export async function execute(repoPath, sendMessage, request, options={}) {
   const problemDir = options.problemDir || 'problems';
   const measurerDir = options.measurerDir || path.join('tools', 'measurer');
   const tmpRootPath = options.tmpRootPath || '/tmp';

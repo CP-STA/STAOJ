@@ -9,14 +9,10 @@ import {
   testProblem,
   tmpRootPath,
 } from './globals.mjs';
-import { Message, state } from '../src/utils/types/message.mjs';
 import { parseRequests } from './request-parser.mjs';
 import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
-
-// Sets the message id to null, as that as the id should exist but the specific
-// value doesn't matter while testing
-// The T stands for Test
-const TMessage = Message.bind(null, null);
+import { generateExpectedMessages } from './expected-generator.mjs';
+import { checkMessages } from './macros.mjs';
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
@@ -31,55 +27,14 @@ const requiredTypes = [
 ];
 const requiredLanguages = Object.keys(supportedLanguages);
 
-// Helper function to generate repeated expected test case messages
-function generateExpectedTestMessages(totalTestCases, resultObject) {
-  return Array.from(Array(totalTestCases).keys()).flatMap((testCase) => [
-    new TMessage(state.testing, { testCase: testCase + 1 }),
-    new TMessage(state.tested, { testCase: testCase + 1, ...resultObject }),
-  ]);
-}
-
-// The expected messages to be sent by the executor for each request type
-const expected = {
-  [requestTypes.compileError]: [
-    new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'error' }),
-  ],
-  [requestTypes.testAccepted]: [
-    new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testProblem.testCases, {
-      result: 'accepted',
-      time: null,
-      memory: null,
-    }),
-  ],
-  [requestTypes.testWrong]: [
-    new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testProblem.testCases, { result: 'wrong' }),
-  ],
-  [requestTypes.testError]: [
-    new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testProblem.testCases, { result: 'error' }),
-  ],
-  [requestTypes.testMle]: [
-    new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testProblem.testCases, { result: 'MLE' }),
-  ],
-  [requestTypes.testTle]: [
-    new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testProblem.testCases, { result: 'TLE' }),
-  ],
-  [requestTypes.testHang]: [
-    new TMessage(state.compiling),
-    new TMessage(state.compiled, { result: 'success' }),
-    ...generateExpectedTestMessages(testProblem.testCases, { result: 'TLE' }),
-  ],
-};
+const expectedMessages = generateExpectedMessages(requiredTypes, testProblem.testCases, {
+  includeCompiled: false,
+  justExecutor: true,
+})
+const expectedMessagesCompiled = generateExpectedMessages(requiredTypes, testProblem.testCases, {
+  includeCompiled: true,
+  justExecutor: true,
+})
 
 const testExecutorMacro = test.macro(async (t, language, requestName) => {
   // Getting the neccessary data from the text context
@@ -94,96 +49,16 @@ const testExecutorMacro = test.macro(async (t, language, requestName) => {
   await t.notThrowsAsync(
     execute(repoPath, mockedSendMessage, request, {
       problemDir: testProblem.dir,
-      tmpRootPath: tmpRootPath,
+      tmpRootPath: path.join(tmpRootPath, 'executor'),
       overwriteTmpPath: true,
       baseFileName: filesFromRequests[requestName],
     })
   );
 
-  // Iterate through messages
-  let i = language.compiled ? 0 : 2;
-  let count = 1;
-  for (const message of messages) {
-    // Prevent followthrough of failure messages
-
-    const expectedMessage = expected[requestName][i];
-
-    if (
-      !t.is(
-        message.state,
-        expectedMessage.state,
-        `Message ${count}: Expected ${expectedMessage.state} but got ${message.state}`
-      )
-    ) {
-      break;
-    }
-
-    const testResult = await t.try(
-      `Checking that message ${count} is the same as expected`,
-      (tt) => {
-        // Check that the message states are the same
-        // Check that the keys are the same
-        if (
-          !tt.deepEqual(
-            Object.keys(message),
-            Object.keys(expectedMessage),
-            'A resulting message is missing some keys'
-          )
-        ) {
-          // Printing the differences
-          const additionalKeys = Object.keys(message).filter(
-            (key) => !Object.keys(expectedMessage).includes(key)
-          );
-          const missingKeys = Object.keys(expectedMessage).filter(
-            (key) => !Object.keys(message).includes(key)
-          );
-          tt.log(
-            `Message ${count}: ${message.state} has different keys than expected:`
-          );
-          missingKeys.length !== 0 && tt.log(` - Missing ${missingKeys}`);
-          additionalKeys.length !== 0 &&
-            tt.log(` - Unexpectedly has ${additionalKeys}`);
-
-          failed = true;
-          return;
-        }
-
-        // Check that the neccessary values are the same
-        if (
-          !tt.true(
-            Object.entries(expectedMessage)
-              .filter(([_, value]) => value !== null)
-              .every(
-                ([key, value]) =>
-                  Object.keys(message).includes(key) &&
-                  Object.values(message).includes(value)
-              ),
-            "A resulting message's value was different than expected"
-          )
-        ) {
-          // Printing the differences
-          const differentEntries = Object.entries(message)
-            .filter(([key, value]) => expectedMessage[key] !== value)
-            .map(([key, value]) => [key, value, expectedMessage[key]]);
-          const differentEntriesString = differentEntries.reduce(
-            (str, [key, v1, v2]) =>
-              v2 !== null ? str + ` {${key}: ${v2} but got ${v1}}` : str,
-            ''
-          );
-          tt.log(
-            `Message ${count}: ${message.state} has different values than expected:`
-          );
-          tt.log(` -${differentEntriesString}`);
-
-          failed = true;
-          return;
-        }
-      }
-    );
-    testResult.commit({ retainLogs: true });
-    i++;
-    count++;
-  }
+  // Pick either expected with or without compiled
+  const expected = language.compiled ? expectedMessagesCompiled : expectedMessages
+  const testResult = await t.try('Checking the received messages', checkMessages, expected[requestName], messages);
+  testResult.commit({ retainLogs: true });
 });
 
 test.before('Prepping the environment', async (t) => {

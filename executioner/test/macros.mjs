@@ -82,3 +82,83 @@ export const cleanEnvironmentMacro = test.macro(async (t) => {
     }
   }
 });
+
+// For checking that two arrays of messages are the same 
+// (Treating null to mean any value but must be included)
+export const checkMessages = test.macro(async (t, expected, messages) => {
+  // Iterate through messages
+  for (const [i, message] of Object.entries(messages)) {
+
+    const expectedMessage = expected[i];
+
+    // If their state isn't the same then break from the loop
+    if (
+      !t.is(
+        message.state,
+        expectedMessage.state,
+        `Message ${i+1}: Expected ${expectedMessage.state} but got ${message.state}`
+      )
+    ) {
+      break;
+    }
+
+    // Check that the message states are the same
+    // Check that the keys are the same
+    if (
+      !t.deepEqual(
+        Object.keys(message),
+        Object.keys(expectedMessage),
+        'A resulting message is missing some keys'
+      )
+    ) {
+      // Printing the differences
+      const additionalKeys = Object.keys(message).filter(
+        (key) => !Object.keys(expectedMessage).includes(key)
+      );
+      const missingKeys = Object.keys(expectedMessage).filter(
+        (key) => !Object.keys(message).includes(key)
+      );
+      t.log(
+        `Message ${i+1}: ${message.state} has different keys than expected:`
+      );
+      missingKeys.length !== 0 && t.log(` - Missing ${missingKeys}`);
+      additionalKeys.length !== 0 &&
+        t.log(` - Unexpectedly has ${additionalKeys}`);
+
+      failed = true;
+      return;
+    }
+
+    // Check that the neccessary values are the same
+    if (
+      !t.true(
+        Object.entries(expectedMessage)
+          .filter(([_, value]) => value !== null)
+          .every(
+            ([key, value]) =>
+              Object.keys(message).includes(key) &&
+              Object.values(message).includes(value)
+          ),
+        "A resulting message's value was different than expected"
+      )
+    ) {
+      // Printing the differences
+      const differentEntries = Object.entries(message)
+        .filter(([key, value]) => expectedMessage[key] !== value)
+        .map(([key, value]) => [key, value, expectedMessage[key]]);
+      const differentEntriesString = differentEntries.reduce(
+        (str, [key, v1, v2]) =>
+          v2 !== null ? str + ` {${key}: ${v2} but got ${v1}}` : str,
+        ''
+      );
+      t.log(
+        `Message ${i+1}: ${message.state} has different values than expected:`
+      );
+      t.log(` -${differentEntriesString}`);
+
+      failed = true;
+      return;
+    }
+  }
+   t.is(messages.length, expected.length, 'The number of received messages does not match the expected number')
+})

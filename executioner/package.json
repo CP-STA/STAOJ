@@ -1,6 +1,6 @@
 {
   "name": "executioner",
-  "version": "0.8",
+  "version": "0.9",
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
@@ -16,7 +16,7 @@
     "prettier": "^2.7.1"
   },
   "scripts": {
-    "start": "node src/executioner.mjs",
+    "start": "node src/app.mjs",
     "test": "ava --timeout=5m -c=4",
     "postinstall": "podman build . -t executioner"
   },
