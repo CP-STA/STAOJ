@@ -93,7 +93,9 @@ export function FirestoreInterface(options) {
           if (data.result === 'success') {
             updateSubmissonState('compiled');
           } else if (data.result === 'error') {
+            // Compilation error is an endstate so 0 becomes score
             updateSubmissonState('compileError');
+            submissions.doc(id).update({ score: 0 });
           } else {
             throw new Error(
               `Unexpected result: ${data.result} received from compiled message`

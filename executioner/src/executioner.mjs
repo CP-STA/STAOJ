@@ -8,9 +8,8 @@ import {
 } from './utils/functions.mjs';
 
 // For logging errors neatly
-function logError(error, exit = true) {
+function logError(error) {
   console.error(error);
-  exit && process.exit(1);
 }
 
 export async function runExecutioner(app, options) {
@@ -66,8 +65,11 @@ export async function runExecutioner(app, options) {
       try {
         const result = await execute(repoPath, sendMessage, request, options);
 
-        // If finished without error then complete with done message
-        sendMessage(new Message(request.id, state.done, result));
+        // Undefined score with no error means compilation error so no done message
+        if (result.score !== undefined) {
+          // If finished without error then complete with done message
+          sendMessage(new Message(request.id, state.done, result));
+        }
       } catch (e) {
         // If error then identify type and let it propogate
         if (e instanceof InvalidDataError) {

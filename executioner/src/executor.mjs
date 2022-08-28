@@ -193,7 +193,9 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
     const subtasks = statement.subtasks;
 
     // In case subtasks is null
-    let failed = false;
+    // Not a fan of this to be fair
+    let testFailed = false;
+    let compileFailed = false;
 
     // Now we await the source code as we'll need it in a bit
     await writeSourceCode;
@@ -230,6 +232,7 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
                 'Error parsing compiled result from container stdout'
               );
             }
+            result === 'error' && (compileFailed = true);
             return new BMessage(state.compiled, { result });
           }
           case 'testing': {
@@ -304,7 +307,7 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
                 } else {
                   // Wrong answer means failed subtask
                   subtask && (subtasks[subtask - 1].failed = true);
-                  failed = true;
+                  testFailed = true;
                   return new BMessage(state.tested, {
                     testCase,
                     subtask,
@@ -314,7 +317,7 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
               case 'error':
                 // Any error means failed subtask
                 subtask && (subtasks[subtask - 1].failed = true);
-                failed = true;
+                testFailed = true;
 
                 // Figure out what the error was
                 const errors = await fs.readFile(errorFilePath);
@@ -385,8 +388,7 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
           })
           .catch((e) => {
             // It's quite difficult to propogate these errors so I have to print them here :(
-            console.error('Error:', e);
-            process.exit(1);
+            console.error(e);
           })
       );
     });
@@ -410,24 +412,31 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
     });
     log('Execution complete');
 
-    // Calculate the store and update failed tasks
-    if (subtasks.length > 0) {
-      executionResult.score = subtasks.reduce((score, task) => {
-        if (!task.failed) {
-          return score + task.score;
-        }
-        return score;
-      }, 0);
-      executionResult.failedSubtasks = Object.keys(
-        subtasks.filter((task) => task.failed)
-      ).map((n) => n + 1);
+    // First if compileFail
+    if (compileFailed) {
+      // Return nothing in the execution result, this will be recognised
     } else {
-      executionResult.score = failed ? 0 : 1;
-    }
+      // Calculate the store and update failed tasks
+      if (subtasks.length > 0) {
+        executionResult.score = subtasks.reduce((score, task) => {
+          if (!task.failed) {
+            return score + task.score;
+          }
+          return score;
+        }, 0);
+        executionResult.failedSubtasks = Object.keys(
+          subtasks.filter((task) => task.failed)
+        ).map((n) => n + 1);
+      } else {
+        executionResult.score = testFailed ? 0 : 1;
+      }
 
-    // Make sure we don't have a weird error here
-    if (executionResult.score > 1) {
-      throw new Error(`Calculated a score greater than 1? ${executionResult}`);
+      // Make sure we don't have a weird error here
+      if (executionResult.score > 1) {
+        throw new Error(
+          `Calculated a score greater than 1? ${executionResult}`
+        );
+      }
     }
   } finally {
     // Upon execution completion do cleanup
