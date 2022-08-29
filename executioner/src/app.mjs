@@ -18,7 +18,7 @@ try {
       if (isActive) {
         console.log('Connected to database');
         return runExecutioner(app, {
-          problemDir: 'problems',
+          problemDir: 'problems-private',
           tmpRootPath: path.join(thisPath, 'tmp'),
           overwriteTmpPath: true,
         });

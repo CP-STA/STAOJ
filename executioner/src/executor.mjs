@@ -424,12 +424,15 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
           }
           return score;
         }, 0);
-        executionResult.failedSubtasks = Object.keys(
-          subtasks.filter((task) => task.failed)
-        ).map((n) => n + 1);
+        executionResult.failedSubtasks = Object.entries(subtasks)
+          .filter(([_, task]) => task.failed)
+          .map(([n, _]) => parseInt(n) + 1);
       } else {
         executionResult.score = testFailed ? 0 : 1;
       }
+
+      // Rounding score to 4 decimal places
+      executionResult.score = Math.round(executionResult.score * 10000) / 10000;
 
       // Make sure we don't have a weird error here
       if (executionResult.score > 1) {

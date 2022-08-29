@@ -3,7 +3,12 @@ import { promises as fs } from 'fs';
 import cp from 'child_process';
 import util from 'util';
 import path from 'path';
-import { repoPath, requestTypes, filesFromRequests } from './globals.mjs';
+import {
+  repoPath,
+  filesFromRequests,
+  requestGroups,
+  getRequestNamesByGroup,
+} from './globals.mjs';
 import {
   cleanEnvironmentMacro,
   createEnvironment,
@@ -19,7 +24,7 @@ const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
 // Define the required types and languages to test
 // Must use read file sync as tests are defined synchronously
-const requiredTypes = [requestTypes.compileSuccess, requestTypes.compileError];
+const requiredTypes = getRequestNamesByGroup(requestGroups.compileAll);
 const requiredLanguages = Object.entries(supportedLanguages)
   .filter(([_, info]) => info.compiled)
   .map(([language, _]) => language);
@@ -51,7 +56,7 @@ const testCompilingMacro = test.macro(async (t, language, requestName) => {
 
   // Assertion logic based on the request is kept within the test code to have more control
   switch (requestName) {
-    case requestTypes.compileError:
+    case 'compileError':
       // Assert that an error is thrown
       // Assert that no compiled file found
       await t.throwsAsync(
@@ -65,7 +70,7 @@ const testCompilingMacro = test.macro(async (t, language, requestName) => {
         'Compiled file found'
       );
       break;
-    case requestTypes.compileSuccess:
+    case 'compileSuccess':
       // Assert that no error is thrown
       // Assert that compiled file found
       // Assert that built demoter found

@@ -3,11 +3,12 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import {
   repoPath,
-  requestTypes,
   filesFromRequests,
   testProblem,
   tmpRootPath,
   thisPath,
+  requestGroups,
+  getRequestNamesByGroup,
 } from './globals.mjs';
 import { parseRequests } from './request-parser.mjs';
 import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
@@ -19,34 +20,23 @@ import { checkMessages } from './macros.mjs';
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
 // Required types and languages for these tests
-const requiredTypes = [
-  requestTypes.testAccepted,
-  requestTypes.testWrong,
-  requestTypes.testError,
-  requestTypes.testMle,
-  requestTypes.testTle,
-  requestTypes.testHang,
-];
+const requiredTypes = getRequestNamesByGroup(requestGroups.testAll);
 const requiredLanguages = Object.keys(supportedLanguages);
 
-const expectedMessages = generateExpectedMessages(
-  requiredTypes,
-  testProblem.testCases,
-  {
-    includeCompiled: false,
-    justExecutor: false,
-    additionalFields: { judgeTime: null },
-    doneFields: { score: null },
-  }
-);
+const expectedMessages = generateExpectedMessages(requiredTypes, testProblem, {
+  includeCompiled: false,
+  justExecutor: false,
+  additionalProperties: { [requestGroups.all]: { judgeTime: null } },
+  doneResults: { [requestGroups.all]: { score: null } },
+});
 const expectedMessagesCompiled = generateExpectedMessages(
   requiredTypes,
-  testProblem.testCases,
+  testProblem,
   {
     includeCompiled: true,
     justExecutor: false,
-    additionalFields: { judgeTime: null },
-    doneFields: { score: null },
+    additionalProperties: { [requestGroups.all]: { judgeTime: null } },
+    doneResults: { [requestGroups.all]: { score: null } },
   }
 );
 
@@ -62,15 +52,15 @@ const testExecutionerMacro = test.macro(async (t, language, requestName) => {
     messages.push(message);
   });
 
-  t.notThrows(() => {
+  await t.notThrowsAsync(
     runExecutioner(app, {
       problemDir: 'problems-private',
       tmpRootPath: path.join(thisPath, 'test', 'tmp', 'executioner'),
       overwriteTmpPath: true,
       baseFileName: filesFromRequests[requestName],
       checkPodman: false,
-    });
-  });
+    })
+  );
 
   setTimeout(() => {
     app.pushSubmission(request);

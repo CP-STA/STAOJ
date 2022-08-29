@@ -8,6 +8,8 @@ import {
   filesFromRequests,
   testProblem,
   tmpRootPath,
+  getRequestNamesByGroup,
+  requestGroups,
 } from './globals.mjs';
 import { parseRequests } from './request-parser.mjs';
 import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
@@ -17,32 +19,19 @@ import { checkMessages } from './macros.mjs';
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
 // Required types and languages for these tests
-const requiredTypes = [
-  requestTypes.testAccepted,
-  requestTypes.testWrong,
-  requestTypes.testError,
-  requestTypes.testMle,
-  requestTypes.testTle,
-  requestTypes.testHang,
-];
+const requiredTypes = getRequestNamesByGroup(requestGroups.testAll);
 const requiredLanguages = Object.keys(supportedLanguages);
 
-const expectedMessages = generateExpectedMessages(
-  requiredTypes,
-  testProblem.testCases,
-  {
-    includeCompiled: false,
-    justExecutor: true,
-    doneFields: { score: null },
-  }
-);
+const expectedMessages = generateExpectedMessages(requiredTypes, testProblem, {
+  includeCompiled: false,
+  justExecutor: true,
+});
 const expectedMessagesCompiled = generateExpectedMessages(
   requiredTypes,
-  testProblem.testCases,
+  testProblem,
   {
     includeCompiled: true,
     justExecutor: true,
-    doneFields: { score: null },
   }
 );
 

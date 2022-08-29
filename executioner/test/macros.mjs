@@ -4,6 +4,7 @@ import { parseRequests } from './request-parser.mjs';
 import { filesFromRequests, tmpRootPath } from './globals.mjs';
 import { promises as fs } from 'fs';
 import path from 'path';
+import _ from 'lodash';
 
 // For creating the bare minimum to emulate the executor environment
 // Requires request.fileName to be set
@@ -108,8 +109,8 @@ export const checkMessages = test.macro(async (t, expected, messages) => {
     // Check that the keys are the same
     if (
       !t.deepEqual(
-        Object.keys(message),
-        Object.keys(expectedMessage),
+        Object.keys(message).sort(),
+        Object.keys(expectedMessage).sort(),
         'A resulting message is missing some keys'
       )
     ) {
@@ -136,17 +137,15 @@ export const checkMessages = test.macro(async (t, expected, messages) => {
       !t.true(
         Object.entries(expectedMessage)
           .filter(([_, value]) => value !== null)
-          .every(
-            ([key, value]) =>
-              Object.keys(message).includes(key) &&
-              Object.values(message).includes(value)
+          .every((p2) =>
+            _.some(Object.entries(message), (p1) => _.isEqual(p1, p2))
           ),
         "A resulting message's value was different than expected"
       )
     ) {
       // Printing the differences
       const differentEntries = Object.entries(message)
-        .filter(([key, value]) => expectedMessage[key] !== value)
+        .filter(([key, value]) => !_.isEqual(expectedMessage[key], value))
         .map(([key, value]) => [key, value, expectedMessage[key]]);
       const differentEntriesString = differentEntries.reduce(
         (str, [key, v1, v2]) =>

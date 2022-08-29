@@ -95,7 +95,6 @@ export function FirestoreInterface(options) {
           } else if (data.result === 'error') {
             // Compilation error is an endstate so 0 becomes score
             updateSubmissonState('compileError');
-            submissions.doc(id).update({ score: 0 });
           } else {
             throw new Error(
               `Unexpected result: ${data.result} received from compiled message`
@@ -103,10 +102,17 @@ export function FirestoreInterface(options) {
           }
           return;
         case 'done':
+          if (data.score) {
+            submissions.doc(id).update({ score: data.score });
+            data.failedSubtasks &&
+              submissions
+                .doc(id)
+                .update({ failedSubtasks: data.failedSubtasks });
+          } else {
+            // compilation error so no judged
+            submissions.doc(id).update({ score: 0 });
+          }
           updateSubmissonState('judged');
-          submissions.doc(id).update({ score: data.score });
-          data.failedSubtasks &&
-            submissions.doc(id).update({ failedSubtasks: data.failedSubtasks });
           return;
         case 'error':
           updateSubmissonState('error');

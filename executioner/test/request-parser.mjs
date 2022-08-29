@@ -5,6 +5,7 @@ import {
   filesFromRequests,
   sampleSourceCodePath,
   requestTypes,
+  requestGroups,
 } from './globals.mjs';
 
 // Reverse filesFromRequest object to get requestType from file name
@@ -72,9 +73,12 @@ export async function parseRequests(problem, requiredTypes, requiredLanguages) {
         );
 
         // Identify missing request types by comparing arrays
+        // Unless is compile as that is language dependent so ignore
         const foundTypes = Object.keys(requests);
         const missingTypes = requiredTypes.filter(
-          (type) => !foundTypes.includes(type)
+          (type) =>
+            !foundTypes.includes(type) &&
+            !requestTypes[type].tags.includes(requestGroups.compileAll)
         );
 
         // Ensure all request type files included

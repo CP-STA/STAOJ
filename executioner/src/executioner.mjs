@@ -64,12 +64,7 @@ export async function runExecutioner(app, options) {
       executingCount++;
       try {
         const result = await execute(repoPath, sendMessage, request, options);
-
-        // Undefined score with no error means compilation error so no done message
-        if (result.score !== undefined) {
-          // If finished without error then complete with done message
-          sendMessage(new Message(request.id, state.done, result));
-        }
+        sendMessage(new Message(request.id, state.done, result));
       } catch (e) {
         // If error then identify type and let it propogate
         if (e instanceof InvalidDataError) {

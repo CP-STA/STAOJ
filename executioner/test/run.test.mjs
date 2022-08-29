@@ -4,12 +4,13 @@ import cp from 'child_process';
 import util from 'util';
 import path from 'path';
 import {
-  requestTypes,
   testProblem,
   repoPath,
   filesFromRequests,
   mleString,
   tleString,
+  requestGroups,
+  getRequestNamesByGroup,
 } from './globals.mjs';
 import {
   cleanEnvironmentMacro,
@@ -26,11 +27,8 @@ const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
 // Required types and languages
 const requiredTypes = [
-  requestTypes.testAccepted,
-  requestTypes.testError,
-  requestTypes.testMle,
-  requestTypes.testTle,
-  requestTypes.testHang,
+  'testAccepted',
+  ...getRequestNamesByGroup(requestGroups.testErrorAll),
 ];
 const requiredLanguages = Object.keys(supportedLanguages);
 
@@ -106,7 +104,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
 
   // Assertion logic based on the request is kept within the test code to have more control
   switch (requestName) {
-    case requestTypes.testAccepted: {
+    case 'testAccepted': {
       // Check that execution successful
       const execResult = await t.try(
         'Checking the result of execution',
@@ -193,7 +191,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
 
       // Additional checks for Mle and Tle
       switch (requestName) {
-        case requestTypes.testMle: {
+        case 'testMle': {
           // Python make it hard to check for now
           const checkMessage = await t.try(
             'Checking if MLE recognised',
@@ -219,8 +217,8 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
           checkMessage.commit({ retainLogs: true });
           break;
         }
-        case requestTypes.testHang:
-        case requestTypes.testTle: {
+        case 'testHang':
+        case 'testTle': {
           const checkMessage = await t.try(
             'Checking if TLE recognised',
             async (tt) => {
@@ -245,7 +243,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
           checkMessage.commit({ retainLogs: true });
           break;
         }
-        case requestTypes.testError: {
+        case 'testError': {
           const checkMessage = await t.try(
             'Checking that its only an error',
             async (tt) => {
