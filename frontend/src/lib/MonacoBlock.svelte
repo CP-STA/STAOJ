@@ -19,13 +19,6 @@
 	/** @type HTMLDivElement */
 	let editorBlock;
 
-	async function getMonaco() {
-		if (!monaco) {
-			monaco = await import('monaco-editor');
-		}
-		return monaco;
-	}
-
 	$: if (language) {
 		(async () => {
 			await updateLanguage(language);
@@ -36,7 +29,7 @@
 	async function updateLanguage(language) {
 		let model = editor.getModel();
 		// @ts-ignore
-		(await getMonaco()).editor.setModelLanguage(model, language);
+		monaco.editor.setModelLanguage(model, language);
 	}
 
 	onMount(async () => {
@@ -47,7 +40,7 @@
 			}
 		};
 
-		const monaco = await getMonaco();
+		monaco = await import('monaco-editor');
 		editor = monaco.editor.create(editorBlock, {
 			value: '',
 			automaticLayout: true
