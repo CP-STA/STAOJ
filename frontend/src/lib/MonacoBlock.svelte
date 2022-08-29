@@ -1,5 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
+	import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+	import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+
 	/** @type import('monaco-editor').editor.IStandaloneCodeEditor */
 	let editor;
 
@@ -37,6 +40,13 @@
 	}
 
 	onMount(async () => {
+		self.MonacoEnvironment = {
+			getWorker: function (_moduleId, label) {
+				if (label === 'typescript' || label === 'javascript') return new tsWorker();
+				return new editorWorker();
+			}
+		};
+
 		const monaco = await getMonaco();
 		editor = monaco.editor.create(editorBlock, {
 			value: '',
