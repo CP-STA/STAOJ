@@ -51,7 +51,7 @@ end note
 
 note left of compiling
   Code is compiled within a container,
-  and the demote is also built. See the 
+  and the demoter is also built. See the 
   demoter diagram for its possible state.
 
 end note

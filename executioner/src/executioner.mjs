@@ -35,7 +35,7 @@ export async function runExecutioner(app, options) {
     // Wrapper send message function to log stuff
     function sendMessage(message) {
       console.log(`${message.id}:`, message.state);
-      app.sendMessage(message);
+      return app.sendMessage(message);
     }
 
     pushRequest(repoPath, sendMessage, request, options).catch(logError);

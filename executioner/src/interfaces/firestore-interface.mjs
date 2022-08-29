@@ -1,5 +1,5 @@
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { Request } from '../utils/types/request.mjs';
 
 export function FirestoreInterface(options) {
@@ -27,11 +27,6 @@ export function FirestoreInterface(options) {
   const db = getFirestore(app);
   const submissions = db.collection(submissionsCollectionPath);
 
-  try {
-  } catch (e) {
-    throw new Error(`Unable to connect to database:\n${e}`);
-  }
-
   let readOldYet = false;
 
   // Return interface object which allows assignment of onSubmission handler
@@ -43,7 +38,7 @@ export function FirestoreInterface(options) {
       return false;
     }
   };
-  (this.onSubmission = function (handleSubmission) {
+  this.onSubmission = function (handleSubmission) {
     submissions.where('state', '==', 'queued').onSnapshot((snapshot) => {
       // Skip the first if not readOld and trigger flag to read rest
       if (!readOld && !readOldYet) {
@@ -69,59 +64,57 @@ export function FirestoreInterface(options) {
         }
       });
     });
-  }),
-    (this.sendMessage = function (message) {
-      // Destructure message and add server time
-      const { id, ...data } = message;
-      data.judgeTime = Date.now();
+  }
+  this.sendMessage = async function (message) {
+    // Destructure message and add server time
+    const { id, ...data } = message;
 
-      const updateSubmissonState = (state) => {
-        submissions.doc(id).update({ state });
-      };
+    const updateSubmissonState = (state) => submissions.doc(id).update({ state });
 
-      // If state is error then mark as error an do nothing else
-      switch (data.state) {
-        case 'queuing':
-          // Need to change this later to support multiple executioners and
-          // prevent nasty race conditions
-          updateSubmissonState('judging');
-          return;
-        case 'compiling':
-          updateSubmissonState('compiling');
-          return;
-        case 'compiled':
-          if (data.result === 'success') {
-            updateSubmissonState('compiled');
-          } else if (data.result === 'error') {
-            // Compilation error is an endstate so 0 becomes score
-            updateSubmissonState('compileError');
-          } else {
-            throw new Error(
-              `Unexpected result: ${data.result} received from compiled message`
-            );
-          }
-          return;
-        case 'done':
-          if (data.score) {
-            submissions.doc(id).update({ score: data.score });
-            data.failedSubtasks &&
-              submissions
-                .doc(id)
-                .update({ failedSubtasks: data.failedSubtasks });
-          } else {
-            // compilation error so no judged
-            submissions.doc(id).update({ score: 0 });
-          }
-          updateSubmissonState('judged');
-          return;
-        case 'error':
-          updateSubmissonState('error');
-          return;
-        case 'invalid':
-          updateSubmissonState('invalidData');
-          return;
-      }
-      // Otherwise add as judge result
-      submissions.doc(id).collection('judge-results').add(data);
-    });
+    // If state is error then mark as error an do nothing else
+    switch (data.state) {
+      case 'queuing':
+        // Need to change this later to support multiple executioners and
+        // prevent nasty race conditions
+        await updateSubmissonState('judging');
+        return;
+      case 'compiling':
+        await updateSubmissonState('compiling');
+        return;
+      case 'compiled':
+        if (data.result === 'success') {
+          await updateSubmissonState('compiled');
+        } else if (data.result === 'error') {
+          // Compilation error is an endstate so 0 becomes score
+          await updateSubmissonState('compileError');
+        } else {
+          throw new Error(
+            `Unexpected result: ${data.result} received from compiled message`
+          );
+        }
+        return;
+      case 'done':
+        if (data.score) {
+          submissions.doc(id).update({ score: data.score });
+          data.failedSubtasks &&
+            submissions
+              .doc(id)
+              .update({ failedSubtasks: data.failedSubtasks });
+        } else {
+          // compilation error so no judged
+          submissions.doc(id).update({ score: 0 });
+        }
+        await updateSubmissonState('judged');
+        return;
+      case 'error':
+        await updateSubmissonState('error');
+        return;
+      case 'invalid':
+        await updateSubmissonState('invalidData');
+        return;
+    }
+    // Otherwise add as judge result
+    data.judgeTime = FieldValue.serverTimestamp();
+    await submissions.doc(id).collection('judge-results').add(data);
+  };
 }

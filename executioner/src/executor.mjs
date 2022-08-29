@@ -383,8 +383,8 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
       outMessages.push(
         handleContainerOut(data, messageIndex)
           .then((message) => {
-            sendMessage(message);
             log(`Message sent: ${message.state}`);
+            return sendMessage(message);
           })
           .catch((e) => {
             // It's quite difficult to propogate these errors so I have to print them here :(
