@@ -8,7 +8,7 @@ import time
 import numpy as np
 
 # Define if waiting is needed between results
-wait = True
+wait = False
 
 # One Hot encoding: See https://github.com/CP-STA/STAOJ/issues/15, if it is false, we use enum.
 one_hot = False
@@ -84,80 +84,97 @@ else:
   })
 
 for i in range(len(test_cases)):
-  subcollection.add({
+  result = {
     "state": "testing",
     "testCase": i +1,
-    "subtask": test_cases[i]['subtask'],
     "judgeTime": firestore.SERVER_TIMESTAMP
-  })
+  }
+  if 'subtask' in test_cases[i]:
+    result['subtask'] = test_cases[i]['subtask']
+  subcollection.add(result)
   if wait:
     time.sleep(.5)
   if i == 1:
     # Test Case 2 TLE
-    subcollection.add({
+    result = {
       "state": "tested",
       "result": "TLE",
       "time": int(rng.integers(100, 1000)),
       "memory": int(rng.integers(128000, 256000)),
       "testCase": i+1,
-      "subtask": test_cases[i]['subtask'],
       "judgeTime": firestore.SERVER_TIMESTAMP
-    })
-    doc_ref.update({
-      "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
-    })
+    }
+    if 'subtask' in test_cases[i]:
+      result['subtask'] = test_cases[i]['subtask']
+    subcollection.add(result)
+    if 'subtask' in test_cases[i]:
+      doc_ref.update({
+        "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
+      })
   elif i == 2:
     # Test Case 3 MLE
-    subcollection.add({
+    result = {
       "state": "tested",
       "result": "MLE",
       "time": int(rng.integers(100, 1000)),
       "memory": int(rng.integers(128000, 256000)),
       "testCase": i+1,
-      "subtask": test_cases[i]['subtask'],
       "judgeTime": firestore.SERVER_TIMESTAMP
-    })
-    doc_ref.update({
-      "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
-    }) 
+    }
+    if 'subtask' in test_cases[i]:
+      result['subtask'] = test_cases[i]['subtask']
+    subcollection.add(result)
+    if 'subtask' in test_cases[i]:
+      doc_ref.update({
+        "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
+      }) 
   elif i == 3:
     # Test Case 4 wrong
-    subcollection.add({
+    result = {
       "state": "tested",
       "result": "wrong",
       "time": int(rng.integers(100, 1000)),
       "memory": int(rng.integers(128000, 256000)),
       "testCase": i+1,
-      "subtask": test_cases[i]['subtask'],
       "judgeTime": firestore.SERVER_TIMESTAMP
-    })
-    doc_ref.update({
-      "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
-    })  
+    }
+    if 'subtask' in test_cases[i]:
+      test_cases: test_cases[i]['subtask']
+    subcollection.add(result)
+    if 'subtask' in test_cases[i]:
+      doc_ref.update({
+        "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
+      })
   elif i == 4:
     # Test Case 5 error
-    subcollection.add({
+    result = {
       "state": "tested",
       "result": "error",
       "time": int(rng.integers(100, 1000)),
       "memory": int(rng.integers(128000, 256000)),
       "testCase": i+1,
-      "subtask": test_cases[i]['subtask'],
       "judgeTime": firestore.SERVER_TIMESTAMP
-    })
-    doc_ref.update({
-      "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
-    })   
+    }
+    if 'subtask' in test_cases[i]:
+      result['subtask'] = test_cases[i]['subtask']
+    subcollection.add(result)
+    if 'subtask' in test_cases[i]:
+      doc_ref.update({
+        "failedSubtasks": firestore.ArrayUnion([test_cases[i]['subtask']])
+      })   
   else:
-    subcollection.add({
+    result = {
       "state": "tested",
       "result": "accepted",
       "time": int(rng.integers(100, 1000)),
       "memory": int(rng.integers(128000, 256000)),
       "testCase": i+1,
-      "subtask": test_cases[i]['subtask'],
+      
       "judgeTime": firestore.SERVER_TIMESTAMP
-    })
+    }
+    if 'subtask' in test_cases[i]:
+      result["subtask"] = test_cases[i]['subtask']
+    subcollection.add(result)
 
 # Update the calculated score. 
 if one_hot:

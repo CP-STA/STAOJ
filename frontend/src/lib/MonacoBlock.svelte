@@ -42,6 +42,7 @@
 			value: '',
 			automaticLayout: true
 		});
+		if (language) updateLanguage(language);
 
 		return () => {
 			editor.dispose();
