@@ -37,14 +37,19 @@ const mleString = 'Out of memory!';
  * @param options Additional optional params: `problemDir`, `tmpRootDir`,
  * `measurerDir`, `log`, `overwriteTmpPath`
  */
-export async function execute(repoPath, sendMessage, request, options = {}) {
-  const problemDir = options.problemDir ?? 'problems';
-  const measurerDir = options.measurerDir ?? path.join('tools', 'measurer');
-  const tmpRootPath = options.tmpRootPath ?? '/tmp';
-  const log = options.log ?? ((msg) => {});
-  const overwriteTmpPath = options.overwriteTmpPath ?? false;
-  const baseFileName = options.baseFileName ?? 'Solution';
-
+export async function execute(
+  repoPath,
+  sendMessage,
+  request,
+  {
+    problemDir = 'problems-private',
+    measurerDir = path.join('tools', 'measurer'),
+    tmpRootPath = path.join(repoPath, 'executioner', 'tmp'),
+    log = (msg) => {},
+    overwriteTmpPath = false,
+    baseFileName = 'Solution',
+  }
+) {
   // What is to be returned
   const executionResult = {};
 
@@ -410,6 +415,10 @@ export async function execute(repoPath, sendMessage, request, options = {}) {
         );
       }
     });
+
+    // Wait for all message sent
+    await Promise.all([outMessages]);
+
     log('Execution complete');
 
     // First if compileFail

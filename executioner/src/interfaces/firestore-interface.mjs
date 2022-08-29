@@ -64,12 +64,13 @@ export function FirestoreInterface(options) {
         }
       });
     });
-  }
+  };
   this.sendMessage = async function (message) {
     // Destructure message and add server time
     const { id, ...data } = message;
 
-    const updateSubmissonState = (state) => submissions.doc(id).update({ state });
+    const updateSubmissonState = (state) =>
+      submissions.doc(id).update({ state });
 
     // If state is error then mark as error an do nothing else
     switch (data.state) {
@@ -97,14 +98,12 @@ export function FirestoreInterface(options) {
         if (data.score) {
           submissions.doc(id).update({ score: data.score });
           data.failedSubtasks &&
-            submissions
-              .doc(id)
-              .update({ failedSubtasks: data.failedSubtasks });
+            submissions.doc(id).update({ failedSubtasks: data.failedSubtasks });
+          await updateSubmissonState('judged');
         } else {
           // compilation error so no judged
           submissions.doc(id).update({ score: 0 });
         }
-        await updateSubmissonState('judged');
         return;
       case 'error':
         await updateSubmissonState('error');

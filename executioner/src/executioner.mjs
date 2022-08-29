@@ -12,9 +12,7 @@ function logError(error) {
   console.error(error);
 }
 
-export async function runExecutioner(app, options) {
-  const checkPodman = options.checkPodman ?? true;
-
+export async function runExecutioner(app, { checkPodman = true, ...options }) {
   if (checkPodman) {
     // Some checks with podman
     // Make sure image is built
@@ -64,13 +62,13 @@ export async function runExecutioner(app, options) {
       executingCount++;
       try {
         const result = await execute(repoPath, sendMessage, request, options);
-        sendMessage(new Message(request.id, state.done, result));
+        await sendMessage(new Message(request.id, state.done, result));
       } catch (e) {
         // If error then identify type and let it propogate
         if (e instanceof InvalidDataError) {
-          sendMessage(new Message(request.id, state.invalid));
+          await sendMessage(new Message(request.id, state.invalid));
         } else {
-          sendMessage(new Message(request.id, state.error));
+          await sendMessage(new Message(request.id, state.error));
         }
         throw e;
       } finally {
