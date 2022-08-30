@@ -189,7 +189,7 @@
 		{#if submissionDoc}
 			<!-- tell prettier to ignore the next line because in pre block, whitespace matters -->
 			<!-- prettier-ignore -->
-			<pre class="m-0">{#await colorize(submissionDoc.sourceCode, data.languages[submissionDoc.language].monaco)}{submissionDoc.sourceCode}{:then element}{@html element}{:catch error}{submissionDoc.sourceCode}{/await}</pre>
+			<pre class="m-0"><code>{#await colorize(submissionDoc.sourceCode, data.languages[submissionDoc.language].monaco)}{submissionDoc.sourceCode}{:then element}{@html element}{:catch error}{submissionDoc.sourceCode}{/await}</code></pre>
 		{/if}
 	</div>
 </div>

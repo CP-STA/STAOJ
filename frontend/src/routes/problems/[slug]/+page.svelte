@@ -84,13 +84,15 @@
 			<h3>Input</h3>
 			<div class="card">
 				<div class="card-body">
-					<code>{example.input}</code>
+					<!-- prettier-ignore -->
+					<pre class="m-0" style="color: var(--bs-code-color)"><code>{example.output}</code></pre>
 				</div>
 			</div>
 			<h3>Output</h3>
 			<div class="card">
 				<div class="card-body">
-					<code>{example.output}</code>
+					<!-- prettier-ignore -->
+					<pre class="m-0" style="color: var(--bs-code-color)"><code>{example.output}</code></pre>
 				</div>
 			</div>
 		</div>
