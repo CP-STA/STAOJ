@@ -38,6 +38,14 @@
 			<a
 				sveltekit:prefetch
 				class="nav-link"
+				href="/standings"
+				class:active={$page.url.pathname === '/standings'}>Standings</a
+			>
+		</li>
+		<li class="nav-item">
+			<a
+				sveltekit:prefetch
+				class="nav-link"
 				href="/account"
 				class:active={$page.url.pathname === '/account'}>Account</a
 			>

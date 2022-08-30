@@ -13,8 +13,12 @@
 	} from 'firebase/firestore';
 	import { browser } from '$app/env';
 	import { getVerdict, formatFirebaseDate, formatFirebaseDateFromDoc, sleep } from '$lib/utils';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { formatTitle } from '$lib/utils';
+
+	/** @type {import('./$types').PageData} */
+	export let data;
+
 	/** @type string */
 	const id = $page.params.id;
 	const q = query(collection(db, 'submissions', id, 'judge-results'), orderBy('judgeTime', 'asc'));
@@ -118,6 +122,15 @@
 		retrySubmissionDoc(16);
 	}
 
+	/** @type {HTMLPreElement} */
+	let codeBlock;
+
+	/** @param {string} s
+	 * @param {string} language */
+	async function colorize(s, language) {
+		const monaco = await import('monaco-editor');
+		return await monaco.editor.colorize(s, language, {});
+	}
 	onDestroy(() => {
 		if (testResultsUnsub) {
 			testResultsUnsub();
@@ -169,3 +182,14 @@
 		{/each}
 	{/if}
 </table>
+
+<h2>Source Code</h2>
+<div class="card">
+	<div class="card-body">
+		{#if submissionDoc}
+			<!-- tell prettier to ignore the next line because in pre block, whitespace matters -->
+			<!-- prettier-ignore -->
+			<pre class="m-0">{#await colorize(submissionDoc.sourceCode, data.languages[submissionDoc.language].monaco)}{submissionDoc.sourceCode}{:then element}{@html element}{:catch error}{submissionDoc.sourceCode}{/await}</pre>
+		{/if}
+	</div>
+</div>
