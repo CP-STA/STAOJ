@@ -4,15 +4,14 @@ import { FirestoreInterface } from './interfaces/firestore-interface.mjs';
 
 // --- Starts here ---
 
-const thisPath = path.resolve('./');
-
-console.log('Connecting to database...');
-
-try {
-  const app = new FirestoreInterface({
-    databaseURL: 'staoj-database.firebaseio.com',
-  });
-  app
+export function start() {
+  const thisPath = path.resolve('./');
+  console.log('Connecting to database...');
+  try {
+    const app = new FirestoreInterface({
+      databaseURL: 'staoj-database.firebaseio.com',
+    });
+    app
     .isActive()
     .then((isActive) => {
       if (isActive) {
@@ -30,7 +29,8 @@ try {
       console.error(e);
       process.exit(1);
     });
-} catch (e) {
-  console.error(e);
-  process.exit(1);
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
 }
