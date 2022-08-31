@@ -15,7 +15,7 @@
 	<ul class="nav nav-pills">
 		<li class="nav-item">
 			<a sveltekit:prefetch class="nav-link" href="/" class:active={$page.url.pathname === '/'}
-				>Home</a
+				>About</a
 			>
 		</li>
 		<li class="nav-item">
