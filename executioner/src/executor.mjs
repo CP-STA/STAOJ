@@ -387,7 +387,7 @@ export async function execute(
       return message;
     }
 
-    let commandArgs = ['run', '-v', `${mountPath}:/app/mount`];
+    let commandArgs = ['run', '--network', 'none', '-v', `${mountPath}:/app/mount`];
 
     // The constraints
     commandArgs.push('-e', `MAX_MEM=${maxMem}`);
