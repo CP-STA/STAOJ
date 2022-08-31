@@ -12,23 +12,23 @@ export function start() {
       databaseURL: 'staoj-database.firebaseio.com',
     });
     app
-    .isActive()
-    .then((isActive) => {
-      if (isActive) {
-        console.log('Connected to database');
-        return runExecutioner(app, {
-          problemDir: 'problems-private',
-          tmpRootPath: path.join(thisPath, 'tmp'),
-          overwriteTmpPath: true,
-        });
-      } else {
-        throw 'Failed to connect to database';
-      }
-    })
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
+      .isActive()
+      .then((isActive) => {
+        if (isActive) {
+          console.log('Connected to database');
+          return runExecutioner(app, {
+            problemDir: 'problems-private',
+            tmpRootPath: path.join(thisPath, 'tmp'),
+            overwriteTmpPath: true,
+          });
+        } else {
+          throw 'Failed to connect to database';
+        }
+      })
+      .catch((e) => {
+        console.error(e);
+        process.exit(1);
+      });
   } catch (e) {
     console.error(e);
     process.exit(1);

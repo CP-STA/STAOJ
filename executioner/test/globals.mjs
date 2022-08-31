@@ -2,44 +2,6 @@ import path from 'path';
 
 // Contains any general constansts used across tests
 
-export const testProblem = Object.freeze({
-  name: 'test-base',
-  dir: 'problems-private',
-  testCases: 3,
-  maxMem: 128000,
-  maxTime: 3000,
-});
-export const testSubtasksPassProblem = Object.freeze({
-  name: 'test-subtasks-pass',
-  dir: 'problems-private',
-  get testCases() {
-    return this.subtasks.reduce((sum, t) => sum + t, 0);
-  },
-  subtasks: [3, 2, 1],
-  maxMem: 128000,
-  maxTime: 3000,
-});
-export const testSubtasksFailProblem = Object.freeze({
-  name: 'test-subtasks-fail',
-  dir: 'problems-private',
-  get testCases() {
-    return this.subtasks.reduce((sum, t) => sum + t, 0);
-  },
-  subtasks: [3, 2, 1],
-  maxMem: 128000,
-  maxTime: 3000,
-});
-export const testSubtasksMixedProblem = Object.freeze({
-  name: 'test-subtasks-mixed',
-  dir: 'problems-private',
-  get testCases() {
-    return this.subtasks.reduce((sum, t) => sum + t, 0);
-  },
-  subtasks: [3, 2, 2, 1],
-  maxMem: 128000,
-  maxTime: 3000,
-});
-
 export const requestGroups = Object.freeze({
   compileAll: 'compileAll',
   testAll: 'testAll',
@@ -142,3 +104,45 @@ export const tmpRootPath = path.join(thisPath, 'test', 'tmp');
 // Demoter consts
 export const mleString = 'Out of memory!';
 export const tleString = 'Out of time!';
+
+export const testProblem = Object.freeze({
+  name: 'test-base',
+  dir: 'problems-private',
+  testCases: 3,
+  maxMem: 128000,
+  maxTime: 3000,
+  testingRequestTypes: getRequestNamesByGroup(requestGroups.testAll),
+});
+export const testSubtasksPassProblem = Object.freeze({
+  name: 'test-subtasks-pass',
+  dir: 'problems-private',
+  get testCases() {
+    return this.subtasks.reduce((sum, t) => sum + t, 0);
+  },
+  subtasks: [3, 2, 1],
+  maxMem: 128000,
+  maxTime: 3000,
+  testingRequestTypes: ['testAccepted', 'testError', 'compileError'],
+});
+export const testSubtasksFailProblem = Object.freeze({
+  name: 'test-subtasks-fail',
+  dir: 'problems-private',
+  get testCases() {
+    return this.subtasks.reduce((sum, t) => sum + t, 0);
+  },
+  subtasks: [3, 2, 1],
+  maxMem: 128000,
+  maxTime: 3000,
+  testingRequestTypes: ['testAccepted', 'testError', 'compileError'],
+});
+export const testSubtasksMixedProblem = Object.freeze({
+  name: 'test-subtasks-mixed',
+  dir: 'problems-private',
+  get testCases() {
+    return this.subtasks.reduce((sum, t) => sum + t, 0);
+  },
+  subtasks: [3, 2, 2, 1],
+  maxMem: 128000,
+  maxTime: 3000,
+  testingRequestTypes: ['testAccepted', 'testError', 'compileError'],
+});

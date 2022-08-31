@@ -50,6 +50,20 @@ export async function execute(
     baseFileName = 'Solution',
   }
 ) {
+  // Option assertions
+  if (!problemDir) {
+    throw new Error(`Invalid problemDir: ${problemDir} passed`);
+  }
+  if (!measurerDir) {
+    throw new Error(`Invalid measurerDir: ${measurerDir} passed`);
+  }
+  if (!tmpRootPath) {
+    throw new Error(`Invalid tmpRootPath: ${tmpRootPath} passed`);
+  }
+  if (!baseFileName) {
+    throw new Error(`Invalid baseFileName: ${baseFileName} passed`);
+  }
+
   // What is to be returned
   const executionResult = {};
 
@@ -130,7 +144,7 @@ export async function execute(
     await fs
       .access(tmpRootPath)
       .catch((e) => {
-        return fs.mkdir(tmpRootPath);
+        return fs.mkdir(tmpRootPath, { recursive: true });
       })
       .catch(() => {});
 
@@ -275,6 +289,22 @@ export async function execute(
             const outFilePath = path.join(outPath, outFile);
             const errorFilePath = path.join(outPath, errorFile);
             const answersFilePath = path.join(answersPath, answerFile);
+
+            // Check that outfile exsits
+            await fs.access(outFilePath).catch((e) => {
+              return fs
+                .readFile(errorFilePath)
+                .then((file) => file.toString())
+                .then((error) => {
+                  console.error('error file:', error);
+                  throw new Error(`No result file found`);
+                })
+                .catch((e) => {
+                  throw new Error(
+                    `No error or result file found after test ${testCase}`
+                  );
+                });
+            });
 
             switch (result) {
               case 'success':

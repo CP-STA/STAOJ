@@ -1,7 +1,10 @@
-export function TestInterface(options) {
+export function TestInterface({ handleMessageSent }) {
+  if (typeof handleMessageSent !== 'function') {
+    throw new Error('handleMessageSent callback not set in interface options');
+  }
+
   // storing the callbacks
   let handleSubmission;
-  let handleMessageSent;
   let handleCompletion;
 
   // Cheeky little function that checks that a callback exists before calling
@@ -24,7 +27,7 @@ export function TestInterface(options) {
   this.sendMessage = function (message) {
     // Destructure message and add server time
     message.judgeTime = Date.now();
-    executeCallback('onMessageSent', handleMessageSent, message);
+    handleMessageSent(message);
     if (message.state === 'done') {
       // handle completion or don't, not required
       handleCompletion && handleCompletion();
@@ -33,9 +36,6 @@ export function TestInterface(options) {
   // These methods exist for testing purposes specifically
   this.pushSubmission = function (request) {
     executeCallback('onSubmission', handleSubmission, request);
-  };
-  this.onMessageSent = (callback) => {
-    handleMessageSent = callback;
   };
   // For testing one time submissions
   this.submissionComplete = function () {
