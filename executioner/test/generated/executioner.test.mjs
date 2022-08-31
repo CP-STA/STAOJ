@@ -5,11 +5,11 @@ import {
   testSubtasksFailProblem,
   testSubtasksMixedProblem,
   testSubtasksPassProblem,
-} from './globals.mjs';
-import { parseRequestsSync } from './request-parser.mjs';
-import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
-import { testInterfaceMacro } from './test-interface-macro.mjs';
-import { firestoreInterfaceMacro } from './firestore-interface-macro.mjs';
+} from '../globals.mjs';
+import { parseRequestsSync } from '../request-parser.mjs';
+import { getSupportedLanguagesSync } from '../../src/utils/functions.mjs';
+import { testInterfaceMacro } from './macros/test-interface-macro.mjs';
+import { firestoreInterfaceMacro } from './macros/firestore-interface-macro.mjs';
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 

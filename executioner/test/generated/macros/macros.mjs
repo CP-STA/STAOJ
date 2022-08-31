@@ -1,7 +1,7 @@
 import test from 'ava';
-import { isContainerImageBuilt } from '../src/utils/functions.mjs';
-import { parseRequests } from './request-parser.mjs';
-import { filesFromRequests, tmpRootPath } from './globals.mjs';
+import { isContainerImageBuilt } from '../../../src/utils/functions.mjs';
+import { parseRequests } from '../../request-parser.mjs';
+import { filesFromRequests, tmpRootPath } from '../../globals.mjs';
 import { promises as fs } from 'fs';
 import path from 'path';
 import _ from 'lodash';

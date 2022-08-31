@@ -5,12 +5,12 @@ import {
   testSubtasksFailProblem,
   testSubtasksMixedProblem,
   testSubtasksPassProblem,
-} from './globals.mjs';
-import { runExecutioner } from '../src/executioner.mjs';
-import { generateExpectedMessages } from './expected-generator.mjs';
+} from '../../globals.mjs';
+import { runExecutioner } from '../../../src/executioner.mjs';
+import { generateExpectedMessages } from '../expected-generator.mjs';
 import path from 'path';
-import { thisPath, filesFromRequests } from './globals.mjs';
-import { TestFirestoreInterface } from '../src/interfaces/firestore-interface.mjs';
+import { thisPath, filesFromRequests } from '../../globals.mjs';
+import { TestFirestoreInterface } from '../../../src/interfaces/firestore-interface.mjs';
 
 export const firestoreInterfaceMacro = test.macro(
   async (t, request, language, problem) => {

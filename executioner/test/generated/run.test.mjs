@@ -11,16 +11,16 @@ import {
   tleString,
   requestGroups,
   getRequestNamesByGroup,
-} from './globals.mjs';
+} from '../globals.mjs';
 import {
   cleanEnvironmentMacro,
   createEnvironment,
   prepareEnvironmentMacro,
-} from './macros.mjs';
+} from './macros/macros.mjs';
 import {
   getSourceCodeFileName,
   getSupportedLanguagesSync,
-} from '../src/utils/functions.mjs';
+} from '../../src/utils/functions.mjs';
 const exec = util.promisify(cp.exec);
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);

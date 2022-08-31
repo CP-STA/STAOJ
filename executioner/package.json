@@ -23,7 +23,7 @@
   },
   "ava": {
     "files": [
-      "test/*.test.mjs"
+      "**/*.test.mjs"
     ]
   }
 }

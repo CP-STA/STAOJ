@@ -1,5 +1,5 @@
-import { Message, state } from '../src/utils/types/message.mjs';
-import { requestGroups, requestTypes } from './globals.mjs';
+import { Message, state } from '../../src/utils/types/message.mjs';
+import { requestGroups, requestTypes } from '../globals.mjs';
 
 // Used for generating the expected messages sent by a request for executing submissions
 export function generateExpectedMessages(

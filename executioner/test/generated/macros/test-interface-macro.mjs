@@ -1,16 +1,16 @@
-import { TestInterface } from '../src/interfaces/test-interface.mjs';
+import { TestInterface } from '../../../src/interfaces/test-interface.mjs';
 import test from 'ava';
 import {
   testProblem,
   testSubtasksFailProblem,
   testSubtasksMixedProblem,
   testSubtasksPassProblem,
-} from './globals.mjs';
-import { runExecutioner } from '../src/executioner.mjs';
-import { generateExpectedMessages } from './expected-generator.mjs';
+} from '../../globals.mjs';
+import { runExecutioner } from '../../../src/executioner.mjs';
+import { generateExpectedMessages } from '../expected-generator.mjs';
 import { checkMessages } from './macros.mjs';
 import path from 'path';
-import { thisPath, filesFromRequests } from './globals.mjs';
+import { thisPath, filesFromRequests } from '../../globals.mjs';
 
 export const testInterfaceMacro = test.macro(
   async (t, request, language, problem) => {

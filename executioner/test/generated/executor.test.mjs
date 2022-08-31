@@ -1,20 +1,19 @@
 import test from 'ava';
-import { execute } from '../src/executor.mjs';
+import { execute } from '../../src/executor.mjs';
 import path from 'path';
 import { promises as fs } from 'fs';
 import {
   repoPath,
-  requestTypes,
   filesFromRequests,
   testProblem,
   tmpRootPath,
   getRequestNamesByGroup,
   requestGroups,
-} from './globals.mjs';
-import { parseRequests } from './request-parser.mjs';
-import { getSupportedLanguagesSync } from '../src/utils/functions.mjs';
+} from '../globals.mjs';
+import { parseRequests } from '../request-parser.mjs';
+import { getSupportedLanguagesSync } from '../../src/utils/functions.mjs';
 import { generateExpectedMessages } from './expected-generator.mjs';
-import { checkMessages } from './macros.mjs';
+import { checkMessages } from './macros/macros.mjs';
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
 
