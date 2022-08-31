@@ -127,8 +127,6 @@ export const checkMessages = test.macro(async (t, expected, messages) => {
       missingKeys.length !== 0 && t.log(` - Missing ${missingKeys}`);
       additionalKeys.length !== 0 &&
         t.log(` - Unexpectedly has ${additionalKeys}`);
-
-      failed = true;
       return;
     }
 

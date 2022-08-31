@@ -24,6 +24,11 @@ get_compiled_name() {
   esac
 }
 
+exit_with_done() {
+  printf "done\n"
+  exit 0
+}
+
 # If compiled language then compile code, build demoter anyway
 if [ "$3" -eq 1 ]; then
   # Get compiled name and compiled
@@ -37,7 +42,7 @@ if [ "$3" -eq 1 ]; then
   fi
   printf "compiled %s\n" "$result"
   if [ $result = "error" ]; then
-    exit 0
+    exit_with_done
   fi
 
 else
@@ -61,6 +66,4 @@ for in_file in mount/"$4"/*; do
   printf "tested %s ${result}\n" "$count"
 done
 
-
-
-
+exit_with_done

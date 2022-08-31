@@ -86,7 +86,8 @@ export const testInterfaceMacro = test.macro(
           return {
             additionalProperties: { [request.name]: { judgeTime: null } },
             doneResults: {
-              [request.name]: { score: 0, failedSubtasks: [1, 2, 3] },
+              testAccepted: { score: 0, failedSubtasks: [1, 2, 3] },
+              testError: { score: 0, failedSubtasks: [1, 2, 3] },
             },
             testedResults: {
               testAccepted: new Array(problem.testCases).fill('wrong'),

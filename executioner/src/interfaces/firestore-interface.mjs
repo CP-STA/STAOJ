@@ -91,6 +91,7 @@ export function TestFirestoreInterface({
   }
 
   let handleSubmission;
+  let handleCompletion;
 
   this.isActive = function () {
     return true;
@@ -98,15 +99,30 @@ export function TestFirestoreInterface({
   this.onSubmission = function (callback) {
     handleSubmission = callback;
   };
-  this.sendMessage = createFirestoreMessageHandler(
-    updateSubmissionField,
-    addSubmissionResult
-  );
+  this.sendMessage = async function (message) {
+    const result = await createFirestoreMessageHandler(
+      updateSubmissionField,
+      addSubmissionResult
+    )(message);
+
+    // Last message is always a done unless error
+    if (message.state === 'done') {
+      handleCompletion && handleCompletion();
+    }
+
+    // In case the function every does return something, return it
+    return result;
+  };
   this.pushSubmission = function (request) {
-    if (!(handleSubmission instanceof 'function')) {
+    if (typeof handleSubmission !== 'function') {
       throw new Error('onSubmission callback not set');
     }
     handleSubmission(request);
+  };
+  this.submissionComplete = function () {
+    return new Promise((resolve) => {
+      handleCompletion = resolve;
+    });
   };
 }
 
@@ -146,14 +162,16 @@ function createFirestoreMessageHandler(
         }
         return;
       case 'done':
-        if (data.score) {
-          updateSubmissionField(id, { score: data.score });
+        if (data.score !== undefined) {
+          await updateSubmissionField(id, { score: data.score });
           data.failedSubtasks &&
-            updateSubmissionField(id, { failedSubtasks: data.failedSubtasks });
+            (await updateSubmissionField(id, {
+              failedSubtasks: data.failedSubtasks,
+            }));
           await updateSubmissonState('judged');
         } else {
           // compilation error so no judged
-          updateSubmissionField(id, { score: 0 });
+          await updateSubmissionField(id, { score: 0 });
         }
         return;
       case 'error':

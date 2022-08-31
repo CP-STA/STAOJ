@@ -2,7 +2,7 @@ import { Message, state } from './utils/types/message.mjs';
 import { promises as fs } from 'fs';
 import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
-import path from 'path';
+import path, { resolve } from 'path';
 import rl from 'readline';
 import { getSourceCodeFileName } from './utils/functions.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
@@ -291,19 +291,8 @@ export async function execute(
             const answersFilePath = path.join(answersPath, answerFile);
 
             // Check that outfile exsits
-            await fs.access(outFilePath).catch((e) => {
-              return fs
-                .readFile(errorFilePath)
-                .then((file) => file.toString())
-                .then((error) => {
-                  console.error('error file:', error);
-                  throw new Error(`No result file found`);
-                })
-                .catch((e) => {
-                  throw new Error(
-                    `No error or result file found after test ${testCase}`
-                  );
-                });
+            await fs.stat(outFilePath).catch((e) => {
+              throw new Error('Out file does not exist');
             });
 
             switch (result) {
@@ -311,10 +300,14 @@ export async function execute(
                 const info = await readLastLines(outFilePath, 2);
 
                 // Truncate out file without info lines
-                await fs.truncate(
-                  outFilePath,
-                  (await fs.stat(outFilePath)).size - info.length
-                );
+                try {
+                  await fs.truncate(
+                    outFilePath,
+                    (await fs.stat(outFilePath)).size - info.length
+                  );
+                } catch {
+                  throw new Error('Out file not found all of a sudden?');
+                }
 
                 // Read the answer and result files
                 const files = await Promise.all([
@@ -407,25 +400,33 @@ export async function execute(
 
     // Pushing the output into a line by line stream
     const execution = cp.spawn('podman', commandArgs);
-    const outStream = rl.createInterface({
-      input: execution.stdout,
-    });
 
-    // On new line printed by container
-    outStream.on('line', (data) => {
-      // Add to array of promises for messages
-      const messageIndex = outMessages.length;
-      outMessages.push(
-        handleContainerOut(data, messageIndex)
-          .then((message) => {
-            log(`Message sent: ${message.state}`);
-            return sendMessage(message);
-          })
-          .catch((e) => {
-            // It's quite difficult to propogate these errors so I have to print them here :(
-            console.error(e);
-          })
-      );
+    await new Promise((resolve, reject) => {
+      const outStream = rl.createInterface({
+        input: execution.stdout,
+      });
+
+      // On new line printed by container
+      outStream.on('line', (data) => {
+        if (data === 'done') {
+          return resolve();
+        }
+        // Add to array of promises for messages
+        const messageIndex = outMessages.length;
+        outMessages.push(
+          handleContainerOut(data, messageIndex)
+            .then((message) => {
+              log(`Message sent: ${message.state}`);
+              return sendMessage(message);
+            })
+            .catch((e) => {
+              // It's quite difficult to propogate these errors so I have to print them here :(
+              // IN theory no errors should occur here and if it is its wholey my fault
+              console.error('Error in container interfacing', e);
+              process.exit(2);
+            })
+        );
+      });
     });
 
     // Await exit from container
@@ -447,7 +448,7 @@ export async function execute(
     });
 
     // Wait for all message sent
-    await Promise.all([outMessages]);
+    await Promise.all(outMessages);
 
     log('Execution complete');
 

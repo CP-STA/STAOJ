@@ -9,12 +9,19 @@ export function generateExpectedMessages(
     includeCompiled = false,
     justExecutor = false,
     messageId = null,
+    noId = false,
     additionalProperties = {},
     testedResults = undefined,
     doneResults = {},
   }
 ) {
   // Assertions
+  if (noId && messageId !== null) {
+    throw new Error('noId specified yet cusotm messageId still passed?');
+  } else if (noId) {
+    messageId = undefined;
+  }
+
   if (problem.subtasks) {
     if (problem.subtasks.reduce((sum, t) => sum + t, 0) !== problem.testCases) {
       throw new Error(
