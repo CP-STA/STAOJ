@@ -85,7 +85,7 @@
 			<div class="card">
 				<div class="card-body">
 					<!-- prettier-ignore -->
-					<pre class="m-0" style="color: var(--bs-code-color)"><code>{example.output}</code></pre>
+					<pre class="m-0" style="color: var(--bs-code-color)"><code>{example.input}</code></pre>
 				</div>
 			</div>
 			<h3>Output</h3>
