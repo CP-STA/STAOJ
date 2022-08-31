@@ -57,5 +57,5 @@ Currently consists of seven St Andrews students from around the world. Learn mor
 <svelte:head>
 	<title>St Anderws Online Judge</title>
 </svelte:head>
-<img src="https://raw.githubusercontent.com/CP-STA/St-Andrews-Competitive-Programming/master/assets/updated-logo.png" class="rounded mx-auto d-block" alt="CPSTA Logo" width="192" height="192">
+<img src="https://raw.githubusercontent.com/CP-STA/STAOJ/master/OnlineJudgedark.png" class="rounded mx-auto d-block" alt="CPSTA Logo" width="192" height="192">
 <SvelteMarkdown {source} />
