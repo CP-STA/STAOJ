@@ -23,4 +23,3 @@ You will find that the local development version is automatically connected to t
 1. [Configure your firebase project](https://firebase.google.com/docs/web/learn-more#config-object)
 1. Replace `firebaseConfig` in `src/lib/firebase.ts` with your own configuration.
 1. [Configure security rules](https://firebase.google.com/docs/firestore/security/get-started) to allow read and write. We don't have our security rules published. We might publish them in the future. As you are developing, just opening read and write for everything is fine.
-    - You can ignore `ReCaptchaV3Provider`. You probably don't need it. In fact, you can delete the entire block surrounded by `if (browser)`. 
