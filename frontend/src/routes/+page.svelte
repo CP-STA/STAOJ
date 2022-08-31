@@ -3,7 +3,8 @@
 	import SvelteMarkdown from 'svelte-markdown';
 	const source = `
 
-<h1 align="center">Competitive Programming St Andrews (CPSTA)</h1>
+<h1 align="center">St Andrews Online Judge (STAOJ)</h1>
+<h4 align="center">by Competitive Programming St Andrews (CPSTA)</h4>
 
 <div id="badges" align="center">
   <a href="https://www.linkedin.com/company/competitive-programming-st-andrews/">
