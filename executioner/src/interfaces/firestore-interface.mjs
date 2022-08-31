@@ -67,9 +67,9 @@ export function FirestoreInterface({
     });
   };
   this.sendMessage = createFirestoreMessageHandler(
+    (id, data) => submissions.doc(id).update(data),
     (id, data) =>
       submissions.doc(id).collection(submissionsJudgeResultPath).add(data),
-    (id, data) => submissions.doc(id).update(data)
   );
 }
 
