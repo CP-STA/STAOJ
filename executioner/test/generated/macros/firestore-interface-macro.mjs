@@ -24,9 +24,11 @@ export const firestoreInterfaceMacro = test.macro(
     const app = new TestFirestoreInterface({
       updateSubmissionField: (id, data) => {
         results.push(data);
+        return true;
       },
       addSubmissionResult: (id, data) => {
         results.push(data);
+        return true;
       },
     });
 
