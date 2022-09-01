@@ -5,7 +5,7 @@ export function compareAnswer(result, answer) {
     const trimmedStr = str.trim();
 
     // Replace mutiple spaces with one
-    return trimmedStr.replace(/\s+/g, ' ');
+    return trimmedStr.replace(/\s\s+/g, ' ');
   }
 
   return cleanString(answer) === cleanString(result);

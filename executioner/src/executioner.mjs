@@ -12,10 +12,12 @@ function logError(error) {
   console.error(error);
 }
 
-export async function runExecutioner(
-  app,
-  { checkPodman = true, executingLimit = 1, ...options }
-) {
+export async function runExecutioner(app, {
+  checkPodman = true,
+  executingLimit = 1,
+  ...options 
+}) {
+
   if (checkPodman) {
     // Some checks with podman
     // Make sure image is built
@@ -34,13 +36,9 @@ export async function runExecutioner(
   console.log('Listening for new submissions...');
   app.onSubmission((request) => {
     // Wrapper send message function to log stuff
-    async function sendMessage(message) {
-      console.log(`${message.id}:`, `Sending ${message.state}`);
-      const result = await app.sendMessage(message);
-      if (!result) {
-        console.log(`${message.id}:`, `Did not send ${message.state}`);
-      }
-      return result;
+    function sendMessage(message) {
+      console.log(`${message.id}:`, message.state);
+      return app.sendMessage(message);
     }
 
     pushRequest(repoPath, sendMessage, request, options).catch(logError);
@@ -56,16 +54,12 @@ export async function runExecutioner(
       throw new InvalidDataError('Pushed request is undefined');
     }
 
+    sendMessage(new Message(request.id, state.queuing));
+
     // Wrapper to handle passing the right args to execution and handling promise result
     // I'm worried that this might actually be recursion and possibly cause overhead over time
     async function handleExecution(request) {
       if (request === undefined) {
-        return false;
-      }
-      // If queued successfully then continue with execution
-      // Otherwise, the request is probably already handled elsewhere
-      // This prevents ugly race conditions
-      if (!(await sendMessage(new Message(request.id, state.queuing)))) {
         return false;
       }
 
