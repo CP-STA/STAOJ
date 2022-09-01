@@ -20,7 +20,7 @@
   "scripts": {
     "start": "node start.mjs",
     "test": "ava --timeout=5m -c=4",
-    "postinstall": "podman build . -t executioner"
+    "postinstall": "podman build . -t executioner --cgroup-manager=cgroupfs"
   },
   "ava": {
     "files": [
