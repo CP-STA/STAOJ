@@ -93,5 +93,5 @@ export function sleep(ms: number) {
 }
 
 export function formatTitle(s: string) {
-	return `${s} | STAOJ`;
+	return `${s} | STAOJ Testing`;
 }

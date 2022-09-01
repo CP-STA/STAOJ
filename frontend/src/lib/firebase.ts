@@ -6,13 +6,12 @@ import { browser } from '$app/env';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-	apiKey: 'AIzaSyCOHc3CptFHnmuSeYL4yLPfnVNeqp7NC-A',
-	authDomain: 'staoj-database.firebaseapp.com',
-	projectId: 'staoj-database',
-	storageBucket: 'staoj-database.appspot.com',
-	messagingSenderId: '585343608721',
-	appId: '1:585343608721:web:e28b77e70ad93b4f669c30',
-	measurementId: 'G-FYHX7X3D4F'
+  apiKey: "AIzaSyAx7IuEW24_yQDmJZ_h1U0VOkZbxXWz1ho",
+  authDomain: "staoj-backend-testing.firebaseapp.com",
+  projectId: "staoj-backend-testing",
+  storageBucket: "staoj-backend-testing.appspot.com",
+  messagingSenderId: "814273570261",
+  appId: "1:814273570261:web:595a3129fe93ac3682c95c"
 };
 
 // Initialize Firebase
