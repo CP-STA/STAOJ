@@ -435,8 +435,7 @@ export async function execute(
             .catch((e) => {
               // It's quite difficult to propogate these errors so I have to print them here :(
               // IN theory no errors should occur here and if it is its wholey my fault
-              console.error('Error in container interfacing', e);
-              process.exit(2);
+              process.emit('SIGINT', e);
             })
         );
       });

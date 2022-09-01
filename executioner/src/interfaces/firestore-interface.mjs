@@ -9,6 +9,7 @@ export function FirestoreInterface({
   readOld = false,
   submissionsCollectionPath = 'submissions',
   submissionsJudgeResultPath = 'judge-results',
+  infoPath = 'info',
 }) {
   if (!databaseURL) {
     throw new Error('Need to pass `databaseURL` to interface options');
@@ -29,6 +30,18 @@ export function FirestoreInterface({
   const db = getFirestore(app);
   const submissions = db.collection(submissionsCollectionPath);
 
+  // Update number of running executioners
+  db.runTransaction(async (t) => {
+    const ref = db.collection(infoPath).doc('info');
+    const info = await t.get(ref);
+    const count = info?.data()?.judgeCount ?? 0;
+    if (info.data() === undefined) {
+      t.create(ref, { judgeCount: 1 });
+    } else {
+      t.update(ref, { judgeCount: count + 1 });
+    }
+  });
+
   let readOldYet = false;
 
   // Return interface object which allows assignment of onSubmission handler
@@ -39,6 +52,19 @@ export function FirestoreInterface({
     } catch {
       return false;
     }
+  };
+  this.deactivate = async function () {
+    // Update number of running executioners to one less
+    await db.runTransaction(async (t) => {
+      const ref = db.collection(infoPath).doc('info');
+      const info = await t.get(ref);
+      if (info.data() !== undefined) {
+        const count = info.data().judgeCount;
+        if (count !== undefined && count > 0) {
+          t.update(ref, { judgeCount: count - 1 });
+        }
+      }
+    });
   };
   this.onSubmission = function (handleSubmission) {
     submissions.where('state', '==', 'queued').onSnapshot((snapshot) => {

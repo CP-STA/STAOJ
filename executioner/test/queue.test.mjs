@@ -37,6 +37,7 @@ test('Testing queuing in executioner', async (t) => {
       baseFileName: filesFromRequests[requestType],
       checkPodman: false,
       executingLimit: 1,
+      cleanUp: false,
     })
   );
 
@@ -122,6 +123,7 @@ test('Testing simultaneous execution in executioner', async (t) => {
       baseFileName: filesFromRequests[requestType],
       checkPodman: false,
       executingLimit: 2,
+      cleanUp: false,
     })
   );
 
@@ -193,6 +195,7 @@ test('Testing simultaneous execution and queuing in executioner', async (t) => {
       baseFileName: filesFromRequests[requestType],
       checkPodman: false,
       executingLimit: 2,
+      cleanUp: false,
     })
   );
 
@@ -299,6 +302,7 @@ test('Testing multiple queuing in executioner', async (t) => {
       baseFileName: filesFromRequests[requestType],
       checkPodman: false,
       executingLimit: 1,
+      cleanUp: false,
     })
   );
 
@@ -433,6 +437,7 @@ test('Testing simultaneous execution and multiple queuing in executioner', async
       baseFileName: filesFromRequests[requestType],
       checkPodman: false,
       executingLimit: 2,
+      cleanUp: false,
     })
   );
 
@@ -572,6 +577,7 @@ test('Stress testing queuing', async (t) => {
       baseFileName: filesFromRequests[requestType],
       checkPodman: false,
       executingLimit: 1,
+      cleanUp: false,
     })
   );
 

@@ -45,6 +45,7 @@ export const firestoreInterfaceMacro = test.macro(
         overwriteTmpPath: true,
         baseFileName: filesFromRequests[request.name],
         checkPodman: false,
+        cleanUp: false,
       })
     );
 

@@ -14,7 +14,7 @@ function logError(error) {
 
 export async function runExecutioner(
   app,
-  { checkPodman = true, executingLimit = 1, ...options }
+  { checkPodman = true, executingLimit = 1, cleanUp = true, ...options }
 ) {
   if (checkPodman) {
     // Some checks with podman
@@ -27,6 +27,27 @@ export async function runExecutioner(
     if ((await getContainerCount()) > 2000) {
       throw 'Podman currently has stored over 1000 containers and will soon fail at 2048, try running `podman rmi --all --force`';
     }
+  }
+
+  // Cleanup function on exit for executioner
+  if (cleanUp) {
+    function onCleanup(code = 0) {
+      console.log('\nCleaning up...');
+      app.deactivate().then(() => {
+        process.exit(code);
+      });
+    }
+
+    // All the main exit signals
+    process.on('SIGINT', onCleanup);
+    process.on('SIGTERM', onCleanup);
+    process.on('SIGUSR1', onCleanup);
+    process.on('SIGUSR2', onCleanup);
+    process.on('uncaughtException', (e) => {
+      console.error('Uncaught exception in executioner:');
+      console.error(e);
+      onCleanup(1);
+    });
   }
 
   // Wrapper send message function to log stuff

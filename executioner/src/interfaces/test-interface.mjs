@@ -22,6 +22,9 @@ export function TestInterface({ handleMessageSent }) {
   this.isActive = function () {
     return true;
   };
+  this.deactivate = async function () {
+    // Do nothing
+  };
   this.onSubmission = function (callback) {
     handleSubmission = callback;
   };

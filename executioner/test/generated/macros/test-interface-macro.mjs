@@ -38,6 +38,7 @@ export const testInterfaceMacro = test.macro(
         overwriteTmpPath: true,
         baseFileName: filesFromRequests[request.name],
         checkPodman: false,
+        cleanUp: false,
       })
     );
 
