@@ -7,6 +7,7 @@ import rl from 'readline';
 import { v4 as uuidv4 } from 'uuid'
 import { getSourceCodeFileName, removeContainer } from './utils/functions.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
+import { compareAnswer } from './utils/compare.mjs';
 
 /*
 - This is where the actual execution of a request in a container occurs
@@ -318,11 +319,10 @@ export async function execute(
                   fs.readFile(answersFilePath),
                 ]);
 
-                // TODO: Not sure on how strict this comparison is
                 // TODO: Restrict usage to be at max resourece limits
 
                 // If the same
-                if (files[0].equals(files[1])) {
+                if (compareAnswer(files[0].toString(), files[1].toString())) {
                   // Parse data from info to send out
                   const infoLines = info.split('\n');
                   const [timeUsed] = infoLines[0].split(' ').slice(-1);
