@@ -2,9 +2,10 @@ import { Message, state } from './utils/types/message.mjs';
 import { promises as fs } from 'fs';
 import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
-import path, { resolve } from 'path';
+import path from 'path';
 import rl from 'readline';
-import { getSourceCodeFileName } from './utils/functions.mjs';
+import { v4 as uuidv4 } from 'uuid'
+import { getSourceCodeFileName, removeContainer } from './utils/functions.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
 import { compareAnswer } from './utils/compare.mjs';
 
@@ -71,6 +72,8 @@ export async function execute(
   // Bind id arg to message as that remains the same for the duration of this funcion
   // The B stands for binded
   const BMessage = Message.bind(null, request.id);
+
+  const containerName = uuidv4();
 
   // Setting the env paths
   const tmpPath = path.join(tmpRootPath, `request_${request.id}`);
@@ -387,13 +390,7 @@ export async function execute(
       return message;
     }
 
-    let commandArgs = [
-      'run',
-      '--network',
-      'none',
-      '-v',
-      `${mountPath}:/app/mount`,
-    ];
+    let commandArgs = ['run', '--network', 'none', '--name', containerName, '--cpus', '1', '-v', `${mountPath}:/app/mount`];
 
     // The constraints
     commandArgs.push('-e', `MAX_MEM=${maxMem}`);
@@ -491,6 +488,7 @@ export async function execute(
     // Upon execution completion do cleanup
     log('Cleaning up environment');
     await fs.rm(tmpPath, { recursive: true, force: true });
+    await removeContainer(containerName);
     log('Cleaning up complete');
   }
 

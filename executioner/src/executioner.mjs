@@ -12,7 +12,12 @@ function logError(error) {
   console.error(error);
 }
 
-export async function runExecutioner(app, { checkPodman = true, ...options }) {
+export async function runExecutioner(app, {
+  checkPodman = true,
+  executingLimit = 1,
+  ...options 
+}) {
+
   if (checkPodman) {
     // Some checks with podman
     // Make sure image is built
@@ -40,7 +45,6 @@ export async function runExecutioner(app, { checkPodman = true, ...options }) {
   });
 
   // Queue state
-  const limit = 1;
   const queuedRequests = [];
   let executingCount = 0;
 
@@ -81,7 +85,7 @@ export async function runExecutioner(app, { checkPodman = true, ...options }) {
     }
 
     // Run or queue depending on if slot open
-    if (executingCount < limit) {
+    if (executingCount < executingLimit) {
       await handleExecution(request);
     } else {
       queuedRequests.push(request);

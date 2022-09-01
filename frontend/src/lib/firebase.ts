@@ -18,9 +18,3 @@ const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-if (browser) {
-	const appCheck = initializeAppCheck(app, {
-		provider: new ReCaptchaV3Provider('6LdXz2shAAAAANnaaEK3VyOkHp4-16jo-c18elp9'),
-		isTokenAutoRefreshEnabled: true
-	});
-}

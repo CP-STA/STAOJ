@@ -82,3 +82,18 @@ export async function getContainerCount() {
     }
   }
 }
+
+export async function removeContainer(name) {
+  const command = `podman container rm ${name}`;
+  try {
+    await exec(command);
+  } catch (e) {
+    if (e.code === 1) {
+      throw new Error(`No such podman container '${name}' found`);
+    } else if (e.code === 127) {
+      throw new Error('Podman is not installed or in the path');
+    } else {
+      throw new Error(`Something went wrong calling '${command}'`);
+    }
+  }
+}

@@ -124,7 +124,6 @@
 	onMount(() => {
 		return () => {
 			if (recentSubmissionRefUnsub) {
-				console.log('unsub');
 				recentSubmissionRefUnsub();
 			}
 		};

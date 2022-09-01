@@ -9,6 +9,7 @@
     "dotenv": "^16.0.1",
     "firebase-admin": "^11.0.1",
     "read-last-lines": "^1.8.0",
+    "uuid": "^8.3.2",
     "ws": "^8.6.0"
   },
   "devDependencies": {
