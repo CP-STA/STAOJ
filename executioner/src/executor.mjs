@@ -4,7 +4,7 @@ import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
 import path from 'path';
 import rl from 'readline';
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 import { getSourceCodeFileName, removeContainer } from './utils/functions.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
 import { compareAnswer } from './utils/compare.mjs';
@@ -390,7 +390,17 @@ export async function execute(
       return message;
     }
 
-    let commandArgs = ['run', '--network', 'none', '--name', containerName, '--cpus', '1', '-v', `${mountPath}:/app/mount`];
+    let commandArgs = [
+      'run',
+      '--network',
+      'none',
+      '--name',
+      containerName,
+      '--cpus',
+      '1',
+      '-v',
+      `${mountPath}:/app/mount`,
+    ];
 
     // The constraints
     commandArgs.push('-e', `MAX_MEM=${maxMem}`);
