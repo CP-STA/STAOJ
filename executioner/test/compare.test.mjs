@@ -73,6 +73,8 @@ test('Comparing trimmed strings with non trimmed strings using special whitespac
     ['Puimoisson\t&\t  Riez', 'Puimoisson\t& Riez'],
     ['Tennison\t\t\n \ndanihe', 'Tennison danihe'],
     ['Mo \n Na \t Co', 'Mo Na Co'],
+    ['S\tT\nA O J', 'S T A O J'],
+    ['Daniel\tBrathagen', 'Daniel Brathagen'],
   ];
 
   for (const [trimmable, trimmed] of strings) {
@@ -85,8 +87,6 @@ test('Comparing trimmed strings with non trimmed strings using special whitespac
 
 test('Comparing wrongly trimmed strings with non trimmed strings', (t) => {
   const strings = [
-    ['Daniel\tBrathagen', 'Daniel Brathagen'],
-    ['S\tT\nA O J', 'S T A O J'],
     ['S\nT A O\tJ', 'STAOJ'],
     ['S    T A OJ  ', 'STAOJ'],
     ['   STAO J', 'STAOJ'],
