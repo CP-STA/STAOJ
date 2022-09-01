@@ -1,5 +1,6 @@
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { state } from '../utils/types/message.mjs';
 import { Request } from '../utils/types/request.mjs';
 
 // Executioner interface for firestore
@@ -75,28 +76,31 @@ export function FirestoreInterface({
             const ref = submissions.doc(id);
             const submission = await t.get(ref);
             if (submission.data().state === 'queued') {
-              t.update(ref, data)
+              t.update(ref, data);
             } else {
-              throw 'Not queued anymore'
+              throw 'Not queued anymore';
             }
-          })
-          return true
-        } catch(e) {
+          });
+          return true;
+        } catch (e) {
           if (e === 'Not queued anymore') {
             return false;
           } else {
-            throw e
+            throw e;
           }
         }
       } else {
-        submissions.doc(id).update(data)
-        return true
+        submissions.doc(id).update(data);
+        return true;
       }
     },
     async (id, data) => {
-      await submissions.doc(id).collection(submissionsJudgeResultPath).add(data)
-      return true
-    },
+      await submissions
+        .doc(id)
+        .collection(submissionsJudgeResultPath)
+        .add(data);
+      return true;
+    }
   );
 }
 
@@ -178,13 +182,13 @@ function createFirestoreMessageHandler(
 
     // If state is error then mark as error an do nothing else
     switch (data.state) {
-      case 'queuing':
+      case state.executing:
         // Need to change this later to support multiple executioners and
         // prevent nasty race conditions
         return await updateSubmissonState('judging');
-      case 'compiling':
+      case state.compiling:
         return await updateSubmissonState('compiling');
-      case 'compiled':
+      case state.compiled:
         if (data.result === 'success') {
           return await updateSubmissonState('compiled');
         } else if (data.result === 'error') {
@@ -195,7 +199,7 @@ function createFirestoreMessageHandler(
             `Unexpected result: ${data.result} received from compiled message`
           );
         }
-      case 'done':
+      case state.done:
         if (data.score !== undefined) {
           await updateSubmissionField(id, { score: data.score });
           data.failedSubtasks &&
@@ -207,9 +211,9 @@ function createFirestoreMessageHandler(
           // compilation error so no judged
           return await updateSubmissionField(id, { score: 0 });
         }
-      case 'error':
+      case state.error:
         return await updateSubmissonState('error');
-      case 'invalid':
+      case state.invalid:
         return await updateSubmissonState('invalidData');
     }
     // Otherwise add as judge result

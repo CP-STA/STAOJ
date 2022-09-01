@@ -139,7 +139,7 @@ export function generateExpectedMessages(
 
     const expected = [];
     if (!justExecutor) {
-      expected.push(new TMessage(state.queuing));
+      expected.push(new TMessage(state.executing));
     }
 
     // Cheeky IIFE

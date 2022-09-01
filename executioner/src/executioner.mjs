@@ -34,7 +34,10 @@ export async function runExecutioner(
     console.log(`${message.id}:`, `Sending ${message.state}`);
     const result = await app.sendMessage(message);
     if (!result) {
-      console.log(`${message.id}:`, `Did not send ${message.state}`);
+      console.log(
+        `${message.id}:`,
+        `Did not send ${message.state} (already taken)`
+      );
     }
     return result;
   }
@@ -44,9 +47,9 @@ export async function runExecutioner(
   console.log('Listening for new submissions...');
   app.onSubmission((request) => {
     try {
-      pushRequest(repoPath, sendMessage, request, options)
+      pushRequest(repoPath, sendMessage, request, options);
     } catch (e) {
-      logError(e)
+      logError(e);
     }
   });
 
@@ -70,9 +73,9 @@ export async function runExecutioner(
       // If queued successfully then continue with execution
       // Otherwise, the request is probably already handled elsewhere
       // This prevents ugly race conditions
-      if (!(await sendMessage(new Message(request.id, state.queuing)))) {
+      if (!(await sendMessage(new Message(request.id, state.executing)))) {
         // Regardless, run the next queued request if any
-        handleExecution(queuedRequests.shift())
+        handleExecution(queuedRequests.shift());
         return false;
       }
 
@@ -89,18 +92,18 @@ export async function runExecutioner(
         throw e;
       } finally {
         // Regardless, run the next queued request if any
-        handleExecution(queuedRequests.shift())
+        handleExecution(queuedRequests.shift());
       }
       return true;
     }
 
     // Run or queue depending on if slot open
     if (executingCount < executingLimit) {
-      executingCount++
-      handleExecution(request)
+      executingCount++;
+      handleExecution(request);
       //console.error(request.id, 'handling execution')
     } else {
-      queuedRequests.push(request)
+      queuedRequests.push(request);
       //console.error(request.id, 'pushed to queue')
     }
   }
