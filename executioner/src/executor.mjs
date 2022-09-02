@@ -396,8 +396,6 @@ export async function execute(
       'none',
       '--name',
       containerName,
-      '--cpus',
-      '1',
       '-v',
       `${mountPath}:/app/mount`,
     ];
