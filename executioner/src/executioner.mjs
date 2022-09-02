@@ -25,17 +25,27 @@ export async function runExecutioner(
 
     // Make sure there aren't too many containers made
     if ((await getContainerCount()) > 2000) {
-      throw 'Podman currently has stored over 1000 containers and will soon fail at 2048, try running `podman rmi --all --force`';
+      throw 'Podman currently has stored over 1000 containers and will soon fail at 2048, try running `podman container rm --all --force`';
     }
   }
 
+  // Variables for shutting down
+  let shuttingDown = false;
+  const executingRequests = [];
+
   // Cleanup function on exit for executioner
   if (cleanUp) {
-    function onCleanup(code = 0) {
+    async function onCleanup(code = 0) {
       console.log('\nCleaning up...');
-      app.deactivate().then(() => {
-        process.exit(code);
-      });
+      shuttingDown = true;
+      const count = executingRequests.length;
+      console.log(
+        `Awaiting ${count} request${count !== 1 ? 's' : ''} to finish`
+      );
+      await app.deactivate();
+      await Promise.all(executingRequests.map(app.submissionComplete));
+      console.log('Goodbye');
+      process.exit(code);
     }
 
     // All the main exit signals
@@ -67,6 +77,13 @@ export async function runExecutioner(
 
   console.log('Listening for new submissions...');
   app.onSubmission((request) => {
+    // Don't handle submissions whilt shutting down
+    if (shuttingDown) {
+      return;
+    }
+
+    console.log('---', 'New submisison:', request.id, '---');
+
     try {
       pushRequest(repoPath, sendMessage, request, options);
     } catch (e) {
@@ -87,7 +104,7 @@ export async function runExecutioner(
     // Wrapper to handle passing the right args to execution and handling promise result
     // I'm worried that this might actually be recursion and possibly cause overhead over time
     async function handleExecution(request) {
-      if (request === undefined) {
+      if (request === undefined || shuttingDown) {
         executingCount--;
         return false;
       }
@@ -101,6 +118,7 @@ export async function runExecutioner(
       }
 
       try {
+        executingRequests.push(request.id);
         const result = await execute(repoPath, sendMessage, request, options);
         await sendMessage(new Message(request.id, state.done, result));
       } catch (e) {
@@ -113,6 +131,10 @@ export async function runExecutioner(
         throw e;
       } finally {
         // Regardless, run the next queued request if any
+        const it = executingRequests.indexOf(request.id);
+        if (it !== -1) {
+          executingRequests.splice(it, 1);
+        }
         handleExecution(queuedRequests.shift());
       }
       return true;
@@ -122,10 +144,8 @@ export async function runExecutioner(
     if (executingCount < executingLimit) {
       executingCount++;
       handleExecution(request);
-      //console.error(request.id, 'handling execution')
     } else {
       queuedRequests.push(request);
-      //console.error(request.id, 'pushed to queue')
     }
   }
 }
