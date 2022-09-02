@@ -4,9 +4,10 @@ import * as cp from 'node:child_process';
 import { read as readLastLines } from 'read-last-lines';
 import path from 'path';
 import rl from 'readline';
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 import { getSourceCodeFileName, removeContainer } from './utils/functions.mjs';
 import { InvalidDataError } from './utils/types/errors.mjs';
+import { compareAnswer } from './utils/compare.mjs';
 
 /*
 - This is where the actual execution of a request in a container occurs
@@ -318,11 +319,10 @@ export async function execute(
                   fs.readFile(answersFilePath),
                 ]);
 
-                // TODO: Not sure on how strict this comparison is
                 // TODO: Restrict usage to be at max resourece limits
 
                 // If the same
-                if (files[0].equals(files[1])) {
+                if (compareAnswer(files[0].toString(), files[1].toString())) {
                   // Parse data from info to send out
                   const infoLines = info.split('\n');
                   const [timeUsed] = infoLines[0].split(' ').slice(-1);
@@ -390,7 +390,17 @@ export async function execute(
       return message;
     }
 
-    let commandArgs = ['run', '--network', 'none', '--name', containerName, '--cpus', '1', '-v', `${mountPath}:/app/mount`];
+    let commandArgs = [
+      'run',
+      '--network',
+      'none',
+      '--name',
+      containerName,
+      '--cpus',
+      '1',
+      '-v',
+      `${mountPath}:/app/mount`,
+    ];
 
     // The constraints
     commandArgs.push('-e', `MAX_MEM=${maxMem}`);
@@ -425,8 +435,7 @@ export async function execute(
             .catch((e) => {
               // It's quite difficult to propogate these errors so I have to print them here :(
               // IN theory no errors should occur here and if it is its wholey my fault
-              console.error('Error in container interfacing', e);
-              process.exit(2);
+              process.emit('SIGINT', e);
             })
         );
       });

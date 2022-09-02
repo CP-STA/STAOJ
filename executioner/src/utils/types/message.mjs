@@ -1,6 +1,6 @@
 // State enum
 export const state = Object.freeze({
-  queuing: 'queuing', // Always sent when the executioner handles a submission
+  executing: 'executing', // Always sent when the executioner handles a submission
   compiling: 'compiling', // Compiling the submission code if neccessary
   compiled: 'compiled', // Compiling code finished
   testing: 'testing', // Testing test case on code

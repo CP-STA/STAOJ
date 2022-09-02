@@ -1,5 +1,6 @@
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { state } from '../utils/types/message.mjs';
 import { Request } from '../utils/types/request.mjs';
 
 // Executioner interface for firestore
@@ -8,6 +9,7 @@ export function FirestoreInterface({
   readOld = false,
   submissionsCollectionPath = 'submissions',
   submissionsJudgeResultPath = 'judge-results',
+  infoPath = 'info',
 }) {
   if (!databaseURL) {
     throw new Error('Need to pass `databaseURL` to interface options');
@@ -28,6 +30,18 @@ export function FirestoreInterface({
   const db = getFirestore(app);
   const submissions = db.collection(submissionsCollectionPath);
 
+  // Update number of running executioners
+  db.runTransaction(async (t) => {
+    const ref = db.collection(infoPath).doc('info');
+    const info = await t.get(ref);
+    const count = info?.data()?.judgeCount ?? 0;
+    if (info.data() === undefined) {
+      t.create(ref, { judgeCount: 1 });
+    } else {
+      t.update(ref, { judgeCount: count + 1 });
+    }
+  });
+
   let readOldYet = false;
 
   // Return interface object which allows assignment of onSubmission handler
@@ -38,6 +52,19 @@ export function FirestoreInterface({
     } catch {
       return false;
     }
+  };
+  this.deactivate = async function () {
+    // Update number of running executioners to one less
+    await db.runTransaction(async (t) => {
+      const ref = db.collection(infoPath).doc('info');
+      const info = await t.get(ref);
+      if (info.data() !== undefined) {
+        const count = info.data().judgeCount;
+        if (count !== undefined && count > 0) {
+          t.update(ref, { judgeCount: count - 1 });
+        }
+      }
+    });
   };
   this.onSubmission = function (handleSubmission) {
     submissions.where('state', '==', 'queued').onSnapshot((snapshot) => {
@@ -67,9 +94,39 @@ export function FirestoreInterface({
     });
   };
   this.sendMessage = createFirestoreMessageHandler(
-    (id, data) => submissions.doc(id).update(data),
-    (id, data) =>
-      submissions.doc(id).collection(submissionsJudgeResultPath).add(data),
+    async (id, data) => {
+      // Special stuff with judging to avoid race conditions
+      if (data.state === 'judging') {
+        try {
+          await db.runTransaction(async (t) => {
+            const ref = submissions.doc(id);
+            const submission = await t.get(ref);
+            if (submission.data().state === 'queued') {
+              t.update(ref, data);
+            } else {
+              throw 'Not queued anymore';
+            }
+          });
+          return true;
+        } catch (e) {
+          if (e === 'Not queued anymore') {
+            return false;
+          } else {
+            throw e;
+          }
+        }
+      } else {
+        submissions.doc(id).update(data);
+        return true;
+      }
+    },
+    async (id, data) => {
+      await submissions
+        .doc(id)
+        .collection(submissionsJudgeResultPath)
+        .add(data);
+      return true;
+    }
   );
 }
 
@@ -91,7 +148,8 @@ export function TestFirestoreInterface({
   }
 
   let handleSubmission;
-  let handleCompletion;
+  let handleCompletionDefault;
+  const handleCompletions = [];
 
   this.isActive = function () {
     return true;
@@ -107,7 +165,12 @@ export function TestFirestoreInterface({
 
     // Last message is always a done unless error
     if (message.state === 'done') {
-      handleCompletion && handleCompletion();
+      // handle completion or don't, not required
+      if (handleCompletions[message.id]) {
+        handleCompletions[message.id]();
+      } else if (handleCompletionDefault) {
+        handleCompletionDefault();
+      }
     }
 
     // In case the function every does return something, return it
@@ -119,9 +182,13 @@ export function TestFirestoreInterface({
     }
     handleSubmission(request);
   };
-  this.submissionComplete = function () {
+  this.submissionComplete = function (id = null) {
     return new Promise((resolve) => {
-      handleCompletion = resolve;
+      if (id === null) {
+        handleCompletionDefault = resolve;
+      } else {
+        handleCompletions[id] = resolve;
+      }
     });
   };
 }
@@ -141,48 +208,42 @@ function createFirestoreMessageHandler(
 
     // If state is error then mark as error an do nothing else
     switch (data.state) {
-      case 'queuing':
+      case state.executing:
         // Need to change this later to support multiple executioners and
         // prevent nasty race conditions
-        await updateSubmissonState('judging');
-        return;
-      case 'compiling':
-        await updateSubmissonState('compiling');
-        return;
-      case 'compiled':
+        return await updateSubmissonState('judging');
+      case state.compiling:
+        return await updateSubmissonState('compiling');
+      case state.compiled:
         if (data.result === 'success') {
-          await updateSubmissonState('compiled');
+          return await updateSubmissonState('compiled');
         } else if (data.result === 'error') {
           // Compilation error is an endstate so 0 becomes score
-          await updateSubmissonState('compileError');
+          return await updateSubmissonState('compileError');
         } else {
           throw new Error(
             `Unexpected result: ${data.result} received from compiled message`
           );
         }
-        return;
-      case 'done':
+      case state.done:
         if (data.score !== undefined) {
           await updateSubmissionField(id, { score: data.score });
           data.failedSubtasks &&
             (await updateSubmissionField(id, {
               failedSubtasks: data.failedSubtasks,
             }));
-          await updateSubmissonState('judged');
+          return await updateSubmissonState('judged');
         } else {
           // compilation error so no judged
-          await updateSubmissionField(id, { score: 0 });
+          return await updateSubmissionField(id, { score: 0 });
         }
-        return;
-      case 'error':
-        await updateSubmissonState('error');
-        return;
-      case 'invalid':
-        await updateSubmissonState('invalidData');
-        return;
+      case state.error:
+        return await updateSubmissonState('error');
+      case state.invalid:
+        return await updateSubmissonState('invalidData');
     }
     // Otherwise add as judge result
     data.judgeTime = FieldValue.serverTimestamp();
-    await addSubmissionResult(id, data);
+    return await addSubmissionResult(id, data);
   };
 }

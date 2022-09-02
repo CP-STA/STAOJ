@@ -26,9 +26,11 @@ export function start() {
         }
       })
       .catch((e) => {
-        console.error(e);
+        // Ensures smooth cleanup
+        process.emit('uncaughtException', e);
       });
   } catch (e) {
     console.error(e);
+    process.exit(1);
   }
 }

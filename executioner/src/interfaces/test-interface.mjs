@@ -5,7 +5,8 @@ export function TestInterface({ handleMessageSent }) {
 
   // storing the callbacks
   let handleSubmission;
-  let handleCompletion;
+  let handleCompletionDefault;
+  const handleCompletions = [];
 
   // Cheeky little function that checks that a callback exists before calling
   // Else complain nicely
@@ -21,6 +22,9 @@ export function TestInterface({ handleMessageSent }) {
   this.isActive = function () {
     return true;
   };
+  this.deactivate = async function () {
+    // Do nothing
+  };
   this.onSubmission = function (callback) {
     handleSubmission = callback;
   };
@@ -30,17 +34,26 @@ export function TestInterface({ handleMessageSent }) {
     handleMessageSent(message);
     if (message.state === 'done') {
       // handle completion or don't, not required
-      handleCompletion && handleCompletion();
+      if (handleCompletions[message.id]) {
+        handleCompletions[message.id]();
+      } else if (handleCompletionDefault) {
+        handleCompletionDefault();
+      }
     }
+    return true;
   };
   // These methods exist for testing purposes specifically
   this.pushSubmission = function (request) {
     executeCallback('onSubmission', handleSubmission, request);
   };
   // For testing one time submissions
-  this.submissionComplete = function () {
+  this.submissionComplete = function (id = null) {
     return new Promise((resolve) => {
-      handleCompletion = resolve;
+      if (id === null) {
+        handleCompletionDefault = resolve;
+      } else {
+        handleCompletions[id] = resolve;
+      }
     });
   };
 }

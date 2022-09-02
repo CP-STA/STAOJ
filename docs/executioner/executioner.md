@@ -27,7 +27,7 @@ state join_tested <<join>>
 state join_done <<join>>
 
 pending: (Pending)
-queued: Queuing
+executing: Executing
 compiling: Compiling
 compiled_success: Compiled Success
 compiled_error: Compiled Error
@@ -41,7 +41,7 @@ done: Done
 error: Error
 invalid: Invalid
 
-note right of queued
+note right of executing
   A node in this graph represents a message
   sent to the executioner interface. The first
   word represents the message state. The
@@ -80,8 +80,8 @@ note right of done
 end note
 
 [*]-->pending: Interface has new submission
-pending-->queued: Executioner reads submission
-queued-->is_valid: Valid submission?
+pending-->executing: Executioner reads submission
+executing-->is_valid: Valid submission?
 is_valid-->is_compile_needed: Yes, compilation required?
 is_valid-->invalid: No
 invalid-->[*]: Error thrown

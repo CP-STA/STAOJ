@@ -12,12 +12,10 @@ function logError(error) {
   console.error(error);
 }
 
-export async function runExecutioner(app, {
-  checkPodman = true,
-  executingLimit = 1,
-  ...options 
-}) {
-
+export async function runExecutioner(
+  app,
+  { checkPodman = true, executingLimit = 1, cleanUp = true, ...options }
+) {
   if (checkPodman) {
     // Some checks with podman
     // Make sure image is built
@@ -31,17 +29,49 @@ export async function runExecutioner(app, {
     }
   }
 
+  // Cleanup function on exit for executioner
+  if (cleanUp) {
+    function onCleanup(code = 0) {
+      console.log('\nCleaning up...');
+      app.deactivate().then(() => {
+        process.exit(code);
+      });
+    }
+
+    // All the main exit signals
+    process.on('SIGINT', onCleanup);
+    process.on('SIGTERM', onCleanup);
+    process.on('SIGUSR1', onCleanup);
+    process.on('SIGUSR2', onCleanup);
+    process.on('uncaughtException', (e) => {
+      console.error('Uncaught exception in executioner:');
+      console.error(e);
+      onCleanup(1);
+    });
+  }
+
+  // Wrapper send message function to log stuff
+  async function sendMessage(message) {
+    console.log(`${message.id}:`, `Sending ${message.state}`);
+    const result = await app.sendMessage(message);
+    if (!result) {
+      console.log(
+        `${message.id}:`,
+        `Did not send ${message.state} (already taken)`
+      );
+    }
+    return result;
+  }
+
   const repoPath = path.resolve('../');
 
   console.log('Listening for new submissions...');
   app.onSubmission((request) => {
-    // Wrapper send message function to log stuff
-    function sendMessage(message) {
-      console.log(`${message.id}:`, message.state);
-      return app.sendMessage(message);
+    try {
+      pushRequest(repoPath, sendMessage, request, options);
+    } catch (e) {
+      logError(e);
     }
-
-    pushRequest(repoPath, sendMessage, request, options).catch(logError);
   });
 
   // Queue state
@@ -49,21 +79,27 @@ export async function runExecutioner(app, {
   let executingCount = 0;
 
   // For queueing submissions
-  async function pushRequest(repoPath, sendMessage, request, options) {
+  function pushRequest(repoPath, sendMessage, request, options) {
     if (request === undefined) {
       throw new InvalidDataError('Pushed request is undefined');
     }
-
-    sendMessage(new Message(request.id, state.queuing));
 
     // Wrapper to handle passing the right args to execution and handling promise result
     // I'm worried that this might actually be recursion and possibly cause overhead over time
     async function handleExecution(request) {
       if (request === undefined) {
+        executingCount--;
+        return false;
+      }
+      // If queued successfully then continue with execution
+      // Otherwise, the request is probably already handled elsewhere
+      // This prevents ugly race conditions
+      if (!(await sendMessage(new Message(request.id, state.executing)))) {
+        // Regardless, run the next queued request if any
+        handleExecution(queuedRequests.shift());
         return false;
       }
 
-      executingCount++;
       try {
         const result = await execute(repoPath, sendMessage, request, options);
         await sendMessage(new Message(request.id, state.done, result));
@@ -77,18 +113,19 @@ export async function runExecutioner(app, {
         throw e;
       } finally {
         // Regardless, run the next queued request if any
-        handleExecution(queuedRequests.shift()).then((executed) => {
-          executed || executingCount--;
-        });
+        handleExecution(queuedRequests.shift());
       }
       return true;
     }
 
     // Run or queue depending on if slot open
     if (executingCount < executingLimit) {
-      await handleExecution(request);
+      executingCount++;
+      handleExecution(request);
+      //console.error(request.id, 'handling execution')
     } else {
       queuedRequests.push(request);
+      //console.error(request.id, 'pushed to queue')
     }
   }
 }
