@@ -20,6 +20,7 @@ export function start() {
             problemDir: 'problems-private',
             tmpRootPath: path.join(thisPath, 'tmp'),
             overwriteTmpPath: true,
+            syncMessages: false,
           });
         } else {
           throw 'Failed to connect to database';
