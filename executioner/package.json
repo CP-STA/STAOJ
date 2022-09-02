@@ -19,6 +19,7 @@
   },
   "scripts": {
     "start": "node start.mjs",
+    "dev": "node start.mjs --testing",
     "test": "ava --timeout=5m -c=4",
     "postinstall": "podman build . -t executioner"
   },
