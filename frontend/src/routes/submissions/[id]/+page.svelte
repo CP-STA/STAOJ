@@ -146,8 +146,6 @@
 	<title>{formatTitle('Submission Result')}</title>
 </svelte:head>
 
-<div class="alert alert-warning">The judging functionality is still being developed and there are a few known bugs and missing features.</div>
-
 <h1>Submission Result</h1>
 <p>
 	Problem: {#if submissionDoc}<a href="/problems/{submissionDoc.problem}"
