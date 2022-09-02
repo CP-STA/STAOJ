@@ -7,7 +7,5 @@ if (process.argv.includes('--testing')) {
   process.env.GOOGLE_APPLICATION_CREDENTIALS = process.env.GOOGLE_APPLICATION_CREDENTIALS_TESTING
 }
 
-console.log(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-
 start();
 

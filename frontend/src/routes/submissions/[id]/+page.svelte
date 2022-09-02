@@ -84,7 +84,8 @@
 				let newJudgeResults = [];
 				snapshot.forEach((document) => {
 					newJudgeResults.push(document.data());
-					if (document.data().state == 'testing') {
+					console.log(testCasesResults[document.data().testCase])
+					if (document.data().state == 'testing' && !testCasesResults[document.data().testCase]) {
 						// @ts-ignore
 						testCasesResults[document.data().testCase] = {
 							verdict: 'Testing',
@@ -144,8 +145,6 @@
 <svelte:head>
 	<title>{formatTitle('Submission Result')}</title>
 </svelte:head>
-
-<div class="alert alert-warning">The judging functionality is still being developed and there are a few known bugs and missing features.</div>
 
 <h1>Submission Result</h1>
 <p>

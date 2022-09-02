@@ -50,6 +50,7 @@ export async function execute(
     log = (msg) => {},
     overwriteTmpPath = false,
     baseFileName = 'Solution',
+    syncMessages = true,
   }
 ) {
   // Option assertions
@@ -396,8 +397,6 @@ export async function execute(
       'none',
       '--name',
       containerName,
-      '--cpus',
-      '1',
       '-v',
       `${mountPath}:/app/mount`,
     ];
@@ -430,7 +429,11 @@ export async function execute(
           handleContainerOut(data, messageIndex)
             .then((message) => {
               log(`Message sent: ${message.state}`);
-              return sendMessage(message);
+              if (syncMessages) {
+                return sendMessage(message);
+              } else {
+                sendMessage(message);
+              }
             })
             .catch((e) => {
               // It's quite difficult to propogate these errors so I have to print them here :(

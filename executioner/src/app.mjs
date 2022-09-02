@@ -11,6 +11,7 @@ export function start() {
     const app = new FirestoreInterface({
       databaseURL: 'staoj-database.firebaseio.com',
     });
+    const executingLimit = parseInt(process.env.EXECUTING_LIMIT) || 1;
     app
       .isActive()
       .then((isActive) => {
@@ -20,6 +21,8 @@ export function start() {
             problemDir: 'problems-private',
             tmpRootPath: path.join(thisPath, 'tmp'),
             overwriteTmpPath: true,
+            syncMessages: false,
+            executingLimit
           });
         } else {
           throw 'Failed to connect to database';

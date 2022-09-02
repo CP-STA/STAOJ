@@ -161,9 +161,9 @@
 									</option>
 								{/each}
 							</select>
+							<button type="submit" class="btn btn-primary mb-3">Submit</button>
 
 							<MonacoBlock language={monacoLangauge} bind:this={monacoBlock} />
-							<button type="submit" class="btn btn-primary mt-3">Submit</button>
 						</form>
 					{:else if submitted}
 						{#if recentSubmissionDoc}
