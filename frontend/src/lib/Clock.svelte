@@ -41,7 +41,6 @@
 	id="clock"
 	class="btn btn-{clockStatus(time, judgeCount)
 		.color} pt-2 pb-2 ms-2 border-0 font-monospace css-tooltip"
-	title="hello world"
 	data-tooltip={clockStatus(time, judgeCount).tooltip}>{time.date.toLocaleTimeString('en-GB')}</span
 >
 
