@@ -1,5 +1,7 @@
 import { readable } from 'svelte/store';
 import { browser } from '$app/env';
+import { db } from '$lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 let offset = 0;
 let synced = false;
@@ -30,4 +32,14 @@ export const time = readable({ synced: false, date: new Date() }, function start
 	return function stop() {
 		clearInterval(interval);
 	};
+});
+
+export const judgeCount = readable(1, function start(set) {
+	const infoDoc = doc(db, 'info', 'info');
+	onSnapshot(infoDoc, (snapshot) => {
+		const documentData = snapshot.data();
+		if (documentData && 'judgeCount' in documentData) {
+			set(documentData.judgeCount);
+		}
+	});
 });
