@@ -352,14 +352,14 @@ export async function execute(
                 testFailed = true;
 
                 // Figure out what the error was
-                const errors = await fs.readFile(errorFilePath);
-                if (errors.toString().includes(mleString)) {
+                const errors = await readLastLines(errorFilePath, 1);
+                if (errors.includes(mleString)) {
                   return new BMessage(state.tested, {
                     testCase,
                     subtask,
                     result: 'MLE',
                   });
-                } else if (errors.toString().includes(tleString)) {
+                } else if (errors.includes(tleString)) {
                   return new BMessage(state.tested, {
                     testCase,
                     subtask,
