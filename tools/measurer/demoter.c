@@ -107,10 +107,13 @@ int main(int argc, char *argv[]) {
     if (status) {
         if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec * 1000000.0l + usage.ru_utime.tv_usec) / (max_time_in_seconds * 1000000.0l) > 0.90) {
             fprintf(stderr, "Out of time!\n");
-        }
-        if (max_mem != -1 && max_mem - usage.ru_maxrss < 4000) {
+        } else if (max_mem != -1 && max_mem - usage.ru_maxrss < 4000) {
             fprintf(stderr, "Out of memory!\n");
+        } else {
+            fprintf(stderr, "Non zero exit code\n");
         }
+    } else {
+        fprintf(stderr, "Normal execution\n");
     }
 
     printf("CPU time (milliseconds) %ld\n", usage.ru_utime.tv_sec * 1000 + usage.ru_utime.tv_usec / 1000);
