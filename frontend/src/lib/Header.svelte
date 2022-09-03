@@ -1,6 +1,9 @@
 <script>
 	import { page } from '$app/stores';
-	import { time } from '$lib/stores';
+	import { onMount } from 'svelte';
+	import { time, judgeCount } from '$lib/stores';
+	import { browser } from '$app/env';
+	import Clock from '$lib/Clock.svelte';
 </script>
 
 <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom mx-3">
@@ -51,12 +54,7 @@
 			>
 		</li>
 		<li class="nav-item">
-			<span
-				class:btn-success={$time.synced}
-				class:btn-secondary={!$time.synced}
-				class="btn pt-2 pb-2 ms-2 border-0 font-monospace"
-				>{$time.date.toLocaleTimeString('en-GB')}</span
-			>
+			<Clock time={$time} judgeCount={$judgeCount} />
 		</li>
 	</ul>
 </header>

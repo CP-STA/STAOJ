@@ -22,6 +22,10 @@ export function FirestoreInterface({
     );
   }
 
+  // Saved callabcks
+  let handleCompletionDefault;
+  let handleCompletions = [];
+
   // connect to cloud and ensure is connected
   const app = initializeApp({
     credential: applicationDefault(),
@@ -82,8 +86,6 @@ export function FirestoreInterface({
           const id = change.doc.id;
           const { problem, language, sourceCode } = rawSubmission;
 
-          console.log('New submission:', id, '\n', rawSubmission, id);
-
           // File names no longer stored, so cannot be read, so they must be
           // set later or removed from request in future
           const newRequest = new Request(id, problem, sourceCode, language);
@@ -93,41 +95,63 @@ export function FirestoreInterface({
       });
     });
   };
-  this.sendMessage = createFirestoreMessageHandler(
-    async (id, data) => {
-      // Special stuff with judging to avoid race conditions
-      if (data.state === 'judging') {
-        try {
-          await db.runTransaction(async (t) => {
-            const ref = submissions.doc(id);
-            const submission = await t.get(ref);
-            if (submission.data().state === 'queued') {
-              t.update(ref, data);
+  this.sendMessage = async (message) => {
+    const result = await createFirestoreMessageHandler(
+      async (id, data) => {
+        // Special stuff with judging to avoid race conditions
+        if (data.state === 'judging') {
+          try {
+            await db.runTransaction(async (t) => {
+              const ref = submissions.doc(id);
+              const submission = await t.get(ref);
+              if (submission.data().state === 'queued') {
+                t.update(ref, data);
+              } else {
+                throw 'Not queued anymore';
+              }
+            });
+            return true;
+          } catch (e) {
+            if (e === 'Not queued anymore') {
+              return false;
             } else {
-              throw 'Not queued anymore';
+              throw e;
             }
-          });
-          return true;
-        } catch (e) {
-          if (e === 'Not queued anymore') {
-            return false;
-          } else {
-            throw e;
           }
+        } else {
+          submissions.doc(id).update(data);
+          return true;
         }
-      } else {
-        submissions.doc(id).update(data);
+      },
+      async (id, data) => {
+        await submissions
+          .doc(id)
+          .collection(submissionsJudgeResultPath)
+          .add(data);
         return true;
       }
-    },
-    async (id, data) => {
-      await submissions
-        .doc(id)
-        .collection(submissionsJudgeResultPath)
-        .add(data);
-      return true;
+    )(message);
+    // Last message is always a done unless error
+    if (message.state === 'done') {
+      // handle completion or don't, not required
+      if (handleCompletions[message.id]) {
+        handleCompletions[message.id]();
+      } else if (handleCompletionDefault) {
+        handleCompletionDefault();
+      }
     }
-  );
+
+    return result;
+  };
+  this.submissionComplete = function (id = null) {
+    return new Promise((resolve) => {
+      if (id === null) {
+        handleCompletionDefault = resolve;
+      } else {
+        handleCompletions[id] = resolve;
+      }
+    });
+  };
 }
 
 // Test version of the firestore interface, mainly to test the message handling logic

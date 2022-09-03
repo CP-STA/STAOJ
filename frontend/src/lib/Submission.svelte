@@ -26,6 +26,7 @@
 	import PreviousSubmissions from '$lib/PreviousSubmissions.svelte';
 	import Header from './Header.svelte';
 	import { getVerdict } from '$lib/utils';
+	import { judgeCount } from '$lib/stores';
 
 	/** @type any */
 	export let languages;
@@ -147,7 +148,9 @@
 		<div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne">
 			<div class="">
 				<div class="accordion-body">
-					{#if !$user.loaded}
+					{#if $judgeCount == 0}
+						The code judging system is offline for maintenance.
+					{:else if !$user.loaded}
 						Loading account information...
 					{:else if !$user.user}
 						Please log in to submit code.

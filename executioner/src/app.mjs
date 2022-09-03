@@ -10,6 +10,7 @@ export function start() {
   try {
     const app = new FirestoreInterface({
       databaseURL: 'staoj-database.firebaseio.com',
+      readOld: true,
     });
     const executingLimit = parseInt(process.env.EXECUTING_LIMIT) || 1;
     app
@@ -30,7 +31,8 @@ export function start() {
       })
       .catch((e) => {
         // Ensures smooth cleanup
-        process.emit('uncaughtException', e);
+        console.error(e);
+        process.emit('SIGINT', 1);
       });
   } catch (e) {
     console.error(e);

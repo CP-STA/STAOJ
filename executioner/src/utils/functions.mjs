@@ -64,7 +64,7 @@ export async function isContainerImageBuilt(name) {
     } else if (e.code === 127) {
       throw new Error('Podman is not installed or in the path');
     } else {
-      throw new Error(`Something went wrong calling '${command}'`);
+      throw new Error(`Something went wrong calling '${command}', (${e.code})`);
     }
   }
 }
@@ -73,27 +73,36 @@ export async function isContainerImageBuilt(name) {
 export async function getContainerCount() {
   const command = `podman ps -a | wc -l`;
   try {
-    return parseInt((await exec(command)).stdout);
+    return parseInt(await exec(command));
   } catch (e) {
     if (e.code === 127) {
       throw new Error('Podman is not installed or in the path');
     } else {
-      throw new Error(`Something went wrong calling '${command}'`);
+      throw new Error(`Something went wrong calling '${command}', (${e.code})`);
     }
   }
 }
 
 export async function removeContainer(name) {
   const command = `podman container rm ${name}`;
+  const splitCommand = command.split(' ');
   try {
-    await exec(command);
+    const execution = cp.spawn(splitCommand[0], splitCommand.slice(1), {
+      detached: true,
+    });
+    await new Promise((resolve, reject) => {
+      execution.on('close', (code) => {
+        code !== 0 && reject(code);
+        resolve();
+      });
+    });
   } catch (e) {
     if (e.code === 1) {
       throw new Error(`No such podman container '${name}' found`);
     } else if (e.code === 127) {
       throw new Error('Podman is not installed or in the path');
     } else {
-      throw new Error(`Something went wrong calling '${command}'`);
+      throw new Error(`Something went wrong calling '${command}', (${e.code})`);
     }
   }
 }

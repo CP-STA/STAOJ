@@ -51,11 +51,17 @@ Upon request, we can create custom contests for hackathons and organisations, an
 ## The Team
 
 Currently consists of seven St Andrews students from around the world. Learn more about the members that power this club [here](https://github.com/STAOJ/St-Andrews-Competitive-Programming/blob/master/the_team.md).
-`
+`;
 </script>
 
 <svelte:head>
 	<title>St Anderws Online Judge</title>
 </svelte:head>
-<img src="https://raw.githubusercontent.com/CP-STA/STAOJ/master/OnlineJudgedark.png" class="rounded mx-auto d-block" alt="CPSTA Logo" width="192" height="192">
+<img
+	src="https://raw.githubusercontent.com/CP-STA/STAOJ/master/OnlineJudgedark.png"
+	class="rounded mx-auto d-block"
+	alt="CPSTA Logo"
+	width="192"
+	height="192"
+/>
 <SvelteMarkdown {source} />
