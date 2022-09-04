@@ -11,147 +11,156 @@ export function FirestoreInterface({
   submissionsJudgeResultPath = 'judge-results',
   infoPath = 'info',
 }) {
-  if (!databaseURL) {
-    throw new Error('Need to pass `databaseURL` to interface options');
-  }
-
-  // Assert that the neccessary env variable is set to connect to db
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS === undefined) {
-    throw new Error(
-      'The GOOGLE_APPLICATION_CREDENTIALS environmental variable must be set to the path of the database key file'
-    );
-  }
-
-  // Saved callabcks
-  let handleCompletionDefault;
-  let handleCompletions = [];
-
-  // connect to cloud and ensure is connected
-  const app = initializeApp({
-    credential: applicationDefault(),
-    databaseURL,
-  });
-  const db = getFirestore(app);
-  const submissions = db.collection(submissionsCollectionPath);
-
-  // Update number of running executioners
-  db.runTransaction(async (t) => {
-    const ref = db.collection(infoPath).doc('info');
-    const info = await t.get(ref);
-    const count = info?.data()?.judgeCount ?? 0;
-    if (info.data() === undefined) {
-      t.create(ref, { judgeCount: 1 });
-    } else {
-      t.update(ref, { judgeCount: count + 1 });
+  try {
+    if (!databaseURL) {
+      throw new Error('Need to pass `databaseURL` to interface options');
     }
-  });
 
-  let readOldYet = false;
-
-  // Return interface object which allows assignment of onSubmission handler
-  this.isActive = async function () {
-    try {
-      await submissions.get();
-      return true;
-    } catch {
-      return false;
+    // Assert that the neccessary env variable is set to connect to db
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === undefined) {
+      throw new Error(
+        'The GOOGLE_APPLICATION_CREDENTIALS environmental variable must be set to the path of the database key file'
+      );
     }
-  };
-  this.deactivate = async function () {
-    // Update number of running executioners to one less
-    await db.runTransaction(async (t) => {
+
+    // Saved callabcks
+    let handleCompletionDefault;
+    let handleCompletions = [];
+
+    // connect to cloud and ensure is connected
+    const app = initializeApp({
+      credential: applicationDefault(),
+      databaseURL,
+    });
+    const db = getFirestore(app);
+    const submissions = db.collection(submissionsCollectionPath);
+
+    // Update number of running executioners
+    db.runTransaction(async (t) => {
       const ref = db.collection(infoPath).doc('info');
       const info = await t.get(ref);
-      if (info.data() !== undefined) {
-        const count = info.data().judgeCount;
-        if (count !== undefined && count > 0) {
-          t.update(ref, { judgeCount: count - 1 });
-        }
+      const count = info?.data()?.judgeCount ?? 0;
+      if (info.data() === undefined) {
+        t.create(ref, { judgeCount: 1 });
+      } else {
+        t.update(ref, { judgeCount: count + 1 });
       }
     });
-  };
-  this.onSubmission = function (handleSubmission) {
-    submissions.where('state', '==', 'queued').onSnapshot((snapshot) => {
-      // Skip the first if not readOld and trigger flag to read rest
-      if (!readOld && !readOldYet) {
-        readOldYet = true;
-        return;
+
+    let readOldYet = false;
+
+    // Return interface object which allows assignment of onSubmission handler
+    this.isActive = async function () {
+      try {
+        await submissions.get();
+        return true;
+      } catch {
+        return false;
       }
-      // Iterate through changes
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          const rawSubmission = change.doc.data();
-
-          // Get request data
-          const id = change.doc.id;
-          const { problem, language, sourceCode } = rawSubmission;
-
-          // File names no longer stored, so cannot be read, so they must be
-          // set later or removed from request in future
-          const newRequest = new Request(id, problem, sourceCode, language);
-
-          handleSubmission(newRequest);
+    };
+    this.deactivate = async function () {
+      // Update number of running executioners to one less
+      await db.runTransaction(async (t) => {
+        const ref = db.collection(infoPath).doc('info');
+        const info = await t.get(ref);
+        if (info.data() !== undefined) {
+          const count = info.data()?.judgeCount;
+          if (count !== undefined && count > 0) {
+            t.update(ref, { judgeCount: count - 1 });
+          }
         }
       });
-    });
-  };
-  this.sendMessage = async (message) => {
-    const result = await createFirestoreMessageHandler(
-      async (id, data) => {
-        // Special stuff with judging to avoid race conditions
-        if (data.state === 'judging') {
-          try {
-            await db.runTransaction(async (t) => {
-              const ref = submissions.doc(id);
-              const submission = await t.get(ref);
-              if (submission.data().state === 'queued') {
-                t.update(ref, data);
-              } else {
-                throw 'Not queued anymore';
-              }
-            });
-            return true;
-          } catch (e) {
-            if (e === 'Not queued anymore') {
-              return false;
-            } else {
-              throw e;
-            }
+    };
+    this.onSubmission = function (handleSubmission) {
+      submissions.where('state', '==', 'queued').onSnapshot((snapshot) => {
+        // Skip the first if not readOld and trigger flag to read rest
+        if (!readOld && !readOldYet) {
+          readOldYet = true;
+          return;
+        }
+        // Iterate through changes
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const rawSubmission = change.doc.data();
+
+            // Get request data
+            const id = change.doc.id;
+            const { problem, language, sourceCode } = rawSubmission;
+
+            // File names no longer stored, so cannot be read, so they must be
+            // set later or removed from request in future
+            const newRequest = new Request(id, problem, sourceCode, language);
+
+            handleSubmission(newRequest);
           }
-        } else {
-          submissions.doc(id).update(data);
+        });
+      });
+    };
+    this.sendMessage = async (message) => {
+      const result = await createFirestoreMessageHandler(
+        async (id, data) => {
+          // Special stuff with judging to avoid race conditions
+          if (data.state === 'judging') {
+            try {
+              await db.runTransaction(async (t) => {
+                const ref = submissions.doc(id);
+                const submission = await t.get(ref);
+                if (submission.data()?.state === 'queued') {
+                  t.update(ref, data);
+                } else {
+                  throw 'Not queued anymore';
+                }
+              });
+              return true;
+            } catch (e) {
+              if (e === 'Not queued anymore') {
+                return false;
+              } else {
+                throw e;
+              }
+            }
+          } else {
+            submissions.doc(id).update(data);
+            return true;
+          }
+        },
+        async (id, data) => {
+          await submissions
+            .doc(id)
+            .collection(submissionsJudgeResultPath)
+            .add(data);
           return true;
         }
-      },
-      async (id, data) => {
-        await submissions
-          .doc(id)
-          .collection(submissionsJudgeResultPath)
-          .add(data);
-        return true;
+      )(message);
+      // Last message is always a done unless error
+      if (message.state === 'done') {
+        // handle completion or don't, not required
+        if (handleCompletions[message.id]) {
+          handleCompletions[message.id]();
+        } else if (handleCompletionDefault) {
+          handleCompletionDefault();
+        }
       }
-    )(message);
-    // Last message is always a done unless error
-    if (message.state === 'done') {
-      // handle completion or don't, not required
-      if (handleCompletions[message.id]) {
-        handleCompletions[message.id]();
-      } else if (handleCompletionDefault) {
-        handleCompletionDefault();
-      }
-    }
 
-    return result;
-  };
-  this.submissionComplete = function (id = null) {
-    return new Promise((resolve) => {
-      if (id === null) {
-        handleCompletionDefault = resolve;
-      } else {
-        handleCompletions[id] = resolve;
-      }
-    });
-  };
+      return result;
+    };
+    this.submissionComplete = function (id = null) {
+      return new Promise((resolve) => {
+        if (id === null) {
+          handleCompletionDefault = resolve;
+        } else {
+          handleCompletions[id] = resolve;
+        }
+      });
+    };
+
+  } catch (e) {
+    if (e.code === 'app/invalid-credential') {
+      throw new Error(`The firestore credentials file ${process.env.GOOGLE_APPLICATION_CREDENTIALS} was not found`);
+    } else {
+      throw e;
+    }
+  }
 }
 
 // Test version of the firestore interface, mainly to test the message handling logic
