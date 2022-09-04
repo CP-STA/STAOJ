@@ -3,20 +3,20 @@
 
 	import katex from 'katex/dist/katex.mjs';
 	import { formatTitle } from '$lib/utils';
-	import SvelteMarkdown from 'svelte-markdown';
 	import showdown from 'showdown';
 	const converter = new showdown.Converter();
 	
 	/** @param {String} s*/
 	function katexString(s) {
-		const s2 = converter.makeHtml(s);
-		return s2
-			.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
-				return katex.renderToString(capture, { displayMode: true, throwOnError: false });
-			})
-			.replaceAll(/\$(.+?)\$/g, (match, capture) => {
-				return katex.renderToString(capture, { throwOnError: false });
-			});
+		const s2 = s
+		.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
+			return katex.renderToString(capture, { displayMode: true, throwOnError: false });
+		})
+		.replaceAll(/\$(.+?)\$/g, (match, capture) => {
+			return katex.renderToString(capture, { throwOnError: false });
+		});
+		const s3 = converter.makeHtml(s2);
+		return s3;
 	}
 
 	/** @type {import('./$types').PageData} */
@@ -60,11 +60,9 @@
 />
 <h2>Problem Statement</h2>
 <p>
-	<SvelteMarkdown source={data.problem.statement} />
 	{@html katexString(data.problem.statement)}
 </p>
 <h2>Constraints</h2>
-<SvelteMarkdown source={katexString(data.problem.constraints)} />
 <p>{@html katexString(data.problem.constraints)}</p>
 
 {#if data.problem.subtasks}
