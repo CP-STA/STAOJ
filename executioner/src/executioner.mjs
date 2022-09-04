@@ -132,7 +132,7 @@ export async function runExecutioner(
         } else {
           await sendMessage(new Message(request.id, state.error));
         }
-        throw e;
+        console.error(e);
       } finally {
         // Regardless, run the next queued request if any
         const it = executingRequests.indexOf(request.id);
