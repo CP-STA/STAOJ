@@ -44,6 +44,10 @@ export async function runExecutioner(
       );
       await app.deactivate();
       await Promise.all(executingRequests.map(app.submissionComplete));
+      // Workaround for executioner not finishing scoring
+      await new Promise((resolve) => {
+        setTimeout(resolve, 2000)
+      });
       console.log('Goodbye');
       process.exit(code);
     }
