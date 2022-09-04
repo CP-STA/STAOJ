@@ -1,13 +1,8 @@
-FROM ubuntu:22.04
+FROM alpine:latest
 
 # Add dependencies via package manager
-RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make build-essential
-RUN apt-get install -y openjdk-11-jre openjdk-11-jdk
-RUN apt-get install -y ruby
-RUN apt-get install -y nodejs
-RUN apt-get install -y rustc
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mono-complete
+RUN apk add gcc make openjdk11 ruby nodejs rust
+RUN apk add mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 WORKDIR /app
 
