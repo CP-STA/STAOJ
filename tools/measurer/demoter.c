@@ -101,6 +101,8 @@ int main(int argc, char *argv[]) {
 
     struct rusage usage;
     getrusage(RUSAGE_CHILDREN, &usage);
+
+    printf(stderr, "\n");
     
     // Check for timeout
     // Check for mem exceed in case program exits before
