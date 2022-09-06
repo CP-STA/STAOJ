@@ -21,6 +21,7 @@ import {
   getSourceCodeFileName,
   getSupportedLanguagesSync,
 } from '../../src/utils/functions.mjs';
+import { read as readLastLines } from 'read-last-lines';
 const exec = util.promisify(cp.exec);
 
 const supportedLanguages = getSupportedLanguagesSync(repoPath);
@@ -126,15 +127,33 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
           const errorContents = await fs.readFile(errorFile);
           const outContents = await fs.readFile(outFile);
 
-          if (!tt.is(errorContents.length, 0, 'Error file is not empty')) {
-            tt.log(`-- ${errorName}  --`);
+          // If out empty then error file might help
+          if (!tt.not(outContents.length, 0, 'Output file is empty')) {
+            tt.log(`-- ${errorName} --`);
             tt.log(errorContents.toString());
+          }
 
-            // If error then out file might help too
-            if (tt.not(outContents.length, 0, 'Output file is empty')) {
-              tt.log(`-- ${outName} --`);
-              tt.log(outContents.toString());
-            }
+          // If error empty then out file might help
+          if (!tt.not(errorContents.length, 0, 'Error file empty')) {
+            tt.log(`-- ${outName}  --`);
+            tt.log(outContents.toString());
+          }
+
+          const errorStatus = await readLastLines(errorFile).then((file) =>
+            file.toString()
+          );
+
+          if (
+            !tt.regex(
+              errorStatus,
+              new RegExp('Normal execution'),
+              'Normal execution output did not match'
+            )
+          ) {
+            tt.log(`-- ${errorName} --`);
+            tt.log(errorContents.toString());
+            tt.log(`-- ${outName}  --`);
+            tt.log(outContents.toString());
           }
 
           return tt;
@@ -186,7 +205,9 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
 
       execResult.commit({ retainLogs: true });
 
-      const errorContents = await fs.readFile(errorFile);
+      const errorStatus = await readLastLines(errorFile).then((file) =>
+        file.toString()
+      );
       const outContents = await fs.readFile(outFile);
 
       // Additional checks for Mle and Tle
@@ -198,7 +219,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
             async (tt) => {
               if (
                 !tt.regex(
-                  errorContents.toString(),
+                  errorStatus,
                   new RegExp('Out of memory!'),
                   'MLE output did not match'
                 )
@@ -224,7 +245,7 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
             async (tt) => {
               if (
                 !tt.regex(
-                  errorContents.toString(),
+                  errorStatus,
                   new RegExp('Out of time!'),
                   'Tle output did not match'
                 )
@@ -248,10 +269,12 @@ const testRunningMacro = test.macro(async (t, language, requestName) => {
             'Checking that its only an error',
             async (tt) => {
               if (
-                errorContents.toString().includes(tleString) ||
-                errorContents.toString().includes(mleString)
+                !tt.regex(
+                  errorStatus,
+                  new RegExp('Non zero exit code'),
+                  'Error output did not match'
+                )
               ) {
-                tt.fail('Execution did not fail with general error');
                 tt.log(`-- ${errorName} --`);
                 tt.log(errorContents.toString());
                 tt.log(`-- ${outName} -- `);

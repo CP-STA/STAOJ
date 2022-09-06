@@ -23,7 +23,7 @@ export function start() {
             tmpRootPath: path.join(thisPath, 'tmp'),
             overwriteTmpPath: true,
             syncMessages: false,
-            executingLimit
+            executingLimit,
           });
         } else {
           throw 'Failed to connect to database';
