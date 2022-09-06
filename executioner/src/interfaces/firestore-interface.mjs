@@ -153,10 +153,11 @@ export function FirestoreInterface({
         }
       });
     };
-
   } catch (e) {
     if (e.code === 'app/invalid-credential') {
-      throw new Error(`The firestore credentials file ${process.env.GOOGLE_APPLICATION_CREDENTIALS} was not found`);
+      throw new Error(
+        `The firestore credentials file ${process.env.GOOGLE_APPLICATION_CREDENTIALS} was not found`
+      );
     } else {
       throw e;
     }
