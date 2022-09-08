@@ -19,7 +19,7 @@
 	}
 	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date;
 	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime);
-	$: isAvaliable = $currentTime.synced && isAfterStart && isBeforeEnd;
+	$: isAvailable = $currentTime.synced && isAfterStart && isBeforeEnd;
 </script>
 
 <svelte:head>
@@ -30,11 +30,12 @@
 	<h1>Loading...</h1>
 {:else if isBeforeEnd}
 	<h1>{data.info.name}</h1>
-	{#if isAvaliable}
+	{#if isAvailable}
 		<table class="table">
 			<thead>
 				<tr>
 					<th scope="col">Problem</th>
+					<th scope="col">Difficulty</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -44,6 +45,9 @@
 							><a sveltekit:prefetch href="/problems/{problem.slug}?contest=true">{problem.name}</a
 							></td
 						>
+						<td>
+							{problem.difficulty}
+						</td>
 					</tr>
 				{/each}
 			</tbody>

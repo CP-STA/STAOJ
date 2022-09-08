@@ -5,16 +5,16 @@
 	import { formatTitle } from '$lib/utils';
 	import showdown from 'showdown';
 	const converter = new showdown.Converter();
-	
+
 	/** @param {String} s*/
 	function katexString(s) {
 		const s2 = s
-		.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
-			return katex.renderToString(capture, { displayMode: true, throwOnError: false });
-		})
-		.replaceAll(/\$(.+?)\$/g, (match, capture) => {
-			return katex.renderToString(capture, { throwOnError: false });
-		});
+			.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
+				return katex.renderToString(capture, { displayMode: true, throwOnError: false });
+			})
+			.replaceAll(/\$(.+?)\$/g, (match, capture) => {
+				return katex.renderToString(capture, { throwOnError: false });
+			});
 		const s3 = converter.makeHtml(s2);
 		return s3;
 	}
