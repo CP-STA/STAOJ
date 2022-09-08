@@ -1,0 +1,6 @@
+node_modules
+key.json
+key-test.json
+**/tmp/
+.env
+key-testing.json
