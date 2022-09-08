@@ -17,8 +17,8 @@
 	function formatTime(dateString) {
 		return new Date(dateString).toLocaleTimeString('en-GB');
 	}
-	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date;
-	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime);
+	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date || true;
+	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime) || true;
 	$: isAvailable = $currentTime.synced && isAfterStart && isBeforeEnd;
 </script>
 
