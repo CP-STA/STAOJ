@@ -7,16 +7,37 @@
 	const converter = new showdown.Converter();
 
 	/** @param {String} s*/
+
+	function escape(s) {
+		// https://tech.saigonist.com/b/code/escaping-special-characters-markdown.html
+		return s
+			.replaceAll(/\\/g, '\\\\')
+			.replaceAll(/`/g, '\\`')
+			.replaceAll(/\*/g, '\\*')
+			.replaceAll(/_/g, '\\_')
+			.replaceAll(/{/g, '\\{')
+			.replaceAll(/}/g, '\\}')
+			.replaceAll(/\[/g, '\\[')
+			.replaceAll(/\]/g, '\\]')
+			.replaceAll(/\(/g, '\\(')
+			.replaceAll(/\)/g, '\\)')
+			.replaceAll(/#/g, '\\#')
+			.replaceAll(/\+/g, '\\+')
+			.replaceAll(/-/g, '\\-')
+			.replaceAll(/\./g, '\\.')
+			.replaceAll(/!/g, '\\!')
+	}
 	function katexString(s) {
-		const s2 = s
-			.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
-				return katex.renderToString(capture, { displayMode: true, throwOnError: false });
-			})
-			.replaceAll(/\$(.+?)\$/g, (match, capture) => {
-				return katex.renderToString(capture, { throwOnError: false });
-			});
+		const s2 = escape(s);
 		const s3 = converter.makeHtml(s2);
-		return s3;
+		const s4 = s3
+		.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
+			return katex.renderToString(capture, { displayMode: true, throwOnError: false });
+		})
+		.replaceAll(/\$(.+?)\$/g, (match, capture) => {
+			return katex.renderToString(capture, { throwOnError: false });
+		})
+		return s4;
 	}
 
 	/** @type {import('./$types').PageData} */
