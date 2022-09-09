@@ -25,18 +25,27 @@
 			.replaceAll(/\+/g, '\\+')
 			.replaceAll(/-/g, '\\-')
 			.replaceAll(/\./g, '\\.')
-			.replaceAll(/!/g, '\\!')
+			.replaceAll(/!/g, '\\!');
 	}
 	function katexString(s) {
-		const s2 = escape(s);
+		const displayMathMatch = /[^\\]\$\$(.*?[^\\])\$\$/g;
+		const inlineMathMatch = /[^\\\$]\$(.*?[^\\\$])\$/g;
+		const s2 = s
+			.replaceAll(displayMathMatch, (match, capture) => escape(match))
+			.replaceAll(inlineMathMatch, (match, capture) => escape(match));
 		const s3 = converter.makeHtml(s2);
 		const s4 = s3
-		.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
-			return katex.renderToString(capture, { displayMode: true, throwOnError: false });
-		})
-		.replaceAll(/\$(.+?)\$/g, (match, capture) => {
-			return katex.renderToString(capture, { throwOnError: false });
-		})
+			.replaceAll(displayMathMatch, (match, capture) => {
+				console.log(capture);
+				return (
+					match.substring(0, 1) +
+					katex.renderToString(capture, { displayMode: true, throwOnError: false })
+				);
+			})
+			.replaceAll(inlineMathMatch, (match, capture) => {
+				return match.substring(0, 1) + katex.renderToString(capture, { throwOnError: false });
+			})
+			.replaceAll(/\\\$/g, '$');
 		return s4;
 	}
 
