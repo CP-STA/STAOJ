@@ -3,6 +3,7 @@
 	/** @type {import('./$types').PageData} */
 	export let data;
 	import { formatTitle } from '$lib/utils';
+	import { page } from '$app/stores';
 
 	const problems = data.problems;
 
@@ -17,8 +18,10 @@
 	function formatTime(dateString) {
 		return new Date(dateString).toLocaleTimeString('en-GB');
 	}
-	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date;
-	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime);
+	
+	const preview = $page.url.searchParams.get('preview') == 'true';
+	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date || preview;
+	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime) || preview;
 	$: isAvailable = $currentTime.synced && isAfterStart && isBeforeEnd;
 </script>
 
