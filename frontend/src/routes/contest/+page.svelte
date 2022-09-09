@@ -18,7 +18,7 @@
 	function formatTime(dateString) {
 		return new Date(dateString).toLocaleTimeString('en-GB');
 	}
-	
+
 	const preview = $page.url.searchParams.get('preview') == 'true';
 	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date || preview;
 	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime) || preview;

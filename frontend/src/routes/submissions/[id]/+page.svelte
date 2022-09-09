@@ -147,7 +147,8 @@
 
 <h1>Submission Result</h1>
 <p>
-	Problem: {#if submissionDoc}<a href="/problems/{submissionDoc.problem}{isContest? '?contest=true': ''}"
+	Problem: {#if submissionDoc}<a
+			href="/problems/{submissionDoc.problem}{isContest ? '?contest=true' : ''}"
 			>{submissionDoc.problemName}</a
 		>{:else}Loading...{/if}
 	<br />
