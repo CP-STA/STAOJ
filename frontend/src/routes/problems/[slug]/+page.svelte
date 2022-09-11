@@ -77,7 +77,7 @@
 			Time: {data.problem.time} ms
 		</div>
 		<div class="col text-start">
-			Memory: {data.problem.memory} kb
+			Memory: {data.problem.memory} kB
 		</div>
 	</div>
 </div>
