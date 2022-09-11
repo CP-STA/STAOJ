@@ -3,6 +3,7 @@
 	/** @type {import('./$types').PageData} */
 	export let data;
 	import { formatTitle } from '$lib/utils';
+	import { page } from '$app/stores';
 
 	const problems = data.problems;
 
@@ -17,9 +18,11 @@
 	function formatTime(dateString) {
 		return new Date(dateString).toLocaleTimeString('en-GB');
 	}
-	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date;
-	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime);
-	$: isAvaliable = $currentTime.synced && isAfterStart && isBeforeEnd;
+
+	const preview = $page.url.searchParams.get('preview') == 'true';
+	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date || preview;
+	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime) || preview;
+	$: isAvailable = $currentTime.synced && isAfterStart && isBeforeEnd;
 </script>
 
 <svelte:head>
@@ -30,11 +33,12 @@
 	<h1>Loading...</h1>
 {:else if isBeforeEnd}
 	<h1>{data.info.name}</h1>
-	{#if isAvaliable}
+	{#if isAvailable}
 		<table class="table">
 			<thead>
 				<tr>
 					<th scope="col">Problem</th>
+					<th scope="col">Difficulty</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -44,6 +48,9 @@
 							><a sveltekit:prefetch href="/problems/{problem.slug}?contest=true">{problem.name}</a
 							></td
 						>
+						<td>
+							{problem.difficulty}
+						</td>
 					</tr>
 				{/each}
 			</tbody>

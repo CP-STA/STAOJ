@@ -1,5 +1,6 @@
 import { db } from '$lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, fetch, url }) {
@@ -12,6 +13,9 @@ export async function load({ params, fetch, url }) {
 	} else {
 		const problemUrl = `https://raw.githubusercontent.com/CP-STA/contest-problems/main/${params.slug}/statement.json`;
 		const problemResponse = await fetch(problemUrl);
+		if (problemResponse.status == 404) {
+			throw error(404, 'Not found');
+		}
 		problem = await problemResponse.json();
 	}
 

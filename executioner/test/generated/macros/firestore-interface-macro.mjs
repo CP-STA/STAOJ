@@ -61,7 +61,7 @@ export const firestoreInterfaceMacro = test.macro(
     // Starting with judging state always
     const expected = [{ state: 'judging' }];
 
-    // Cheecky iife
+    // Cheeky iife
     (() => {
       if (language.compiled) {
         expected.push({ state: 'compiling' });
@@ -218,7 +218,7 @@ export const firestoreInterfaceMacro = test.macro(
             filteredResults,
             shared,
             _.isEqual
-          ).map(([key, v1]) => [key, v1, filteredExp[key]]);
+          ).map(([key, v1]) => [key, v1, exp[key]]);
 
           const differencesString = differences.reduce(
             (str, [key, v1, v2]) =>

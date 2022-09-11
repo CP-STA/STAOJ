@@ -3,16 +3,50 @@
 
 	import katex from 'katex/dist/katex.mjs';
 	import { formatTitle } from '$lib/utils';
+	import showdown from 'showdown';
+	const converter = new showdown.Converter();
 
 	/** @param {String} s*/
-	function katexString(s) {
+
+	function escape(s) {
+		// https://tech.saigonist.com/b/code/escaping-special-characters-markdown.html
 		return s
-			.replaceAll(/\$\$(.+?)\$\$/g, (match, capture) => {
-				return katex.renderToString(capture, { displayMode: true, throwOnError: false });
+			.replaceAll(/\\/g, '\\\\')
+			.replaceAll(/`/g, '\\`')
+			.replaceAll(/\*/g, '\\*')
+			.replaceAll(/_/g, '\\_')
+			.replaceAll(/{/g, '\\{')
+			.replaceAll(/}/g, '\\}')
+			.replaceAll(/\[/g, '\\[')
+			.replaceAll(/\]/g, '\\]')
+			.replaceAll(/\(/g, '\\(')
+			.replaceAll(/\)/g, '\\)')
+			.replaceAll(/#/g, '\\#')
+			.replaceAll(/\+/g, '\\+')
+			.replaceAll(/-/g, '\\-')
+			.replaceAll(/\./g, '\\.')
+			.replaceAll(/!/g, '\\!');
+	}
+	function katexString(s) {
+		const displayMathMatch = /[^\\]\$\$(.*?[^\\])\$\$/g;
+		const inlineMathMatch = /[^\\\$]\$(.*?[^\\\$])\$/g;
+		const s6 = ' ' + s;
+		const s2 = s6
+			.replaceAll(displayMathMatch, (match, capture) => escape(match))
+			.replaceAll(inlineMathMatch, (match, capture) => escape(match));
+		const s3 = converter.makeHtml(s2.substring(1));
+		const s4 = s3
+			.replaceAll(displayMathMatch, (match, capture) => {
+				return (
+					match.substring(0, 1) +
+					katex.renderToString(capture, { displayMode: true, throwOnError: false })
+				);
 			})
-			.replaceAll(/\$(.+?)\$/g, (match, capture) => {
-				return katex.renderToString(capture, { throwOnError: false });
-			});
+			.replaceAll(inlineMathMatch, (match, capture) => {
+				return match.substring(0, 1) + katex.renderToString(capture, { throwOnError: false });
+			})
+			.replaceAll(/\\\$/g, '$');
+		return s4;
 	}
 
 	/** @type {import('./$types').PageData} */
@@ -43,7 +77,7 @@
 			Time: {data.problem.time} ms
 		</div>
 		<div class="col text-start">
-			Memory: {data.problem.memory} kb
+			Memory: {data.problem.memory} kB
 		</div>
 	</div>
 </div>

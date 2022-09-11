@@ -1,5 +1,5 @@
 // Demotes the user and limit resources and run the argumnts. 
-// Written in c becauseperl -e 'while ($i<100000000) {$a->{$i} = $i++;} the time and memory usage of this will be measured as the contestants usage.
+// Written in c because perl -e 'while ($i<100000000) {$a->{$i} = $i++;} the time and memory usage of this will be measured as the contestants usage.
 // e.g. gcc demoter.c && ./a.out python3
 
 #include <sys/resource.h>
@@ -21,11 +21,13 @@ char* max_time_env = "MAX_TIME";
 // (in kilobytes)
 char* max_mem_env = "MAX_MEM";
 
+int timeout = 0;
+
 // Handler of alarm signal after real time limit passes
 void alarm_handler(int signum) {
     if (exe_pid != 0) {
         kill(exe_pid, SIGKILL);
-        fprintf(stderr, "Out of time!\n");
+        timeout = 1;
     }
 }
 
@@ -101,16 +103,21 @@ int main(int argc, char *argv[]) {
 
     struct rusage usage;
     getrusage(RUSAGE_CHILDREN, &usage);
+
+    fprintf(stderr, "\n");
     
     // Check for timeout
     // Check for mem exceed in case program exits before
     if (status) {
-        if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec * 1000000.0l + usage.ru_utime.tv_usec) / (max_time_in_seconds * 1000000.0l) > 0.90) {
+        if (usage.ru_utime.tv_sec >= max_time_in_seconds || (usage.ru_utime.tv_sec * 1000000.0l + usage.ru_utime.tv_usec) / (max_time_in_seconds * 1000000.0l) > 0.90 || timeout) {
             fprintf(stderr, "Out of time!\n");
-        }
-        if (max_mem != -1 && max_mem - usage.ru_maxrss < 4000) {
+        } else if (max_mem != -1 && max_mem - usage.ru_maxrss < 4000) {
             fprintf(stderr, "Out of memory!\n");
+        } else {
+            fprintf(stderr, "Non zero exit code\n");
         }
+    } else {
+        fprintf(stderr, "Normal execution\n");
     }
 
     printf("CPU time (milliseconds) %ld\n", usage.ru_utime.tv_sec * 1000 + usage.ru_utime.tv_usec / 1000);
