@@ -30,13 +30,13 @@
 	function katexString(s) {
 		const displayMathMatch = /[^\\]\$\$(.*?[^\\])\$\$/g;
 		const inlineMathMatch = /[^\\\$]\$(.*?[^\\\$])\$/g;
-		const s2 = s
+		const s6 = ' ' + s;
+		const s2 = s6
 			.replaceAll(displayMathMatch, (match, capture) => escape(match))
 			.replaceAll(inlineMathMatch, (match, capture) => escape(match));
-		const s3 = converter.makeHtml(s2);
+		const s3 = converter.makeHtml(s2.substring(1));
 		const s4 = s3
 			.replaceAll(displayMathMatch, (match, capture) => {
-				console.log(capture);
 				return (
 					match.substring(0, 1) +
 					katex.renderToString(capture, { displayMode: true, throwOnError: false })
