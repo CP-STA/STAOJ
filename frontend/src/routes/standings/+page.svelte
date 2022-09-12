@@ -1,58 +1,68 @@
 <script>
-  import { onSnapshot, collection, doc, query, orderBy, Timestamp, limit, where } from 'firebase/firestore';
-  import { db } from '$lib/firebase';
-  import { onDestroy } from 'svelte';
+	import {
+		onSnapshot,
+		collection,
+		doc,
+		query,
+		orderBy,
+		Timestamp,
+		limit,
+		where
+	} from 'firebase/firestore';
+	import { db } from '$lib/firebase';
+	import { onDestroy } from 'svelte';
 
-  /** @type {import('./$types').PageData} */
-  export let data;
+	/** @type {import('./$types').PageData} */
+	export let data;
 
-  /** @type {any[]} */
+	/** @type {any[]} */
 
-  let standingsData = data.standingsData;
+	let standingsData = data.standingsData;
 
-  const unsub = onSnapshot(query(collection(db, 'standings'), orderBy('startTime', 'desc')), (docs) => {
-    /** @type {any[]} */
-    let newStandingsData = [];
-    docs.forEach((doc) => {
-      newStandingsData.push(doc.data());
-    })
-    standingsData = newStandingsData
-  })
+	const unsub = onSnapshot(
+		query(collection(db, 'standings'), orderBy('startTime', 'desc')),
+		(docs) => {
+			/** @type {any[]} */
+			let newStandingsData = [];
+			docs.forEach((doc) => {
+				newStandingsData.push(doc.data());
+			});
+			standingsData = newStandingsData;
+		}
+	);
 
-  onDestroy(() => {
-    unsub();
-  })
-
+	onDestroy(() => {
+		unsub();
+	});
 </script>
+
 <h1>Standings</h1>
 
 {#each standingsData as data}
-<h2>{data.name}</h2>
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col">Name</th>
-        {#each data.problemsOrder as problemSlug}
-        <th scope="col">{data.problemsNames[problemSlug]}</th>
-        {/each}
-        <th>Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each data.usersOrder as uid, i}
-      <tr>
-        <th scope="row">{i+1}</th>
-       <td>{data.users[uid].displayName}</td>
-       {#each data.problemsOrder as problemSlug}
-        <td>{data.users[uid].problems[problemSlug].score}</td>
-       {/each}
-       <td>{data.users[uid].total}</td>
-      </tr>
-      {/each}
-    </tbody>
-  </table>
-  <hr />
+	<h2>{data.name}</h2>
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">#</th>
+				<th scope="col">Name</th>
+				{#each data.problemsOrder as problemSlug}
+					<th scope="col">{data.problemsNames[problemSlug]}</th>
+				{/each}
+				<th>Total</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each data.usersOrder as uid, i}
+				<tr>
+					<th scope="row">{i + 1}</th>
+					<td>{data.users[uid].displayName}</td>
+					{#each data.problemsOrder as problemSlug}
+						<td>{data.users[uid].problems[problemSlug].score}</td>
+					{/each}
+					<td>{data.users[uid].total}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+	<hr />
 {/each}
-
-
