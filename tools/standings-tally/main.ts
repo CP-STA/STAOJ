@@ -25,12 +25,16 @@ async function main() {
   const contestName: string = await new Promise(resolve => rl.question("Contest name: ", (answer) => {resolve(answer)}));
   
   const contestDefinitionPath = `../../problems-private/contests/${contestName}.json`;
-  const contestDefinition = require(contestDefinitionPath);
+  const contestDefinition: {info: any, problems: {slug: string, name: string}[]} = require(contestDefinitionPath);
   const submissionCollection = db.collection('submissions'); 
   interface UserStanding {
     [uid: string]: {
       displayName: string,
-      scores: {[problem: string]: number},
+      problems: {
+        [problem: string]: {
+          score: number
+        }
+      }
       total: number
     };
   }
@@ -40,6 +44,14 @@ async function main() {
   let problems = contestDefinition.problems.map((x: any) => {
     return x.slug
   });
+
+  let problemsOrder: string[] = [];
+  let problemsNames: {[problem: string]: string} = {}
+  for (const problem of contestDefinition.problems) {
+    problemsOrder.push(problem.slug);
+    problemsNames[problem.slug] = problem.name;
+  }
+
   while (!success) {
     const docs = await submissionCollection.where('submissionTime', '>=', new Date(contestDefinition.info.startTime)).where('submissionTime', '<=', new Date(contestDefinition.info.endTime)).get();
     people = {};
@@ -54,9 +66,11 @@ async function main() {
       } 
 
       if (!(data.user in people)) {
-        let scores: {[problem: string]: number} = {};
+        let problems: {[problem: string]: {score: number}} = {};
         for (const problem of contestDefinition.problems) {
-          scores[problem.slug] = 0; 
+          problems[problem.slug] = {
+            score: 0
+          }
         }
         let displayName: string = data.user;
         const a = db.collection("users").doc(data.user);
@@ -76,13 +90,13 @@ async function main() {
         }
         people[data.user] = {
           displayName,
-          scores,
+          problems,
           total: 0
         }
       }
-      if (data.score > people[data.user as string].scores[data.problem]) {
-        const oldScore = people[data.user as string].scores[data.problem];
-        people[data.user].scores[data.problem as string] = data.score;
+      if (data.score > people[data.user as string].problems[data.problem as string].score) {
+        const oldScore = people[data.user as string].problems[data.problem as string].score;
+        people[data.user].problems[data.problem as string].score = data.score;
         people[data.user].total += (data.score - oldScore)
       }
     } catch (e) {console.error(e)} }
@@ -92,17 +106,24 @@ async function main() {
     }
   }
 
+  let usersOrder: { uid: string; data: { total: number; }; }[] = [];
+  for (const [uid, data] of Object.entries(people)) {
+    usersOrder.push({uid, data});
+  }
+
+  usersOrder.sort((first, second) => {
+    return - first.data.total + second.data.total; 
+  })
+
   await db.collection("standings").doc(contestName).set({
     name: contestDefinition.info.name,
     startTime: new Date(contestDefinition.info.startTime), 
-    users: people
+    users: people,
+    usersOrder: usersOrder.map(x => x.uid),
+    problemsOrder,
+    problemsNames
   });
-  
-  await db.collection("standings").doc("alpha-2").set({
-    name: contestDefinition.info.name,
-    startTime: new Date(contestDefinition.info.startTime), 
-    users: people
-  });
+
   console.log(people);
   process.exit(0);
 }
