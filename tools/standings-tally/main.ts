@@ -75,15 +75,15 @@ async function main() {
     success = true;
     const docsList = await getDocs(docs);
     for (const doc of docsList) {
-      if (!success) {
-        return;
-      }
       const data = doc.data();
-      if (data.state != "judged") {
+      if (data.state != "judged" && data.state != "compileError") {
         success = false;
-        return;
+        console.log(
+          "Some submissions have not finished judging, retrying in 1 second"
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        continue;
       }
-
       if (!(data.user in people)) {
         let problems: { [problem: string]: { score: number } } = {};
         for (const problem of contestDefinition.problems) {
@@ -138,12 +138,7 @@ async function main() {
         people[data.user].total += data.score - oldScore;
       }
     }
-    if (!success) {
-      console.log(
-        "Some submissions have not finished judging, retrying in 1 second"
-      );
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+    console.log(people);
   }
 
   let usersOrder: { uid: string; data: { total: number } }[] = [];
