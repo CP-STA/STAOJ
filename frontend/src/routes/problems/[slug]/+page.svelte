@@ -122,13 +122,17 @@
 					<pre class="m-0" style="color: var(--bs-code-color)"><code>{example.input}</code></pre>
 				</div>
 			</div>
-			<h3>Output</h3>
+			<h3 class="mt-3">Output</h3>
 			<div class="card">
 				<div class="card-body">
 					<!-- prettier-ignore -->
 					<pre class="m-0" style="color: var(--bs-code-color)"><code>{example.output}</code></pre>
 				</div>
 			</div>
+			{#if example.explanation}
+			<h3 class="mt-3">Explanation</h3>
+			<p>{@html katexString(example.explanation)}</p>
+			{/if}
 		</div>
 	</div>
 {/each}
