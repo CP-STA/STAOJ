@@ -2,5 +2,6 @@ node_modules
 key.json
 key-test.json
 **/tmp/
+debug
 .env
 key-testing.json
