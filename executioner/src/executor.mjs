@@ -51,6 +51,7 @@ export async function execute(
     overwriteTmpPath = false,
     baseFileName = 'Solution',
     syncMessages = true,
+    diffProcessGroup = false,
   }
 ) {
   // Option assertions
@@ -411,7 +412,7 @@ export async function execute(
     commandArgs.push(language.compiled ? 1 : 0, inDir, outDir);
 
     // Pushing the output into a line by line stream
-    const execution = cp.spawn('podman', commandArgs, { detached: true });
+    const execution = cp.spawn('podman', commandArgs, { detached: diffProcessGroup });
 
     await new Promise((resolve, reject) => {
       const outStream = rl.createInterface({

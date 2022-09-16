@@ -113,6 +113,14 @@ export const testProblem = Object.freeze({
   maxTime: 3000,
   testingRequestTypes: getRequestNamesByGroup(requestGroups.testAll),
 });
+export const test256Problem = Object.freeze({
+  name: 'test-256',
+  dir: 'problems-private',
+  testCases: 256,
+  maxMem: 128000,
+  maxTime: 1000,
+  testingRequestTypes: ['testHang'],//getRequestNamesByGroup(requestGroups.testAll),
+});
 export const testSubtasksPassProblem = Object.freeze({
   name: 'test-subtasks-pass',
   dir: 'problems-private',
