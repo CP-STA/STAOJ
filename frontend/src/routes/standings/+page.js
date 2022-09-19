@@ -4,7 +4,6 @@ import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, fetch, url }) {
-	console.log('hello');
 	const docs = await getDocs(query(collection(db, 'standings'), orderBy('startTime', 'desc')));
 
 	let standingsData = await new Promise((resolve) => {
