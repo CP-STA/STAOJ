@@ -19,13 +19,12 @@
 
 	/** @type {{[name:string]: string}} */
 	const languageBoilerPlate = {
-		'java': 'class Solution {\n    public static void main(String args[]){\n        \n    }\n}',
-		'gcc': 'int main(){\n    \n}',
-		'gpp': 'int main(){\n    \n}',
-		'rust': 'fn main(){\n    \n}',
-		'mono': 'class Solution {\n    static void Main() {\n        \n    }\n}'
-	}
-
+		java: 'class Solution {\n    public static void main(String args[]){\n        \n    }\n}',
+		gcc: 'int main(){\n    \n}',
+		gpp: 'int main(){\n    \n}',
+		rust: 'fn main(){\n    \n}',
+		mono: 'class Solution {\n    static void Main() {\n        \n    }\n}'
+	};
 
 	/** @param {string} language */
 	function getLanguageBoilerPlate(language) {
@@ -52,14 +51,14 @@
 		})();
 	}
 
-	/** 
+	/**
 	 * @param language {string}
 	 * @param languageId {string} */
 	async function updateLanguage(language, languageId) {
 		let model = editor.getModel();
 		// @ts-ignore
 		monaco.editor.setModelLanguage(model, language);
-		
+
 		if (!editor.getValue() || editor.getValue() == getLanguageBoilerPlate(previousLanguage)) {
 			editor.setValue(getLanguageBoilerPlate(languageId));
 		}

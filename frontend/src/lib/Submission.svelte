@@ -167,10 +167,15 @@
 							<button type="submit" class="btn btn-primary mb-3">Submit</button>
 							{#if selectedLanguage.split('-')[0] == 'java'}
 								<div class="alert alert-warning" role="alert">
-									For Java code, you must name your class <code>Solution</code>, otherwise it will not run correctly.
+									For Java code, you must name your class <code>Solution</code>, otherwise it will
+									not run correctly.
 								</div>
 							{/if}
-							<MonacoBlock language={monacoLangauge} languageId={selectedLanguage} bind:this={monacoBlock} />
+							<MonacoBlock
+								language={monacoLangauge}
+								languageId={selectedLanguage}
+								bind:this={monacoBlock}
+							/>
 						</form>
 					{:else if submitted}
 						{#if recentSubmissionDoc}

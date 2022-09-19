@@ -130,8 +130,8 @@
 				</div>
 			</div>
 			{#if example.explanation}
-			<h3 class="mt-3">Explanation</h3>
-			<p>{@html katexString(example.explanation)}</p>
+				<h3 class="mt-3">Explanation</h3>
+				<p>{@html katexString(example.explanation)}</p>
 			{/if}
 		</div>
 	</div>
