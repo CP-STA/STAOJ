@@ -34,6 +34,7 @@
 {:else if isBeforeEnd}
 	<h1>{data.info.name}</h1>
 	{#if isAvailable}
+		<p>This contest will end at {formatTime(data.info.endTime)}</p>
 		<table class="table">
 			<thead>
 				<tr>
@@ -62,6 +63,13 @@
 			)} on {formatDate(data.info.startTime)}
 		</p>
 	{/if}
+{:else if data.next}
+	<h1>{data.next.name}</h1>
+	<p>
+		This contest will begin at {formatTime(data.next.startTime)} and end at {formatTime(
+			data.next.endTime
+		)} on {formatDate(data.next.startTime)}
+	</p>
 {:else}
 	<h1>No Upcoming Contest</h1>
 	<p>There is no currently scheduled contest at the moment. Follow our facebook to stay tuned.</p>
