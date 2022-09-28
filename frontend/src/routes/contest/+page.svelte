@@ -22,16 +22,14 @@
 	const preview = $page.url.searchParams.get('preview') == 'true';
 	$: isAfterStart = new Date(data.info.startTime) <= $currentTime.date || preview;
 	$: isBeforeEnd = $currentTime.date < new Date(data.info.endTime) || preview;
-	$: isAvailable = $currentTime.synced && isAfterStart && isBeforeEnd;
+	$: isAvailable = isAfterStart && isBeforeEnd;
 </script>
 
 <svelte:head>
 	<title>{formatTitle('Upcoming Contest')}</title>
 </svelte:head>
 
-{#if !$currentTime.synced}
-	<h1>Loading...</h1>
-{:else if isBeforeEnd}
+{#if isBeforeEnd}
 	<h1>{data.info.name}</h1>
 	{#if isAvailable}
 		<p>This contest will end at {formatTime(data.info.endTime)}</p>
