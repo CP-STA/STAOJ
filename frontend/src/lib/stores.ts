@@ -10,7 +10,7 @@ export const time = readable({ synced: false, date: new Date() }, function start
 	if (browser) {
 		(async () => {
 			try {
-				let response = await fetch('http://time.deyaochen.com');
+				let response = await fetch('https://time.deyaochen.com');
 				if (!response.ok) {
 					throw Error('Response from the time url was not ok');
 				}
