@@ -1,4 +1,4 @@
-import http from 'http';
+import * as http from 'http';
 
 http.createServer(function (req, res) {
     const headers = {
