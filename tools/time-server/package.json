@@ -4,8 +4,7 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node main.ts",
-    "compiled": "node main.js",
+    "start": "tsc -b && node build/main.js",
     "dev": "ts-node-dev main.ts",
     "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
   },
