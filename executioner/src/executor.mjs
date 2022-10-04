@@ -51,6 +51,9 @@ export async function execute(
     overwriteTmpPath = false,
     baseFileName = 'Solution',
     syncMessages = true,
+    diffProcessGroup = false,
+    debug = false,
+    debugRootPath = path.join(repoPath, 'executioner', 'debug'),
   }
 ) {
   // Option assertions
@@ -78,6 +81,7 @@ export async function execute(
 
   // Setting the env paths
   const tmpPath = path.join(tmpRootPath, `request_${request.id}`);
+  const debugPath = path.join(debugRootPath, `request_${request.id}`);
   const mountPath = path.join(tmpPath, 'mount');
   const answersPath = path.join(tmpPath, 'answers');
   const inDir = 'in';
@@ -153,9 +157,24 @@ export async function execute(
       })
       .catch(() => {});
 
+    // Create the debug root dir if it doesn't already exist
+    if (debug) {
+      await fs
+        .access(debugRootPath)
+        .catch((e) => {
+          return fs.mkdir(debugRootPath, { recursive: true });
+        })
+        .catch(() => {});
+    }
+
     // Prep the tmp dir
     await fs.mkdir(tmpPath);
     await Promise.all([fs.mkdir(mountPath), fs.mkdir(answersPath)]);
+
+    // Prep the debug dir
+    if (debug) {
+      await fs.mkdir(debugPath);
+    }
 
     // Create the in and out dirs and copy over demoter stuff
     await Promise.all([
@@ -173,6 +192,10 @@ export async function execute(
 
     // Write source code, promise will be awaited later
     const writeSourceCode = fs.writeFile(sourceCodePath, request.sourceCode);
+
+    if (debug) {
+      fs.writeFile(path.join(debugPath, request.fileName), request.sourceCode);
+    }
 
     const tests = await fs
       .readFile(path.join(problemPath, problemTestCasesFile))
@@ -300,6 +323,17 @@ export async function execute(
               throw new Error('Out file does not exist');
             });
 
+            try {
+              if (debug) {
+                await Promise.all([
+                  fs.copyFile(outFilePath, path.join(debugPath, outFile)),
+                  fs.copyFile(errorFilePath, path.join(debugPath, errorFile)),
+                ])
+              }
+            } catch (e) {
+              console.error(`Failed to copy over and/or error file in debug: ${e}`)
+            }
+
             switch (result) {
               case 'success':
                 const info = await readLastLines(outFilePath, 2);
@@ -411,7 +445,13 @@ export async function execute(
     commandArgs.push(language.compiled ? 1 : 0, inDir, outDir);
 
     // Pushing the output into a line by line stream
-    const execution = cp.spawn('podman', commandArgs, { detached: true });
+    const execution = cp.spawn('podman', commandArgs, { detached: diffProcessGroup });
+
+    execution.stderr.on('data', (data) => {
+      if (debug) {
+        fs.writeFile(path.join(debugPath, 'errorCompile.out'), data.toString())
+      }
+    })
 
     await new Promise((resolve, reject) => {
       const outStream = rl.createInterface({

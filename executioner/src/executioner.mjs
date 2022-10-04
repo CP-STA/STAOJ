@@ -66,7 +66,7 @@ export async function runExecutioner(
 
   // Wrapper send message function to log stuff
   async function sendMessage(message) {
-    console.log(`${message.id}:`, `Sending ${message.state}`);
+    console.log(`${message.id}:`, `Sending ${message.state}`, message.state === 'testing' ? message.testCase : '');
     const result = await app.sendMessage(message);
     if (!result) {
       console.log(
@@ -123,7 +123,7 @@ export async function runExecutioner(
 
       try {
         executingRequests.push(request.id);
-        const result = await execute(repoPath, sendMessage, request, options);
+        const result = await execute(repoPath, sendMessage, request, { ...options, diffProcessGroup: cleanUp });
         await sendMessage(new Message(request.id, state.done, result));
       } catch (e) {
         // If error then identify type and let it propogate

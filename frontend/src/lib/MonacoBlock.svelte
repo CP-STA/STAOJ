@@ -9,8 +9,34 @@
 	/** @type String */
 	export let language;
 
+	/** @type String */
+	export let languageId;
+	let previousLanguage = '';
+
 	export function getCode() {
 		return editor.getValue();
+	}
+
+	/** @type {{[name:string]: string}} */
+	const languageBoilerPlate = {
+		java: 'class Solution {\n    public static void main(String args[]){\n        \n    }\n}',
+		gcc: 'int main(){\n    \n}',
+		gpp: 'int main(){\n    \n}',
+		rust: 'fn main(){\n    \n}',
+		mono: 'class Solution {\n    static void Main() {\n        \n    }\n}'
+	};
+
+	/** @param {string} language */
+	function getLanguageBoilerPlate(language) {
+		if (!language) {
+			return '';
+		}
+		const languageName = language.split('-')[0];
+		if (languageName in languageBoilerPlate) {
+			return languageBoilerPlate[languageName];
+		} else {
+			return '';
+		}
 	}
 
 	/** @type import('monaco-editor') | null */
@@ -21,15 +47,22 @@
 
 	$: if (language) {
 		(async () => {
-			await updateLanguage(language);
+			await updateLanguage(language, languageId);
 		})();
 	}
 
-	/** @param language {String} */
-	async function updateLanguage(language) {
+	/**
+	 * @param language {string}
+	 * @param languageId {string} */
+	async function updateLanguage(language, languageId) {
 		let model = editor.getModel();
 		// @ts-ignore
 		monaco.editor.setModelLanguage(model, language);
+
+		if (!editor.getValue() || editor.getValue() == getLanguageBoilerPlate(previousLanguage)) {
+			editor.setValue(getLanguageBoilerPlate(languageId));
+		}
+		previousLanguage = languageId;
 	}
 
 	onMount(async () => {
@@ -42,10 +75,10 @@
 
 		monaco = await import('monaco-editor');
 		editor = monaco.editor.create(editorBlock, {
-			value: '',
+			value: getLanguageBoilerPlate(language),
 			automaticLayout: true
 		});
-		if (language) updateLanguage(language);
+		if (language) updateLanguage(language, languageId);
 
 		return () => {
 			editor.dispose();

@@ -1,19 +1,19 @@
 {
-  "name": "standings-tally",
+  "name": "time-server",
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "ts-node main.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc -b && node build/main.js",
+    "dev": "ts-node-dev main.ts",
     "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.0.2",
-    "firebase": "^9.9.4",
-    "firebase-admin": "^11.0.1",
-    "prettier": "^2.7.1",
-    "ts-node": "^10.9.1"
+    "http-server": "^14.1.1",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.8.4"
   }
 }

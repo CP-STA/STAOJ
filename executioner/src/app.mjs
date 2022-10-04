@@ -24,6 +24,7 @@ export function start() {
             overwriteTmpPath: true,
             syncMessages: false,
             executingLimit,
+            //debug: true,
           });
         } else {
           throw 'Failed to connect to database';

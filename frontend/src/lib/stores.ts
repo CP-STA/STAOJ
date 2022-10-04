@@ -10,12 +10,12 @@ export const time = readable({ synced: false, date: new Date() }, function start
 	if (browser) {
 		(async () => {
 			try {
-				let response = await fetch('https://worldtimeapi.org/api/timezone/GMT');
+				let response = await fetch('https://time.deyaochen.com');
 				if (!response.ok) {
 					throw Error('Response from the time url was not ok');
 				}
-				let data = await response.json();
-				offset = data.unixtime - Math.floor(new Date().getTime() / 1000);
+				let serverDate = new Date(await response.text());
+				offset = Math.floor(serverDate.getTime() / 1000 - new Date().getTime() / 1000);
 				synced = true;
 				let date = new Date((offset + Math.floor(new Date().getTime() / 1000)) * 1000);
 				set({ synced, date });
