@@ -77,6 +77,7 @@
 	let testResultsUnsub;
 	/** @param {number} retries the number of retries remaining */
 	function retryTestResults(retries) {
+		if (retries > 0) {
 		testResultsUnsub = onSnapshot(
 			q,
 			(snapshot) => {
@@ -115,6 +116,7 @@
 				retryTestResults(retries - 1);
 			}
 		);
+		}
 	}
 
 	if (browser && true) {

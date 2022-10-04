@@ -12,6 +12,9 @@
 	/** @type boolean */
 	export let isContest;
 
+	/** @type boolean */
+	export let showUser;
+
 	let loading = true;
 
 	/**
@@ -44,6 +47,9 @@
 <table class="table">
 	<tr>
 		<th scope="col">ID</th>
+		{#if showUser}
+			<th scope="col">UID</th>
+		{/if}
 		<th scope="col">Submission Time</th>
 		<th scope="col">Verdict</th>
 	</tr>
@@ -58,6 +64,9 @@
 					><a class="p-0" href="/submissions/{doc.id}{isContest ? '?contest=true' : ''}">{doc.id}</a
 					></td
 				>
+				{#if showUser}
+					<td>{doc.data().user}</td>
+				{/if}
 				<td>{formatFirebaseDate(doc.data().submissionTime)}</td>
 				<td class="text-{getVerdict(doc.data()).verdictColor}">{getVerdict(doc.data()).verdict}</td>
 			</tr>

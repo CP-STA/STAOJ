@@ -239,6 +239,7 @@
 							orderBy('submissionTime', 'desc')
 						)}
 						{isContest}
+						showUser={false}
 					/>
 				{/if}
 			</div>
