@@ -57,9 +57,9 @@
 					<th scope="row">{i + 1}</th>
 					<td>{data.users[uid].displayName}</td>
 					{#each data.problemsOrder as problemSlug}
-						<td>{data.users[uid].problems[problemSlug].score}</td>
+						<td>{data.users[uid].problems[problemSlug].scaledScore}</td>
 					{/each}
-					<td>{data.users[uid].total}</td>
+					<td>{data.users[uid].scaledTotal}</td>
 				</tr>
 			{/each}
 		</tbody>
