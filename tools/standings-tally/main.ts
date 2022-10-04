@@ -24,6 +24,15 @@ async function getDocs(
   });
 }
 
+function difficulty(problem: {
+  slug: string;
+  name: string;
+  difficulty: string;
+}): number {
+  const count = (problem.difficulty.match(/☆/g) || []).length;
+  return count;
+}
+
 async function main() {
   const app = initializeApp();
   const db = getFirestore(app);
@@ -38,7 +47,7 @@ async function main() {
   const contestDefinitionPath = `../../problems-private/contests/${contestName}.json`;
   const contestDefinition: {
     info: any;
-    problems: { slug: string; name: string }[];
+    problems: { slug: string; name: string; difficulty: string }[];
   } = require(contestDefinitionPath);
   const submissionCollection = db.collection("submissions");
   interface UserStanding {
@@ -47,10 +56,20 @@ async function main() {
       problems: {
         [problem: string]: {
           score: number;
+          scaledScore: number;
+          difficulty: number;
         };
       };
       total: number;
+      scaledTotal: number;
     };
+  }
+
+  interface SubmissionDocument {
+    state: "judged" | "compileError";
+    user: string;
+    score: number;
+    problem: string;
   }
 
   let people: UserStanding = {};
@@ -75,7 +94,7 @@ async function main() {
     success = true;
     const docsList = await getDocs(docs);
     for (const doc of docsList) {
-      const data = doc.data();
+      const data: SubmissionDocument = doc.data() as SubmissionDocument;
       if (data.state != "judged" && data.state != "compileError") {
         success = false;
         console.log(
@@ -85,10 +104,18 @@ async function main() {
         continue;
       }
       if (!(data.user in people)) {
-        let problems: { [problem: string]: { score: number } } = {};
+        let problems: {
+          [problem: string]: {
+            score: number;
+            scaledScore: number;
+            difficulty: number;
+          };
+        } = {};
         for (const problem of contestDefinition.problems) {
           problems[problem.slug] = {
             score: 0,
+            scaledScore: 0,
+            difficulty: difficulty(problem),
           };
         }
         let displayName: string = data.user;
@@ -125,6 +152,7 @@ async function main() {
           displayName,
           problems,
           total: 0,
+          scaledTotal: 0,
         };
       }
       if (
@@ -134,7 +162,16 @@ async function main() {
       ) {
         const oldScore =
           people[data.user as string].problems[data.problem as string].score;
+        const oldScaledScore =
+          people[data.user as string].problems[data.problem as string]
+            .scaledScore;
+        const scaledScore =
+          data.score *
+          people[data.user].problems[data.problem as string].difficulty;
         people[data.user].problems[data.problem as string].score = data.score;
+        people[data.user].problems[data.problem as string].scaledScore =
+          scaledScore;
+        people[data.user].scaledTotal += scaledScore - oldScaledScore;
         people[data.user].total += data.score - oldScore;
       }
     }
