@@ -78,44 +78,44 @@
 	/** @param {number} retries the number of retries remaining */
 	function retryTestResults(retries) {
 		if (retries > 0) {
-		testResultsUnsub = onSnapshot(
-			q,
-			(snapshot) => {
-				/** @type any[] */
-				let newJudgeResults = [];
-				snapshot.forEach((document) => {
-					newJudgeResults.push(document.data());
-					if (document.data().state == 'testing' && !testCasesResults[document.data().testCase]) {
-						// @ts-ignore
-						testCasesResults[document.data().testCase] = {
-							verdict: 'Testing',
-							memory: 0,
-							time: 0,
-							subtask: document.data().subtask,
-							color: 'dark'
-						};
-					} else if (document.data().state == 'tested') {
-						testCasesResults[document.data().testCase] = {
+			testResultsUnsub = onSnapshot(
+				q,
+				(snapshot) => {
+					/** @type any[] */
+					let newJudgeResults = [];
+					snapshot.forEach((document) => {
+						newJudgeResults.push(document.data());
+						if (document.data().state == 'testing' && !testCasesResults[document.data().testCase]) {
 							// @ts-ignore
-							verdict: resultMap[document.data().result],
-							memory: document.data().memory,
-							time: document.data().time,
-							subtask: document.data().subtask,
-							// @ts-ignore
-							color: resultColorMap[document.data().result]
-						};
-					}
-				});
-				judgeResults = newJudgeResults;
-			},
-			async (error) => {
-				console.error(error);
-				console.log('Retrying getting results document after .5 second');
-				await sleep(500);
-				console.log(`Retrying... remaning retries ${retries - 1}`);
-				retryTestResults(retries - 1);
-			}
-		);
+							testCasesResults[document.data().testCase] = {
+								verdict: 'Testing',
+								memory: 0,
+								time: 0,
+								subtask: document.data().subtask,
+								color: 'dark'
+							};
+						} else if (document.data().state == 'tested') {
+							testCasesResults[document.data().testCase] = {
+								// @ts-ignore
+								verdict: resultMap[document.data().result],
+								memory: document.data().memory,
+								time: document.data().time,
+								subtask: document.data().subtask,
+								// @ts-ignore
+								color: resultColorMap[document.data().result]
+							};
+						}
+					});
+					judgeResults = newJudgeResults;
+				},
+				async (error) => {
+					console.error(error);
+					console.log('Retrying getting results document after .5 second');
+					await sleep(500);
+					console.log(`Retrying... remaning retries ${retries - 1}`);
+					retryTestResults(retries - 1);
+				}
+			);
 		}
 	}
 
