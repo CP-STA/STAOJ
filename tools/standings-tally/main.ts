@@ -178,13 +178,13 @@ async function main() {
     console.log(people);
   }
 
-  let usersOrder: { uid: string; data: { total: number } }[] = [];
+  let usersOrder: { uid: string; data: { scaledTotal: number } }[] = [];
   for (const [uid, data] of Object.entries(people)) {
     usersOrder.push({ uid, data });
   }
 
   usersOrder.sort((first, second) => {
-    return -first.data.total + second.data.total;
+    return -first.data.scaledTotal + second.data.scaledTotal;
   });
 
   await db
