@@ -54,7 +54,7 @@
 		<tbody>
 			{#each data.usersOrder as uid, i}
 				<tr>
-					<th scope="row">{i + 1}</th>
+					<th scope="row">{data.usersRanking[i] + 1}</th>
 					<td>{data.users[uid].displayName}</td>
 					{#each data.problemsOrder as problemSlug}
 						<td>{data.users[uid].problems[problemSlug].scaledScore}</td>
