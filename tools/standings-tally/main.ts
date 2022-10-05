@@ -175,7 +175,6 @@ async function main() {
         people[data.user].total += data.score - oldScore;
       }
     }
-    console.log(people);
   }
 
   let usersOrder: { uid: string; data: { scaledTotal: number } }[] = [];
@@ -187,6 +186,17 @@ async function main() {
     return -first.data.scaledTotal + second.data.scaledTotal;
   });
 
+  let j = 0;
+  let usersRanking: number[] = [];
+  let previousScore = -1;
+  for (let i = 0; i < usersOrder.length; i++) {
+    if (usersOrder[i].data.scaledTotal != previousScore) {
+      previousScore = usersOrder[i].data.scaledTotal;
+      j = i;
+    } 
+    usersRanking.push(j);
+  }
+
   await db
     .collection("standings")
     .doc(contestName)
@@ -197,9 +207,9 @@ async function main() {
       usersOrder: usersOrder.map((x) => x.uid),
       problemsOrder,
       problemsNames,
+      usersRanking,
     });
 
-  console.log(people);
   process.exit(0);
 }
 
