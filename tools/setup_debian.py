@@ -17,7 +17,7 @@ def apt_install(a):
 
 subprocess.run(['ssh', ssh_host, 'sudo apt-get install -y rsync'])
 
-apt_install(['podman', 'slirp4netns', 'fuse-overlayfs'])
+apt_install(['podman', 'slirp4netns', 'fuse-overlayfs', 'git'])
 
 ssh_run('curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -')
 
