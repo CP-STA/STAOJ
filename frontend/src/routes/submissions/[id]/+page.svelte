@@ -11,7 +11,7 @@
 		documentId,
 		where
 	} from 'firebase/firestore';
-	import { browser } from '$app/env';
+	import { browser } from '$app/environment';
 	import { getVerdict, formatFirebaseDate, formatFirebaseDateFromDoc, sleep } from '$lib/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { formatTitle } from '$lib/utils';

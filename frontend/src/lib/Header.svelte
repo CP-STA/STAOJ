@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { time, judgeCount } from '$lib/stores';
-	import { browser } from '$app/env';
+	import { browser } from '$app/environment';
 	import Clock from '$lib/Clock.svelte';
 </script>
 
