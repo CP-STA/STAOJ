@@ -70,7 +70,7 @@
 	</p>
 {:else}
 	<h1>No Upcoming Contest</h1>
-	<p>There is no currently scheduled contest at the moment. Follow our <a href="https://discord.gg/8wTzq7Megd">discord server</a> to stay turned.</p>
+	<p>There is no scheduled contest at the moment. Follow our <a href="https://discord.gg/8wTzq7Megd">discord server</a> to stay turned.</p>
 {/if}
 
 <style>
