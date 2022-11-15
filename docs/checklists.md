@@ -1,6 +1,7 @@
 # Checklists
 
 ## Push Contest
+1. compile all statements with -C
 1. push to the private repo
 1. check contest name in `upcoming-contest.json`
 1. check contest time.
