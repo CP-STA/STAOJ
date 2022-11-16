@@ -17,40 +17,28 @@
 
 	<ul class="nav nav-pills">
 		<li class="nav-item">
-			<a sveltekit:prefetch class="nav-link" href="/" class:active={$page.url.pathname === '/'}
-				>About</a
+			<a class="nav-link" href="/" class:active={$page.url.pathname === '/'}>About</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="/contest" class:active={$page.url.pathname === '/contest'}
+				>Contest</a
 			>
 		</li>
 		<li class="nav-item">
 			<a
-				sveltekit:prefetch
-				class="nav-link"
-				href="/contest"
-				class:active={$page.url.pathname === '/contest'}>Contest</a
-			>
-		</li>
-		<li class="nav-item">
-			<a
-				sveltekit:prefetch
 				class="nav-link"
 				href="/past-problems"
 				class:active={$page.url.pathname === '/past-problems'}>Past Problems</a
 			>
 		</li>
 		<li class="nav-item">
-			<a
-				sveltekit:prefetch
-				class="nav-link"
-				href="/standings"
-				class:active={$page.url.pathname === '/standings'}>Standings</a
+			<a class="nav-link" href="/standings" class:active={$page.url.pathname === '/standings'}
+				>Standings</a
 			>
 		</li>
 		<li class="nav-item">
-			<a
-				sveltekit:prefetch
-				class="nav-link"
-				href="/account"
-				class:active={$page.url.pathname === '/account'}>Account</a
+			<a class="nav-link" href="/account" class:active={$page.url.pathname === '/account'}
+				>Account</a
 			>
 		</li>
 		<li class="nav-item">
