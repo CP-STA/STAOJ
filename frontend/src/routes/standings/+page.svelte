@@ -11,6 +11,7 @@
 	} from 'firebase/firestore';
 	import { db } from '$lib/firebase';
 	import { onDestroy } from 'svelte';
+	import { formatTitle } from '$lib/utils';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -35,6 +36,10 @@
 		unsub();
 	});
 </script>
+
+<svelte:head>
+	<title>{formatTitle('Standings')}</title>
+</svelte:head>
 
 <h1>Standings</h1>
 
