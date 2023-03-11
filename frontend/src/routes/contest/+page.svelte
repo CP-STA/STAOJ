@@ -4,7 +4,6 @@
 	export let data;
 	import { formatTitle } from '$lib/utils';
 	import { page } from '$app/stores';
-	import SvelteMarkdown from 'svelte-markdown';
 
 	const problems = data.problems;
 
@@ -58,9 +57,6 @@
 				data.info.endTime
 			)} on {formatDate(data.info.startTime)}
 		</p>
-		{#if data.info.additionalText}
-			<SvelteMarkdown source={data.info.additionalText} />
-		{/if}
 	{/if}
 {:else if data.next}
 	<h1>{data.next.name}</h1>
@@ -69,9 +65,6 @@
 			data.next.endTime
 		)} on {formatDate(data.next.startTime)}
 	</p>
-	{#if data.next.additionalText}
-		<SvelteMarkdown source={data.next.additionalText} />
-	{/if}
 {:else}
 	<h1>No Upcoming Contest</h1>
 	<p>
