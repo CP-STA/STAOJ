@@ -55,7 +55,7 @@ Currently consists of seven St Andrews students from around the world. Learn mor
 </script>
 
 <svelte:head>
-	<title>St Anderws Online Judge</title>
+	<title>St Andrews Online Judge</title>
 </svelte:head>
 <img
 	src="https://raw.githubusercontent.com/CP-STA/STAOJ/master/OnlineJudgedark.png"
