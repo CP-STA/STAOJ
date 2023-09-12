@@ -46,7 +46,7 @@
 
 <style>
 	.btn {
-		border:unset;
+		border: unset;
 	}
 	.btn:hover {
 		color: unset;
