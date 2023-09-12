@@ -39,12 +39,19 @@
 
 <span
 	id="clock"
-	class="btn btn-{clockStatus(time, judgeCount)
+	class="nav-link text-{clockStatus(time, judgeCount)
 		.color} pt-2 pb-2 ms-2 border-0 font-monospace css-tooltip"
 	data-tooltip={clockStatus(time, judgeCount).tooltip}>{time.date.toLocaleTimeString('en-GB')}</span
 >
 
 <style>
+	.btn {
+		border:unset;
+	}
+	.btn:hover {
+		color: unset;
+		background-color: unset;
+	}
 	.css-tooltip {
 		position: relative;
 	}

@@ -6,6 +6,17 @@
 	import Clock from '$lib/Clock.svelte';
 </script>
 
+<style>
+	.btn {
+		border:unset;
+		outline: 1px solid;
+	}
+	.btn:hover {
+		color: unset;
+		background-color: unset;
+	}
+</style>
+
 <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom mx-3">
 	<a
 		href="/"
@@ -15,29 +26,41 @@
 		<span class="fs-4">St Andrews Online Judge</span>
 	</a>
 
-	<ul class="nav nav-pills">
+	<ul class="nav">
 		<li class="nav-item">
-			<a class="nav-link" href="/" class:active={$page.url.pathname === '/'}>About</a>
+			<a href="/"
+			class="nav-link btn-hover"
+			class:btn={$page.url.pathname === '/'}
+			class:btn-outline-primary={$page.url.pathname === '/'}
+			>About</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link" href="/contest" class:active={$page.url.pathname === '/contest'}
+			<a class="nav-link btn-hover" href="/contest"
+			class:btn={$page.url.pathname === '/contest'}
+			class:btn-outline-primary={$page.url.pathname === '/contest'}
 				>Contest</a
 			>
 		</li>
 		<li class="nav-item">
 			<a
-				class="nav-link"
+				class="nav-link btn-hover"
 				href="/past-problems"
-				class:active={$page.url.pathname === '/past-problems'}>Past Problems</a
+				class:btn={$page.url.pathname === '/past-problems'}
+				class:btn-outline-primary={$page.url.pathname === '/past-problems'}
+			>Past Problems</a
 			>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link" href="/standings" class:active={$page.url.pathname === '/standings'}
+			<a class="nav-link btn-hover" href="/standings"
+			class:btn={$page.url.pathname === '/standings'}
+			class:btn-outline-primary={$page.url.pathname === '/standings'}
 				>Standings</a
 			>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link" href="/account" class:active={$page.url.pathname === '/account'}
+			<a class="nav-link btn-hover" href="/account"
+			class:btn={$page.url.pathname === '/account'}
+			class:btn-outline-primary={$page.url.pathname === '/account'}
 				>Account</a
 			>
 		</li>
