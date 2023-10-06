@@ -26,9 +26,9 @@ with open('test-cases.json') as f:
 has_incorrect = False
 for i, test_case in enumerate(test_cases):
   start = time.time()
-  p = subprocess.run(args.cmd, input=test_case['input'].encode('utf-8'), capture_output=True)
+  p = subprocess.run(args.cmd, input=test_case['input'].encode('utf-8'), capture_output=True, check=False)
   answer = p.stdout.decode('utf-8')
-  if answer.split() != test_case['output'].split():
+  if answer.split() != test_case['output'].split() or p.returncode != 0:
     if 'subtask' in test_case:
       print(i+1, bcolors.FAIL + f'incorrect for subtask {test_case["subtask"]}' + bcolors.ENDC)
     else:
