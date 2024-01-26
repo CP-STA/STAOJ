@@ -45,3 +45,4 @@ for i, test_case in enumerate(test_cases):
 
 if has_incorrect:
   print(bcolors.FAIL + "Some test cases did not pass." + bcolors.ENDC)
+  exit(1)
