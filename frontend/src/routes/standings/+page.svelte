@@ -45,6 +45,7 @@
 
 {#each standingsData as data}
 	<h2>{data.name}</h2>
+	<p>Competition Date: {(new Date(data.startTime.seconds * 1000)).toDateString()}</p>
 	<table class="table">
 		<thead>
 			<tr>
