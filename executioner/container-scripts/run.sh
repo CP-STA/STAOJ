@@ -32,6 +32,10 @@ run() {
       ./demoter.out python3 "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
       ;;
+    "pypy-3.8")
+      ./demoter.out pypy3 "$1" 1> "$4" 2> "$5" < "$3"
+      return "$?"
+      ;;
     "ruby-3.0")
       ./demoter.out ruby "$1" 1> "$4" 2> "$5" < "$3"
       return "$?"
@@ -84,6 +88,14 @@ interpret() {
         fi
       fi
       ;;
+    "pypy3-3.8")
+      if ! grep "$MLE" "$1"; then
+        if grep "MemoryError" "$1"; then
+          echo "$MLE" >> "$1"
+        fi
+      fi
+      ;;
+      
     "ruby-3.0")
       if ! grep "$MLE" "$1"; then
         if grep "failed to allocate memory" "$1"; then
