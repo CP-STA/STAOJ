@@ -2,7 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import 'firebase/firestore';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
-import { browser } from '$app/env';
+import { browser } from '$app/environment';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {

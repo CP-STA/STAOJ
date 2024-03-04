@@ -4,6 +4,7 @@
 	export let data;
 	import { formatTitle } from '$lib/utils';
 	import { page } from '$app/stores';
+	import SvelteMarkdown from 'svelte-markdown';
 
 	const problems = data.problems;
 
@@ -43,10 +44,7 @@
 			<tbody>
 				{#each problems as problem}
 					<tr>
-						<td
-							><a sveltekit:prefetch href="/problems/{problem.slug}?contest=true">{problem.name}</a
-							></td
-						>
+						<td><a href="/problems/{problem.slug}?contest=true">{problem.name}</a></td>
 						<td>
 							{problem.difficulty}
 						</td>
@@ -60,6 +58,9 @@
 				data.info.endTime
 			)} on {formatDate(data.info.startTime)}
 		</p>
+		{#if data.info.additionalText}
+			<SvelteMarkdown source={data.info.additionalText} />
+		{/if}
 	{/if}
 {:else if data.next}
 	<h1>{data.next.name}</h1>
@@ -68,9 +69,16 @@
 			data.next.endTime
 		)} on {formatDate(data.next.startTime)}
 	</p>
+	{#if data.next.additionalText}
+		<SvelteMarkdown source={data.next.additionalText} />
+	{/if}
 {:else}
 	<h1>No Upcoming Contest</h1>
-	<p>There is no currently scheduled contest at the moment. Follow our facebook to stay tuned.</p>
+	<p>
+		There is no scheduled contest at the moment. Follow our <a href="https://discord.gg/8wTzq7Megd"
+			>discord server</a
+		> to stay turned.
+	</p>
 {/if}
 
 <style>

@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { time, judgeCount } from '$lib/stores';
-	import { browser } from '$app/env';
+	import { browser } from '$app/environment';
 	import Clock from '$lib/Clock.svelte';
 </script>
 
@@ -15,42 +15,45 @@
 		<span class="fs-4">St Andrews Online Judge | <span class="text-warning">Testing</span></span>
 	</a>
 
-	<ul class="nav nav-pills">
+	<ul class="nav">
 		<li class="nav-item">
-			<a sveltekit:prefetch class="nav-link" href="/" class:active={$page.url.pathname === '/'}
-				>About</a
+			<a
+				href="/"
+				class="nav-link btn-hover"
+				class:btn={$page.url.pathname === '/'}
+				class:btn-outline-primary={$page.url.pathname === '/'}>About</a
 			>
 		</li>
 		<li class="nav-item">
 			<a
-				sveltekit:prefetch
-				class="nav-link"
+				class="nav-link btn-hover"
 				href="/contest"
-				class:active={$page.url.pathname === '/contest'}>Contest</a
+				class:btn={$page.url.pathname === '/contest'}
+				class:btn-outline-primary={$page.url.pathname === '/contest'}>Contest</a
 			>
 		</li>
 		<li class="nav-item">
 			<a
-				sveltekit:prefetch
-				class="nav-link"
+				class="nav-link btn-hover"
 				href="/past-problems"
-				class:active={$page.url.pathname === '/past-problems'}>Past Problems</a
+				class:btn={$page.url.pathname === '/past-problems'}
+				class:btn-outline-primary={$page.url.pathname === '/past-problems'}>Past Problems</a
 			>
 		</li>
 		<li class="nav-item">
 			<a
-				sveltekit:prefetch
-				class="nav-link"
+				class="nav-link btn-hover"
 				href="/standings"
-				class:active={$page.url.pathname === '/standings'}>Standings</a
+				class:btn={$page.url.pathname === '/standings'}
+				class:btn-outline-primary={$page.url.pathname === '/standings'}>Standings</a
 			>
 		</li>
 		<li class="nav-item">
 			<a
-				sveltekit:prefetch
-				class="nav-link"
+				class="nav-link btn-hover"
 				href="/account"
-				class:active={$page.url.pathname === '/account'}>Account</a
+				class:btn={$page.url.pathname === '/account'}
+				class:btn-outline-primary={$page.url.pathname === '/account'}>Account</a
 			>
 		</li>
 		<li class="nav-item">
@@ -58,3 +61,14 @@
 		</li>
 	</ul>
 </header>
+
+<style>
+	.btn {
+		border: unset;
+		outline: 1px solid;
+	}
+	.btn:hover {
+		color: unset;
+		background-color: unset;
+	}
+</style>

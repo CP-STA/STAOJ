@@ -135,7 +135,7 @@ For each `judge-results/{result}`. There should be the following fields:
 
 ## Problems and Test Cases
 
-The problem folder should be read by the frontend and the executioner. It should exists at the path `STAOJ/problems`. In the folder, each problem should be stored in a sub-folder (no nesting should exist).  For example, `STAOJ/problems/hello-world` is the folder for the hello world problem. The name of the folder should be unique and should be used by many parts of the system to identify the problem. It should only lowercase english letters, numbers, and dash (-) lest some component in the tech stack cannot handle spaces or special characters. In the problem folder there should be five files handwritten, named “statement.md”, “test-cases.json”, “constraints.json”, “solution.xxx”, “generator.xxx”, where xxx is the suffix of whatever programming language the file uses, and one complied file `statement.json`. The following sections will explain what each file is used for. 
+The problem folder should be read by the frontend and the executioner. It should exists at the path `STAOJ/problems`. In the folder, each problem should be stored in a sub-folder (no nesting should exist).  For example, `STAOJ/problems/hello-world` is the folder for the hello world problem. The name of the folder should be unique and should be used by many parts of the system to identify the problem. It should only lowercase english letters, numbers, and dash (-) lest some component in the tech stack cannot handle spaces or special characters. In the problem folder there should be five files handwritten, named “statement.md”, “test-cases.json”, “solution.xxx”, “generator.xxx”, where xxx is the suffix of whatever programming language the file uses, and one complied file `statement.json`. The following sections will explain what each file is used for.
 
 In addition, in the folder REPO_PATH/problem, you will find a python script named “audit.py”, run “python3 audit.py problem_name” to automatically check for the file formats and styles.  You need to installed the dependencies “pytest” and “pytest-depends” 
 
@@ -295,11 +295,6 @@ This should describe the test cases. This should be a json array, with each elem
 However, the format of the output should be less strict. Any leading or trailing whitespace should be ignored, and words separated by multiple consecutive whitespaces should also be accepted. Generally, the solution should be accepted if .split() in python returns the same result for the expected and the actual output.  
 
 Although not required, it would be the best if the json is pretty printed so that it’s human readable to some extent.  
-
-### constraints.json
-
-This file should contain a json object (dictionary) that contains two keys, `memory`, which value is an integer that denotes the memory limit in kilobytes, and `time`, which value is an integer which denotes the time limit in millisecond.  
-
 
 ### solution.xxx
 
