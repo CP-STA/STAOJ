@@ -39,7 +39,7 @@ cout << sth << endl;
 cout << sth;
 \`\`\`
 - To Java users, be careful about the specification of class name (follow template).
-- You are allowed to use any resource you want, including Google and ChatGPT, but you may not ask others for help.
+- You are allowed to use any resource you want, including Google, but you may not ask others or ChatGPT for help.
 
 ## Who are We?
 
