@@ -52,6 +52,9 @@
 				{/each}
 			</tbody>
 		</table>
+		{#if data.info.contestAdditionalText}
+			<SvelteMarkdown source={data.info.contestAdditionalText} />
+		{/if}
 	{:else}
 		<p>
 			This contest will begin at {formatTime(data.info.startTime)} and end at {formatTime(
