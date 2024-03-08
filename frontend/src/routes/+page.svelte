@@ -20,6 +20,23 @@
 
 <br/>
 
+## Rules
+
+- The points attainable from a problem problem is equal to the number of stars it has, which correlates to its difficulty.
+- Problems with greater difficulty may contain subtasks with smaller constraints. You can gain partial score by solving those subtasks. So try to read all the problems to maximise your score!
+- Your programme needs to read standard input and give the results as standard output.
+- To users of languages that require explicit line break (e.g. C++), make sure you add it to the end of output; do 
+
+\`\`\`
+cout << sth << endl;
+\`\`\`
+ rather than 
+\`\`\`
+cout << sth;
+\`\`\`
+- To Java users, be careful about the specification of class name (follow template).
+- You are allowed to use any resource you want, including Google and ChatGPT, but you may not ask others for help.
+
 ## Who are We?
 
 We are a society in St Andrews formed by a group of passionate people whose main intention is to strengthen people's algorithmic and problem-solving skills. Our workshops and contests serve as preparation for competitive programming competitions and will help one ace technical coding interviews.
