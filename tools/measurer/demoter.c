@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
 
     struct rusage usage;
     getrusage(RUSAGE_CHILDREN, &usage);
-
+    printf("\n"); // Without it, it hangs. https://github.com/CP-STA/STAOJ/issues/67
     fprintf(stderr, "\n");
     
     // Check for timeout
