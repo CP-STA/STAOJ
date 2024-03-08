@@ -34,7 +34,6 @@ for i, test_case in enumerate(test_cases):
     else:
       print(i+1, bcolors.FAIL + 'incorrect' + bcolors.ENDC)
     if not args.no_display_wrong:
-      print("input was ", test_case['input'].strip())
       print("should be ", test_case['output'].split())
       print("but found ", answer.split())
       print("stderr was ", p.stderr.decode('utf-8'))
