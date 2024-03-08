@@ -157,6 +157,8 @@
 	Submission: {id}
 	<br />
 	Submission Time: {formatFirebaseDateFromDoc(submissionDoc)}
+	<br />
+	Language: {#if submissionDoc} {data.languages[submissionDoc.language].name} {/if}
 </p>
 
 <h2>Verdict: <span class="text-{verdictColor}"> {verdict} </span></h2>
