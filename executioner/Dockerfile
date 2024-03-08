@@ -7,8 +7,8 @@ RUN apt-get install -y openjdk-11-jre openjdk-11-jdk
 RUN apt-get install -y ruby
 RUN apt-get install -y nodejs
 RUN apt-get install -y rustc
-RUN apt-get install -y pypy3
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mono-complete
+RUN apt-get install -y pypy3
 
 WORKDIR /app
 
