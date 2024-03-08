@@ -1,0 +1,14 @@
+{
+  "customizations": {
+    "codespaces": {
+      "repositories": {
+        "cp-sta/contest-problems": {
+            "permissions": "write-all"
+        },
+        "cp-sta/problems-private": {
+            "permissions": "write-all"
+        }
+      }
+    }
+  }
+}
