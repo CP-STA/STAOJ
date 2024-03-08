@@ -16,6 +16,10 @@
   <a href="https://discord.gg/5FsjrdEwzE">
     <img src="https://img.shields.io/badge/discord-7289da?style=for-the-badge&logo=discord&logoColor=white" alt="Discord Badge"/>
   </a>
+  <a href="https://www.instagram.com/_cpsta_">
+    <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram Badge"/>
+  </a>
+  
 </div>
 
 <br/>
@@ -39,7 +43,7 @@ cout << sth;
 
 ## Who are We?
 
-We are a society in St Andrews formed by a group of passionate people whose main intention is to strengthen people's algorithmic and problem-solving skills. Our workshops and contests serve as preparation for competitive programming competitions and will help one ace technical coding interviews.
+We are a [society in St Andrews](https://www.yourunion.net/activities/societies/explore/9403/) formed by a group of passionate people whose main intention is to strengthen people's algorithmic and problem-solving skills. Our workshops and contests serve as preparation for competitive programming competitions and will help one ace technical coding interviews.
 
 We are open to all irrespective of major or coding experience - the point is to learn and improve.
 
