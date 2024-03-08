@@ -1,14 +1,12 @@
 {
-  "customizations": {
-    "codespaces": {
-      "repositories": {
-        "cp-sta/contest-problems": {
-            "permissions": "write-all"
-        },
-        "cp-sta/problems-private": {
-            "permissions": "write-all"
+    "image":"mcr.microsoft.com/devcontainers/universal:2",
+    "customizations": {
+        "codespaces": {
+            "repositories": {
+                "cpsta/problems-private": {
+                    "permissions": "write-all"
+                }
+            }
         }
-      }
-    }
-  }
+     }
 }
