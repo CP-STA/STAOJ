@@ -36,18 +36,20 @@ export async function runExecutioner(
   // Cleanup function on exit for executioner
   if (cleanUp) {
     async function onCleanup(code = 0) {
-      console.log('\nCleaning up...');
-      shuttingDown = true;
-      const count = executingRequests.length;
-      console.log(
-        `Awaiting ${count} request${count !== 1 ? 's' : ''} to finish`
-      );
-      await app.deactivate();
-      await Promise.all(executingRequests.map(app.submissionComplete));
-      // Workaround for executioner not finishing scoring
-      await new Promise((resolve) => {
-        setTimeout(resolve, 2000);
-      });
+      if (!shuttingDown) {
+	      console.log('\nCleaning up...');
+	      shuttingDown = true;
+	      const count = executingRequests.length;
+	      console.log(
+		`Awaiting ${count} request${count !== 1 ? 's' : ''} to finish`
+	      );
+	      await app.deactivate();
+	      await Promise.all(executingRequests.map(app.submissionComplete));
+	      // Workaround for executioner not finishing scoring
+	      await new Promise((resolve) => {
+		setTimeout(resolve, 2000);
+	      });
+      }
       console.log('Goodbye');
       process.exit(code);
     }
