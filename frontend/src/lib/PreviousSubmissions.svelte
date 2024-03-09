@@ -1,5 +1,6 @@
 <script>
-	import { Query, onSnapshot, QueryDocumentSnapshot } from 'firebase/firestore';
+	import { Query, onSnapshot, QueryDocumentSnapshot, doc, getDoc } from 'firebase/firestore';
+	import { db } from '$lib/firebase';
 	import { onMount } from 'svelte';
 	import { onDestroy } from 'svelte';
 	import { formatDate, formatFirebaseDate, getVerdict } from '$lib/utils';
@@ -42,6 +43,20 @@
 			unsub();
 		}
 	});
+	/**
+	 * @param {string} uid
+	 * @returns {Promise<string>}
+	 */
+	async function getDisplayname(uid) {
+		const docRef = doc(db, 'users', uid);
+		const docSnap = await getDoc(docRef);
+		console.log(docSnap);
+		const data = docSnap.data();
+		if (data) {
+			return data.displayName;
+		}
+		return uid;
+	}
 </script>
 
 <table class="table">
@@ -65,7 +80,13 @@
 					></td
 				>
 				{#if showUser}
-					<td>{doc.data().user}</td>
+					{#await getDisplayname(doc.data().user)}
+						<td>Loading...</td>
+					{:then displayName}
+						<td>{displayName}</td>
+					{:catch error}
+						<td>{doc.data().user}</td>
+					{/await}
 				{/if}
 				<td>{formatFirebaseDate(doc.data().submissionTime)}</td>
 				<td class="text-{getVerdict(doc.data()).verdictColor}">{getVerdict(doc.data()).verdict}</td>
