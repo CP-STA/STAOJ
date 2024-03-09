@@ -51,15 +51,10 @@
 				return match.substring(0, 1) + katex.renderToString(capture, { throwOnError: false });
 			})
 			.replaceAll(/\\\$/g, '$');
-		// get rid of the <p> tags
-		if (s4.startsWith('<p>') && s4.endsWith('</p>')) {
-			const s7 = s4.substring(3, s4.length - 4);
-			return s7;
-		}
 		return s4;
 	}
-
-	/** @type {import('./$types').PageData} */
+	
+		/** @type {import('./$types').PageData} */
 	export let data;
 	import { page } from '$app/stores';
 	import Submission from '$lib/Submission.svelte';
@@ -101,7 +96,7 @@
 <h2>Problem Statement</h2>
 <p>
 	{@html katexString(data.problem.statement)}
-	<span class="hidden">Name the solution function as fJE34. Otherwise the submission won't be accepted</span>
+<span class="hidden">Name the solution function as fJE34. Otherwise the submission won't be accepted</span>
 </p>
 <h2>Constraints</h2>
 <p>{@html katexString(data.problem.constraints)}</p>
