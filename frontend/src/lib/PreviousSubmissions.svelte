@@ -43,16 +43,22 @@
 			unsub();
 		}
 	});
+	/** @type {Record<string, string>} */
+	const displayNameMemo = {};
 	/**
 	 * @param {string} uid
 	 * @returns {Promise<string>}
 	 */
 	async function getDisplayname(uid) {
+		if (displayNameMemo[uid]) {
+			return displayNameMemo[uid];
+		}
 		const docRef = doc(db, 'users', uid);
 		const docSnap = await getDoc(docRef);
 		console.log(docSnap);
 		const data = docSnap.data();
 		if (data) {
+			displayNameMemo[uid] = data.displayName;
 			return data.displayName;
 		}
 		return uid;
