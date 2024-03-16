@@ -148,7 +148,9 @@
 		<div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne">
 			<div class="">
 				<div class="accordion-body">
-					{#if $judgeCount == 0}
+					{#if $judgeCount < 0}
+					    The code judging system is only available during contests. Check out the <a href="https://github.com/cp-sta/contest-problems">github repo</a> for test cases and solutions.
+					{:else if $judgeCount == 0}
 						The code judging system is offline for maintenance.
 					{:else if !$user.loaded}
 						Loading account information...

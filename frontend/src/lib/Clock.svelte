@@ -19,7 +19,7 @@
 				color: 'success',
 				tooltip: 'The clock is synced with server time with ± 1s accuracy'
 			};
-		} else if (time.synced && judgeCount == 0) {
+		} else if (time.synced && judgeCount <= 0) {
 			return {
 				color: 'warning',
 				tooltip: 'The clock is synced but the code judging system is offline'
