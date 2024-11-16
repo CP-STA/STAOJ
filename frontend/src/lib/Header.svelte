@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import { time, judgeCount } from '$lib/stores';
 	import { browser } from '$app/environment';
-	import Clock from '$lib/Clock.svelte';
 </script>
 
 <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom mx-3">
@@ -55,9 +54,6 @@
 				class:btn={$page.url.pathname === '/account'}
 				class:btn-outline-primary={$page.url.pathname === '/account'}>Account</a
 			>
-		</li>
-		<li class="nav-item">
-			<Clock time={$time} judgeCount={$judgeCount} />
 		</li>
 	</ul>
 </header>
